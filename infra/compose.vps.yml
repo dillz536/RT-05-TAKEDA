@@ -7,18 +7,19 @@ services:
   gateway:
     networks: [default, coolify]
     labels:
-      traefik.enable: "true"
-      traefik.docker.network: coolify
-      traefik.http.routers.rt05-${RT05_ENV}-https.rule: Host(`${RT05_HOST}`)
-      traefik.http.routers.rt05-${RT05_ENV}-https.entrypoints: https
-      traefik.http.routers.rt05-${RT05_ENV}-https.tls: "true"
-      traefik.http.routers.rt05-${RT05_ENV}-https.tls.certresolver: letsencrypt
-      traefik.http.routers.rt05-${RT05_ENV}-https.service: rt05-${RT05_ENV}
-      traefik.http.routers.rt05-${RT05_ENV}-http.rule: Host(`${RT05_HOST}`)
-      traefik.http.routers.rt05-${RT05_ENV}-http.entrypoints: http
-      traefik.http.routers.rt05-${RT05_ENV}-http.middlewares: rt05-${RT05_ENV}-redirect
-      traefik.http.middlewares.rt05-${RT05_ENV}-redirect.redirectscheme.scheme: https
-      traefik.http.services.rt05-${RT05_ENV}.loadbalancer.server.port: "80"
+      # Bentuk key=value diperlukan agar variabel pada nama label ikut diinterpolasi.
+      - traefik.enable=true
+      - traefik.docker.network=coolify
+      - traefik.http.routers.rt05-${RT05_ENV}-https.rule=Host(`${RT05_HOST}`)
+      - traefik.http.routers.rt05-${RT05_ENV}-https.entrypoints=https
+      - traefik.http.routers.rt05-${RT05_ENV}-https.tls=true
+      - traefik.http.routers.rt05-${RT05_ENV}-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.rt05-${RT05_ENV}-https.service=rt05-${RT05_ENV}
+      - traefik.http.routers.rt05-${RT05_ENV}-http.rule=Host(`${RT05_HOST}`)
+      - traefik.http.routers.rt05-${RT05_ENV}-http.entrypoints=http
+      - traefik.http.routers.rt05-${RT05_ENV}-http.middlewares=rt05-${RT05_ENV}-redirect
+      - traefik.http.middlewares.rt05-${RT05_ENV}-redirect.redirectscheme.scheme=https
+      - traefik.http.services.rt05-${RT05_ENV}.loadbalancer.server.port=80
 
 networks:
   coolify:

@@ -12,7 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Gateway privat meneruskan protokol HTTPS dari proxy Coolify.
+        $proxies = array_filter(explode(',', (string) env('TRUSTED_PROXIES', '')));
+        if ($proxies !== []) {
+            $middleware->trustProxies(at: $proxies);
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

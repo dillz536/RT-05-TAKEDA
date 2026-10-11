@@ -176,6 +176,26 @@ Belum ada. M02 passed (PR #11 menunggu merge). Berikutnya M03 (Redis/worker/outb
 - Deploy: infra/compose.vps.yml + infra/scripts/deploy-vps.sh (ADR18). Menunggu pemilik menjalankan script di Konsol web Hostinger (agent tidak menjalankan perintah shell di server).
 - Keterbatasan: staging memakai password rt05_app yang sama dengan dev (ALTER ROLE ditolak di branch turunan); push FCM, SMTP, CMS website→API (M13/M14), signing key rilis, UAT belum.
 
+### Sesi 5 (11 Oktober 2026) — deploy staging lewat Konsol web
+
+- Otorisasi langsung pemilik: jalankan instruksi deploy staging dari Claude melalui Chrome dan beri kabar setelah selesai. Target hanya `takeda-staging.morriz.tech` / project `rt05-staging`.
+- Baseline source server/lokal: `53a8b10c9156fa6dcbd57d623863efb238f39d64`. Perbaikan lokal disimpan pada branch `codex/m04-staging-routing`; server menjalankan baseline tersebut dengan patch empat file yang sama. Patch belum berada pada `origin/main`.
+- Build pertama lima image berhasil (~311 detik), deploy script exit 0. Migrasi: `Nothing to migrate`; hak DML role runtime diterapkan. Env server berada di `/root/.rt05/.env.staging`, mode 600; direktori mode 700.
+- Dua masalah live ditemukan dan diperbaiki: label Traefik berbentuk mapping tidak menginterpolasi nama label sehingga HTTPS menjawab 503; chain proxy tidak mempertahankan HTTPS sehingga URL aset HTTP diblokir browser. Label kini memakai list `key=value`; gateway mempercayai proxy privat; website menerima `TRUSTED_PROXIES` dan APP_ENV staging.
+- File implementasi: `infra/compose.vps.yml`, `infra/compose.production.yml`, `infra/docker/gateway.Caddyfile`, `website/bootstrap/app.php`. Hanya gateway/web staging dibuat ulang setelah perbaikan; tidak ada operasi mutasi pada container layanan lain, DNS, firewall, atau production.
+- Verifikasi 07:31 WIB: HTTPS valid tanpa bypass; `/health/live`, `/health/ready`, `/`, `/profil`, `/api/v1` semuanya HTTP 200; ready mengembalikan database ok. Browser Chrome memuat CSS/JS/gambar HTTPS dan navigasi profil berhasil. API/web/Redis healthy; worker/scheduler Up; enam container staging restart count 0.
+- Lokal: `php artisan test --compact` lulus 9 tes/155 assertion; pemeriksaan repo dan `git diff --check` lulus. Caddy validation, Compose config, build web ulang (~11 detik) berhasil.
+- Insiden rahasia: setelah env ditempel dengan terminal echo off, pembacaan AX browser masih mencatat nilai textarea dalam keluaran alat. Tidak ada nilainya pada source atau evidence tersimpan; clipboard dibersihkan. Rotasi password role database dan APP_KEY staging diperlukan sebagai tindak lanjut; password runtime dev yang sama perlu ditangani bersama. Rotasi belum dilakukan.
+- Handoff lengkap: [docs/evidence/m04/STAGING_DEPLOY_2026-10-11.md](evidence/m04/STAGING_DEPLOY_2026-10-11.md). Jangan menjalankan ulang script yang melakukan reset ke `origin/main` sebelum patch disatukan ke main, karena akan mengembalikan dua bug deploy.
+- Batas hasil: deploy/smoke staging selesai; gate M04 menyeluruh (Neon write, job/heartbeat, restart persistence) dan M15/M16 belum dinilai ulang pada sesi ini.
+
+### Sesi 6 (11 Oktober 2026) — verifikasi staging, APK staging, temuan rahasia
+
+- Verifikasi dari PC: `/health/ready` 200 (database ok), `/health/live`, `/api/v1`, `/`, `/profil` 200; `POST /api/v1/auth/mobile-login` tanpa body → 422, `GET /api/v1/auth/me` tanpa token → 401. `https://takeda.morriz.tech` masih sertifikat default Traefik (production belum di-deploy).
+- Patch routing sesi 5 dibawa ke main lewat PR #14 (branch `codex/m04-staging-routing`).
+- APK debug dengan `API_BASE_URL=https://takeda-staging.morriz.tech` dibangun via workflow_dispatch (run 38099378306, sukses), dipasang ke emulator Pixel_8a; layar login tampil. Bukti: docs/evidence/mobile/09-login-staging.png. Login ke staging belum diuji agent (credential ke host non-lokal diketik pemilik sendiri). Catatan: kunci debug CI berbeda per run, jadi APK lama harus di-uninstall sebelum memasang yang baru.
+- Temuan: password `rt05_owner` di `.env.staging` identik dengan `.env.production` (role disalin saat branch Neon dibuat), sehingga insiden sesi 5 juga mengenai credential owner production. Rotasi oleh agent ditolak pengaman (penulisan secret store); **blocked → pemilik**: reset password `rt05_owner` di branch production (dan staging/dev) serta buat APP_KEY production baru sebelum deploy production. Langkah ada di docs/DEPLOYMENT.md (Rotasi credential).
+
 ## Checkpoint sesi
 
 10 Oktober 2026 (M01): checkout lokal pemilik berada di `Documents/RT X TAKEDA/RT-05-TAKEDA/`; folder induk `RT X TAKEDA/` berisi paket MD asli (tidak di-commit). PR #10 merged. Sesi M02: branch `codex/m02-api-neon-foundation`, PR #11. Neon dev sudah dimigrasi (5 migration fondasi). `rest-api/.env` lokal menunjuk Neon dev. php.ini lokal: pdo_pgsql/pgsql/intl/sodium diaktifkan. Tidak ada migration, image, atau job. Input belum tersedia: credential Neon, akses VPS/DNS (ditawarkan pemilik via Chrome untuk M04), SMTP, FCM, signing key, Flutter SDK.
