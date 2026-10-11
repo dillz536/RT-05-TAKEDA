@@ -15,7 +15,7 @@ ditentukan hanya oleh tersedianya kode.
 | M02 | passed | PR #11 merged (321db0d) |
 | M03 | passed | PR #15, kode 0d678bb: API CI 88 tes/727 assertion, recovery worker/Redis nyata dan build infra SUCCESS; review final Kimi PASS; docs/evidence/m03/CI_RESULTS.md |
 | M04 | passed | Gate fungsional staging SHA12b4642: HTTPS, Neon pooled/direct rollback0, AOF pending job, empat heartbeat, volume/unrelated unchanged; Grok menerima bukti. Credential incident tetap open; production belum siap. docs/evidence/m04/LIVE_RESULTS.md |
-| M05 | in_progress | Analyze/13 tes historis dan emulator warga/pengurus sesi 4; APK staging terpasang sesi 6, login staging belum dibuktikan |
+| M05 | in_progress | Branch codex/m05-mobile-foundation setelah PR16 merged; fondasi/CI sedang ditutup. Tes13 dan APK lama bukti historis; gate baru menunggu CI/emulator health nyata. |
 | M06 | in_progress | Registrasi/login/token/approval + tes CI lulus; SMTP reset belum (log) |
 | M07 | in_progress | Rumah/keluarga/akun/permohonan API + layar mobile; tes CI lulus |
 | M08 | in_progress | Pengaduan + foto privat + anonim + status; tes CI lulus |
@@ -32,8 +32,8 @@ M00 memakai label accepted_baseline khusus, bukan status passed hasil tes baru. 
 
 ## Milestone aktif
 
-**M04 — staging setelah gate M03**, penutupan branch `codex/m03-async-recovery`
-dan tahap berikutnya pada `codex/m04-staging-recovery`.
+**M05 — fondasi mobile**, branch `codex/m05-mobile-foundation`, setelah PR16
+merged `3a8be79` dan gate fungsional live M04 terbukti pada SHA `12b4642`.
 Pemilik meminta pengerjaan bertahap dengan empat agent (P16), bukan membuka
 seluruh roadmap serentak. [COORDINATION.md](COORDINATION.md) mencatat ownership,
 gate, pemulihan setelah limit/listrik mati, dan urutan berikutnya.
@@ -360,7 +360,7 @@ Selesaikan perubahan pengguna dengan hati-hati; tidak reset/force-push.
 | R01 | medium | website/release | `package-frontend.ps1` setelah dipindah ke `website/` menghasilkan ZIP kosong yang lolos verifikasi (filesVerified 0), lalu CRLF pada arsip subtree | M01 | fixed (350390a), diverifikasi 201/201 |
 | R02 | low | docs | FRONTEND.md/SOURCES.md menyebut 34e9b21 sebagai Git tree; sebenarnya commit | M01 | fixed |
 | R03 | medium | deploy preview | Root Directory Vercel belum diubah; tanpa jembatan root, merge akan memutus preview | M01 | mitigated (ADR12), menunggu pemilik |
-| R04 | medium | mobile | Flutter SDK tidak terpasang | M05 | open |
+| R04 | medium | mobile | Flutter SDK dahulu belum terpasang | M05 | resolved runtime: Flutter3.47.7/Dart3.13.5 terverifikasi 11 Oktober; gate analyze/test/APK baru masih pending |
 | R05 | high | database | pdo_pgsql named prepares + pooler Neon → transaksi gugur 25P02 pada tulis pertama | M02 | fixed (ADR14), terverifikasi di Neon pooled |
 | R06 | medium | dev env | Docker Desktop tidak jalan: WSL2 belum terpasang (Windows Home) | M02/M03 | open, menunggu pemilik |
 | R07 | low | security | Credential owner Neon dev tampil di keluaran tool agent saat pengambilan connection string | M02 | open: reset password rt05_owner (dev) disarankan |

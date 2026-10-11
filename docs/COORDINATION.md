@@ -9,25 +9,28 @@ otomasi yang dijamin terus hidup saat komputer atau Orca mati.
 
 ## Tahap aktif
 
-**M04 — staging dan bukti operasi VPS.** M03 lulus kode/CI pada `0d678bb`
-dan review final Kimi; bukti [CI_RESULTS.md](evidence/m03/CI_RESULTS.md).
+**M05 — fondasi mobile, sesudah M04 fungsional lulus.** PR #16 merged
+`3a8be79` setelah lima cek sukses pada `9cad5de`. Staging menjalankan SHA
+`12b4642` yang telah diuji; merge dokumentasi tidak memicu redeploy.
+M03 lulus kode/CI pada `0d678bb` dan review final Kimi.
 
 PR #14 telah digabung pada commit `c644b84`: perbaikan routing staging dan aset
 HTTPS sudah menjadi baseline main. PR #15 merged `27a3e5b` setelah lima cek
-SUCCESS pada HEAD `ea4179e`. Branch tahap ini: `codex/m04-staging-recovery`.
+SUCCESS pada HEAD `ea4179e`. Branch tahap ini: `codex/m05-mobile-foundation`.
 Implementasi layanan M05–M12 yang sudah ada dipertahankan, tetapi status gate
 masing-masing tidak dinaikkan hanya karena kode tersedia. M13–M16 belum dibuka.
 
 | Agent | Tanggung jawab | File yang boleh diedit |
 | --- | --- | --- |
 | Codex | Rencana, keputusan integrasi, Git, review, tes gabungan, laporan | Dokumen utama dan perubahan integrasi setelah ownership diserahkan |
-| Claude Code | Audit kesiapan M05 diserahkan; review independen integrasi infra M04 | `docs/evidence/m04/CLAUDE_INFRA_REVIEW.md` |
-| Grok | Skrip rollout dan smoke diserahkan; coordinator menutup temuan integrasi | Laporan infra M04; implementasi infra telah diserahkan ke Codex |
+| Claude Code | Fondasi Flutter, sesi/offline, router, health, brand dan tes | `mobile/**`, `docs/evidence/m05/CLAUDE_FOUNDATION_RESULT.md` |
+| Grok | CI, guard flavor/URL, APK dev/staging; menggantikan review Kimi saat limit | `.github/workflows/mobile.yml`, `infra/scripts/check-mobile-build-config.mjs`, `docs/evidence/m05/GROK_CI_RESULT.md` |
 | Kimi | Checkpoint diserahkan; review baru dijeda karena quota 403 batas 5 jam | Sesi tetap dipertahankan, tidak dimulai ulang |
 
 Semua bekerja pada checkout yang sama dengan ownership file terpisah. Hanya
 Codex melakukan switch branch, commit, push, dan merge. Agent meminta perubahan
 lintas ownership melalui mailbox coordinator; tidak mengedit diam-diam.
+Rencana dan gate tahap ini: [M05_PLAN.md](evidence/m05/M05_PLAN.md).
 
 ## Kontrak integrasi M03
 

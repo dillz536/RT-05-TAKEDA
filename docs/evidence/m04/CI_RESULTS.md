@@ -48,3 +48,13 @@ Lima check SUCCESS setelah temuan live `compose run --no-build` dibetulkan:
 Vercel dan Preview Comments. CLI help Compose memverifikasi `--no-deps` dan
 `--pull`; script one-shot memakai image hasil build dengan `--pull never`.
 Ini koreksi operasional skrip, tanpa perubahan source API/web dari `62a863f`.
+
+## Penutupan PR16 `9cad5de`
+
+Lima check final SUCCESS sesudah pembukuan live dan review independen:
+[API38133898050](https://github.com/morrispes5/RT-05-TAKEDA/actions/runs/38133898050)
+(2m3s), [Infra38133897989](https://github.com/morrispes5/RT-05-TAKEDA/actions/runs/38133897989)
+(2m4s), [Hygiene38133897951](https://github.com/morrispes5/RT-05-TAKEDA/actions/runs/38133897951),
+Vercel dan Preview Comments. PR16 merged `3a8be793ea286df20d05d66da9c0ebec90fe1e3a`
+pada 11 Oktober 2026 11:01:48 UTC. Staging tetap menjalankan code SHA12b4642;
+merge dokumentasi tidak mengubah service. M05 dibuka pada branch baru.
