@@ -74,7 +74,7 @@ OK: 519 berkas dilacak; tanpa file terlarang, pola secret, .git bersarang, atau 
 
 ## Serah terima
 
-Setelah Claude menyerahkan `mobile/**`, Codex menjalankan Mobile verification, mengunduh `rt05-takeda-debug-dev` dan `rt05-takeda-debug-staging`, memeriksa sha256, lalu memasang APK debug staging pada emulator. APK itu ditandatangani debug, bukan rilis production. Langkah `dart format` boleh gagal sampai sumber mobile diformat; kegagalan itu adalah gerbang yang diminta. Jika nama `FLAVOR` atau `API_BASE_URL` berubah, workflow perlu diselaraskan. Request nyata emulator atau HP, yaitu gate [ROADMAP.md](../../ROADMAP.md) M05, belum ditutup oleh dokumen ini. [READINESS_REVIEW.md](READINESS_REVIEW.md) tidak diubah.
+Setelah Claude menyerahkan `mobile/**`, Codex menjalankan Mobile verification, mengunduh `rt05-takeda-debug-dev` dan `rt05-takeda-debug-staging`, memeriksa sha256, lalu memasang APK debug staging pada emulator. APK itu ditandatangani debug, bukan rilis production. Pemeriksaan format adalah gate wajib; hasil source final25 file0changed ada di [CI_RESULTS.md](CI_RESULTS.md). Jika nama `FLAVOR` atau `API_BASE_URL` berubah, workflow perlu diselaraskan. Bukti request nyata emulator untuk [ROADMAP.md](../../ROADMAP.md) M05 ada di [LIVE_RESULTS.md](LIVE_RESULTS.md). [READINESS_REVIEW.md](READINESS_REVIEW.md) tidak diubah.
 
 Dokumen acuan lain: [MOBILE.md](../../MOBILE.md), [TESTING.md](../../TESTING.md), [CAPSTONE_ALIGNMENT.md](../../CAPSTONE_ALIGNMENT.md). Rotasi kredensial dari insiden sebelumnya tetap di luar pekerjaan ini dan tetap blocked pada pemilik. M06 dan sesudahnya tidak dibuka.
 

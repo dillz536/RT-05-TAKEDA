@@ -9,7 +9,11 @@ otomasi yang dijamin terus hidup saat komputer atau Orca mati.
 
 ## Tahap aktif
 
-**M05 — fondasi mobile, sesudah M04 fungsional lulus.** PR #16 merged
+**Penutupan M05 — fondasi mobile PASS, PR17 dalam penutupan.** Source13de24e:
+77 tes dan dua APK CI lulus; emulator health HTTPS/offline/retry/brand/text
+scaling lulus; review final Kimi PASS. Bukti [LIVE_RESULTS.md](evidence/m05/LIVE_RESULTS.md)
+dan [CI_RESULTS.md](evidence/m05/CI_RESULTS.md). Tidak membuka fitur M06+.
+PR #16 merged
 `3a8be79` setelah lima cek sukses pada `9cad5de`. Staging menjalankan SHA
 `12b4642` yang telah diuji; merge dokumentasi tidak memicu redeploy.
 M03 lulus kode/CI pada `0d678bb` dan review final Kimi.
@@ -23,9 +27,9 @@ masing-masing tidak dinaikkan hanya karena kode tersedia. M13–M16 belum dibuka
 | Agent | Tanggung jawab | File yang boleh diedit |
 | --- | --- | --- |
 | Codex | Rencana, keputusan integrasi, Git, review, tes gabungan, laporan | Dokumen utama dan perubahan integrasi setelah ownership diserahkan |
-| Claude Code | Fondasi Flutter diserahkan: 75 tes lokal lulus; review CI berikutnya setelah integrasi | Laporan awal `docs/evidence/m05/CLAUDE_FOUNDATION_RESULT.md`; sumber kini milik Codex |
-| Grok | Workflow/guard diserahkan setelah koreksi kontrak URL; review mobile berikutnya | Laporan awal `docs/evidence/m05/GROK_CI_RESULT.md`; workflow/guard kini milik Codex |
-| Kimi | Kuota kembali merespons; audit rencana M05 PASS diterima, gate implementasi belum dinilai | `docs/evidence/m05/KIMI_PLAN_REVIEW.md`, sesi sama dipertahankan; bila quota 403 kembali, alihkan tugas baru ke Grok |
+| Claude Code | Fondasi Flutter diserahkan; review independen CI PASS, sekarang idle | Laporan foundation dan CLAUDE_CI_REVIEW.md; sumber milik Codex |
+| Grok | Workflow/guard diserahkan; review independen mobile PASS, sekarang idle | GROK_CI_RESULT.md dan GROK_MOBILE_REVIEW.md; workflow/guard milik Codex |
+| Kimi | Audit rencana dan acceptance final M05 PASS diterima; sekarang retained user_requested | KIMI_PLAN_REVIEW.md dan KIMI_ACCEPTANCE_REVIEW.md; sesi sama dipertahankan, bila quota403 kembali tugas baru dialihkan ke Grok |
 
 Semua bekerja pada checkout yang sama dengan ownership file terpisah. Hanya
 Codex melakukan switch branch, commit, push, dan merge. Agent meminta perubahan
