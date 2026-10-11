@@ -13,7 +13,7 @@ ditentukan hanya oleh tersedianya kode.
 | M00 | accepted_baseline | Handoff repo menyatakan desain accepted; M01 rerun QA baseline pada 34e9b21 dan dari website/ (lihat M01) |
 | M01 | passed | PR #10 merged (02d92a1); production alias rt05takeda.vercel.app 19/19 HTML + 26 aset cocok setelah merge |
 | M02 | passed | PR #11 merged (321db0d) |
-| M03 | in_progress | Tahap aktif: mengganti dispatcher inbox sinkron dengan Redis consumer/replay dan menguji recovery; belum ada bukti gate recovery lulus |
+| M03 | passed | PR #15, kode 0d678bb: API CI 88 tes/727 assertion, recovery worker/Redis nyata dan build infra SUCCESS; review final Kimi PASS; docs/evidence/m03/CI_RESULTS.md |
 | M04 | in_progress | Staging deploy/smoke sesi 5–6 sudah berhasil; patch PR #14 merged c644b84; gate M03, live write/heartbeat/restart masih perlu bukti |
 | M05 | in_progress | Analyze/13 tes historis dan emulator warga/pengurus sesi 4; APK staging terpasang sesi 6, login staging belum dibuktikan |
 | M06 | in_progress | Registrasi/login/token/approval + tes CI lulus; SMTP reset belum (log) |
@@ -32,7 +32,8 @@ M00 memakai label accepted_baseline khusus, bukan status passed hasil tes baru. 
 
 ## Milestone aktif
 
-**M03 — Redis/worker/scheduler/outbox recovery**, branch `codex/m03-async-recovery`.
+**M04 — staging setelah gate M03**, penutupan branch `codex/m03-async-recovery`
+dan tahap berikutnya pada `codex/m04-staging-recovery`.
 Pemilik meminta pengerjaan bertahap dengan empat agent (P16), bukan membuka
 seluruh roadmap serentak. [COORDINATION.md](COORDINATION.md) mencatat ownership,
 gate, pemulihan setelah limit/listrik mati, dan urutan berikutnya.
@@ -250,14 +251,22 @@ staging. Tidak ada redeploy server dari aksi merge ini.
   registrasi utama dan tipe nominal. Chrome Hostinger dapat diinspeksi melalui computer-use; emulator
   Pixel_8a dinyalakan, `adb shell getprop sys.boot_completed` mengembalikan 1.
   Belum ada login emulator atau redeploy staging pada checkpoint ini.
-- Batas bukti: PHP/Postgres/Redis recovery belum dinyatakan lulus. Docker/WSL
-  lokal tetap tidak dipasang sesuai ADR19; pengujian integrasi nyata memakai
-  Postgres/Redis sintetis di GitHub CI. Tidak menjalankan tes terhadap Neon.
+- CI aktual kode `0d678bb` pada PR #15: API run 38112554974 SUCCESS,
+  88 tes/727 assertion; kill setelah commit, duplikat, AOF everysec restart,
+  queue-loss replay (attempts=2/inbox=1), heartbeat worker/scheduler,
+  runtime/migrator smoke rollback=0 dan OpenAPI. Infra run 38112554907
+  SUCCESS: Compose, build API/web, gateway smoke. Hygiene/Vercel keduanya
+  SUCCESS. Bukti rinci: `docs/evidence/m03/CI_RESULTS.md`.
+- Review final Kimi memeriksa log CI langsung dan menutup B01–B05/N01–N04;
+  seluruh gate M03 PASS. Docker/WSL lokal tetap tidak dipasang sesuai ADR19;
+  CI sintetis ini bukan bukti deployment VPS baru. Tidak menjalankan tes Neon.
 - Kimi aktif mengaudit meskipun composed startup Orca keliru menandai
   `agent_prompt_stalled`; laporan tersimpan. Coordinator memulihkan tracking
-  tanpa menggandakan atau merestart agent yang masih bekerja.
-- Langkah berikutnya: review independen dengan CI API/infra
-  nyata, kemudian staging M04 jika gate M03 telah terbukti. Insiden credential
+  tanpa menggandakan atau merestart agent yang masih bekerja. Review final
+  dikirim sebagai prompt biasa dan task dipulihkan manual berdasarkan laporan
+  tersimpan; tidak mengklaim worker_done diterima dari capability yang dicabut.
+- Langkah berikutnya: merge penutupan M03, kemudian staging M04 karena gate
+  M03 telah terbukti. Insiden credential
   sesi 5–6 tetap open; production/UAT/signing/SMTP/FCM bukan hasil tahap ini.
 
 10 Oktober 2026 (M01): checkout lokal pemilik berada di `Documents/RT X TAKEDA/RT-05-TAKEDA/`; folder induk `RT X TAKEDA/` berisi paket MD asli (tidak di-commit). PR #10 merged. Sesi M02: branch `codex/m02-api-neon-foundation`, PR #11. Neon dev sudah dimigrasi (5 migration fondasi). `rest-api/.env` lokal menunjuk Neon dev. php.ini lokal: pdo_pgsql/pgsql/intl/sodium diaktifkan. Tidak ada migration, image, atau job. Input belum tersedia: credential Neon, akses VPS/DNS (ditawarkan pemilik via Chrome untuk M04), SMTP, FCM, signing key, Flutter SDK.

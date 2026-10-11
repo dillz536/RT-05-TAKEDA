@@ -9,7 +9,8 @@ otomasi yang dijamin terus hidup saat komputer atau Orca mati.
 
 ## Tahap aktif
 
-**M03 — Redis, worker, scheduler, dan pemulihan outbox.**
+**M04 — staging dan bukti operasi VPS.** M03 lulus kode/CI pada `0d678bb`
+dan review final Kimi; bukti [CI_RESULTS.md](evidence/m03/CI_RESULTS.md).
 
 PR #14 telah digabung pada commit `c644b84`: perbaikan routing staging dan aset
 HTTPS sudah menjadi baseline main. Branch tahap ini: `codex/m03-async-recovery`.

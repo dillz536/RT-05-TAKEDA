@@ -194,3 +194,64 @@ Perubahan baru sejak review 2 dinilai. Dispatch ctx_fd5300f8fc3d dicabut runtime
 ### Verdict review 3
 
 N01/N02/N03 (sebagai script) teratasi; tes durabilitas keuangan-async kuat. **Gate M03 tetap PENDING**: B04 harus diperbaiki (CI infra saat ini pasti merah), B05 perlu wiring drill ke workflow, lalu seluruh gate dinilai dari hasil CI aktual setelah Codex commit/push.
+
+---
+
+## REVIEW FINAL — HEAD 0d678bb (PR #15), bukti CI aktual (11 Oktober 2026)
+
+Seluruh handoff ter-commit pada `0d678bb feat(m03): deliver outbox through Redis workers with recovery drills`. Reviewer memverifikasi bukti CI aktual (bukan kode saja) dan menutup/menolak setiap temuan historis berdasarkan kondisi HEAD.
+
+### Bukti CI yang diverifikasi reviewer langsung
+
+| Run | URL | Hasil diverifikasi |
+| --- | --- | --- |
+| API verification | https://github.com/morrispes5/RT-05-TAKEDA/actions/runs/38112554974 | SUCCESS. `ci-redis.sh` OK (kebijakan, restart AOF, hapus kunci prefix). `php artisan test`: **88 passed, 727 assertions**. Langkah "Drill worker Redis nyata": kill/restart (inbox 0 dan event published-belum-completed diverifikasi sebelum SIGKILL; worker baru → `state=completed attempts=1 inbox=1`), duplikat payload via EVAL dengan kedua delivery di-drain → inbox 1, AOF everysec restart (job+sentinel bertahan → inbox 1), queue-loss (hanya kunci `queues:notifications*` dihapus, sentinel tetap, replay stale → `attempts=2 inbox=1`), heartbeat worker-default dan scheduler OK. |
+| Infra images | https://github.com/morrispes5/RT-05-TAKEDA/actions/runs/38112554907 | SUCCESS. Kontrak statis M03 OK; compose production+VPS valid tanpa port 6379 terpublikasi; build image API/web. |
+| Repository checks | run 38112554910 | SUCCESS (hygiene). |
+| Vercel + Vercel Preview Comments | cek PR #15 (dpl 49W5TMqu5zoN8GLdDXxhqePmgufv) | SUCCESS — source website tidak berubah pada branch ini. Diverifikasi `gh pr checks 15`: kelima cek PR #15 pass pada HEAD 0d678bb. |
+
+### Tabel penerimaan gate M03 (final)
+
+| Gate (ROADMAP/COORDINATION) | Verdict | Bukti |
+| --- | --- | --- |
+| Enqueue/consumer terpisah | **PASS** | Unit `test_dispatcher_publishes_after_enqueue_and_only_consumer_completes` + drill: inbox 0 saat worker di-SIGSTOP, event published tanpa completed |
+| Duplikat → satu inbox per penerima | **PASS** | Unit dedup + drill duplikasi EVAL dengan drain kedua delivery, inbox=1; `UNIQUE(event_id,penerima_id)` |
+| Kill/restart worker | **PASS** | Drill: SIGSTOP→commit→SIGKILL→worker baru menyelesaikan event (CI run 38112554974) |
+| Lease expired / stale published replay | **PASS** | Unit lease/stale + drill queue-loss `attempts=2 inbox=1` (replay stale 5 detik CI) |
+| AOF restart | **PASS** | ci-redis.sh (list sintetis bertahan) + drill app-level everysec (job+sentinel bertahan → inbox) |
+| Queue-loss recovery | **PASS** | Drill: hapus hanya kunci notifications (whitelist), sentinel tetap, replay via dispatcher |
+| DB rollback tidak meninggalkan event | **PASS** | `test_domain_rollback_leaves_no_outbox_event` (assert eksplisit outbox) |
+| Isolasi: queue/cache terpisah, Redis tidak publik, heartbeat | **PASS** | Dua instance (queue AOF/noeviction, cache allkeys-lru); compose production tanpa `ports:`; password wajib `:?`; lock/heartbeat di instance queue; heartbeat worker+scheduler terbukti di drill |
+
+### Penutupan temuan historis
+
+- **B01** (referensi `Notifications::dispatch` menggantung) — CLOSED (ServicesTest/DemoSeed beralih ke OutboxDispatcher; 88 tes hijau).
+- **B02** (tanpa tes/drill) — CLOSED (AsyncOutboxTest 11 tes, HeartbeatTest 5 tes, drill nyata di CI).
+- **B03** (infra single Redis) — CLOSED (dua instance, 3 worker+scheduler, healthcheck heartbeat, stop grace 180s).
+- **B04** (kontrak statis vs compose.local) — CLOSED (`check-m03-compose.mjs` kini mewajibkan mapping loopback `127.0.0.1:6379/6380` dan tetap melarang publikasi di production; exit 0 pada HEAD; langkah infra CI hijau).
+- **B05** (drill tidak di-wire) — CLOSED (`api.yml:73` menjalankan `m03-recovery-ci.sh`; path filter menyertakan kedua script).
+- **N01–N04** — CLOSED (password wajib staging/production; prefix `takeda:<env>:`; drill script ada; header compose.local dikoreksi).
+
+### Privacy/finance/bisnis (tidak ada regresi)
+
+- 88 tes hijau mencakup seluruh FinanceTest (snapshot tarif, idempotency 409/replay, pembalikan, koreksi, ledger immutable, CSV injection) dan ServicesTest (anonimitas, kepemilikan, versi).
+- `OutboxConsumerFailed` memastikan `failed_jobs.exception`/log hanya kelas+SQLSTATE — tanpa SQL/binding/ID pelapor anonim; payload job hanya UUID event; payload outbox hanya ID/jenis.
+- Guard `*_test` lokal/CI di bootstrap PHPUnit, async-smoke, dan drill (penolakan eksplisit host Neon); tidak ada tes menyentuh Neon/production.
+- Konsumen hanya menulis inbox — tidak ada jalur queue yang menulis keuangan (tes durabilitas pembayaran membuktikan ledger tetap 1 melalui outage+replay+redelivery).
+- Tiga jenis event no-op eksplisit (`akun.registrasi_utama`, `iuran.tagihan_dibuat`, `iuran.pembayaran_dibalik`) tetap no-op; jenis lain tak dikenal diparkir.
+
+### Laporan selisih capstone
+
+`docs/CAPSTONE_ALIGNMENT.md` diverifikasi reviewer: sumber Drive dicatat tanpa menyalin identitas; selisih nyata (approval registrasi utama, tipe nominal bigint, masa token, relasi akun–warga nullable, nama tabel operasi, storage foto, push, Logbook 3 kosong) dilaporkan jujur dengan penanganan, tanpa mengarang fakta RT atau mengklaim UAT. Konsisten dengan instruksi pemilik.
+
+### Keterbatasan tersisa (bukan gate M03)
+
+- Drill berjalan di CI sintetis; belum ada bukti pada VPS staging (gate live M04: heartbeat/restart persistence di server).
+- Worker media/exports berjalan tanpa job domain (heartbeat saja) — sesuai cakupan M03.
+- Insiden credential sesi 5–6 tetap open; rotasi password Neon/APP_KEY adalah prasyarat production, bukan M03.
+- Docker/WSL lokal tetap tidak dipasang (ADR19); verifikasi lokal reviewer terbatas pada lint/statik.
+- `REDIS_PASSWORD` wajib diisi di env server sebelum deploy berikutnya (compose menolak nilai kosong).
+
+### Jawaban final reviewer
+
+**Seluruh gate M03 (ROADMAP/COORDINATION) PASS berdasarkan bukti CI aktual pada HEAD 0d678bb.** Tidak ada blocker penerimaan tersisa untuk M03 pada lingkup kode/CI. Upgrade status milestone di PROGRESS.md dan keputusan melanjutkan ke M04 adalah wewenang coordinator; reviewer merekomendasikan M03 dapat ditandai **passed** dengan keterbatasan yang tercatat di atas.
