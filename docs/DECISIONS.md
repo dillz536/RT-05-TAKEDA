@@ -29,6 +29,8 @@ Konflik tidak diselesaikan dengan menyalin keputusan lama yang tampak paling tek
 | P13 | Vercel tetap preview; production di subdomain morriz.tech (rancangan takeda.morriz.tech) pada VPS Hostinger | Instruksi pemilik di sesi M01, 10 Oktober 2026 |
 | P14 | Pemilik menawarkan akses panel Hostinger/DNS lewat Chrome dan emulator Android untuk tahap berikutnya | Instruksi pemilik di sesi M01; dipakai pada M04/M05 dengan konfirmasi per tindakan eksternal |
 | P15 | Kerjakan semampunya lintas milestone dengan izin VPS/Docker/PC; hemat SSD; desain mobile boleh kolaborasi Google Stitch | Instruksi pemilik sesi 3, 10 Oktober 2026 |
+| P16 | Codex mengoordinasikan Claude Code, Grok, dan Kimi dengan ownership terpisah; selesaikan satu tahap dan gate sebelum maju, checkpoint bila limit atau listrik mati | Instruksi pemilik 11 Oktober 2026; mempersempit eksekusi serentak P15. Rencana di COORDINATION.md |
+| P17 | Target lanjutan sampai M05 secara bertahap; cocokkan dengan planning dan Drive capstone, laporkan setiap perbedaan; tidak membuka seluruh roadmap dalam satu hari | Instruksi pemilik terbaru 11 Oktober 2026 |
 
 ## ADR rekayasa v1
 
@@ -149,6 +151,15 @@ Tanggal/status: 10 Oktober 2026, diterapkan M02.
 Keputusan: migration default Laravel (users/sessions/cache/jobs bigint) dihapus. users UUID dengan role/status dibuat M06; `audit_logs.actor_id` dan `idempotency_requests.actor_id` mendapat FK pada migration M06. Sesi/cache/queue memakai Redis (M03), bukan tabel database.
 
 ## Input operasional yang belum tersedia
+
+### Otorisasi lanjutan pemilik 11 Oktober 2026
+
+Pemilik menyediakan Chrome pada Hostinger dan mengizinkan penggunaan terminal,
+emulator Android, serta akses yang diperlukan untuk deployment. Coordinator
+boleh melanjutkan staging setelah gate tahap aktif lulus tanpa meminta ulang
+izin akses tersebut. Urutan bertahap P16 tetap berlaku; otorisasi akses tidak
+menjadi bukti gate production/UAT/signing/credential telah selesai. Penolakan
+pengaman sebelumnya tetap dicatat dan tidak diakali.
 
 | Input | Ditangani pada | Dampak |
 | --- | --- | --- |

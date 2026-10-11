@@ -73,7 +73,8 @@ return [
     |
     */
 
-    'connection' => env('SESSION_CONNECTION'),
+    // Sesi CMS (driver redis) disimpan di instance cache, bukan instance antrean.
+    'connection' => env('SESSION_CONNECTION', 'cache'),
 
     /*
     |--------------------------------------------------------------------------

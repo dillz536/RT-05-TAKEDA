@@ -16,6 +16,7 @@ class OutboxEvent extends Model
             'dispatch_lease_until' => 'datetime',
             'published_at' => 'datetime',
             'completed_at' => 'datetime',
+            'failed_at' => 'datetime',
             'attempts' => 'integer',
         ];
     }

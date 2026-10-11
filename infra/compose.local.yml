@@ -1,6 +1,7 @@
-# Layanan pengembangan lokal. Hanya terikat ke 127.0.0.1; tidak dipakai di VPS.
+# Layanan pengembangan lokal. Postgres hanya terikat ke 127.0.0.1. Tidak dipakai di VPS.
 #   docker compose -f infra/compose.local.yml up -d
-# Postgres 17 mengikuti versi project Neon yang direncanakan. Redis/SMTP capture ditambahkan M03.
+# Postgres 17 mengikuti versi project Neon. Redis hanya di 127.0.0.1:6379 (antrean) dan :6380 (cache).
+# SMTP capture belum masuk paket ini.
 name: rt05-local
 
 services:
@@ -23,5 +24,39 @@ services:
       timeout: 3s
       retries: 20
 
+  redis:
+    image: redis:7.4-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: ["/bin/sh", "/usr/local/bin/rt05-redis-queue.sh"]
+    volumes:
+      - rt05-redis-local:/data
+      - ./docker/redis-queue.sh:/usr/local/bin/rt05-redis-queue.sh:ro
+      - ./docker/redis-health.sh:/usr/local/bin/rt05-redis-health.sh:ro
+    healthcheck:
+      test: ["CMD", "/bin/sh", "/usr/local/bin/rt05-redis-health.sh"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  redis-cache:
+    image: redis:7.4-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_CACHE_PASSWORD:-}
+    ports:
+      - "127.0.0.1:6380:6379"
+    command: ["/bin/sh", "/usr/local/bin/rt05-redis-cache.sh"]
+    volumes:
+      - ./docker/redis-cache.sh:/usr/local/bin/rt05-redis-cache.sh:ro
+      - ./docker/redis-health.sh:/usr/local/bin/rt05-redis-health.sh:ro
+    healthcheck:
+      test: ["CMD", "/bin/sh", "/usr/local/bin/rt05-redis-health.sh"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
 volumes:
   rt05-pg-local:
+  rt05-redis-local:

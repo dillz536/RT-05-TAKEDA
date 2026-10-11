@@ -20,6 +20,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Kontrak statis Redis/worker M03
+        run: node infra/scripts/check-m03-compose.mjs
       - name: Validasi compose production + override VPS
         env:
           API_APP_KEY: x
@@ -29,11 +34,24 @@ jobs:
           DATABASE_URL_UNPOOLED: x
           RT05_ENV: ci
           RT05_HOST: example.test
+          APP_ENV: ci
+          REDIS_PASSWORD: ci-only-redis
+          REDIS_CACHE_PASSWORD: ci-only-cache
         run: |
           docker compose -f infra/compose.production.yml config --quiet
           docker compose -f infra/compose.production.yml -f infra/compose.vps.yml config > /tmp/merged.yml
           grep -q 'rt05-ci-https.rule' /tmp/merged.yml && grep -q 'example.test' /tmp/merged.yml
+          grep -q 'worker-default' /tmp/merged.yml
+          grep -q 'redis-cache' /tmp/merged.yml
+          grep -q 'notifications,default' /tmp/merged.yml
+          grep -Eq 'REDIS_QUEUE_CONNECTION: "?queue"?' /tmp/merged.yml
+          if grep -E 'published: ["'\'']?6379' /tmp/merged.yml; then echo 'Redis terpublikasi'; exit 1; fi
           bash -n infra/scripts/deploy-vps.sh
+          bash -n infra/scripts/ci-redis.sh
+          bash -n infra/scripts/m03-recovery-ci.sh
+          bash -n infra/docker/redis-queue.sh
+          bash -n infra/docker/redis-cache.sh
+          bash -n infra/docker/redis-health.sh
       - name: Build image API
         run: docker build -f infra/docker/api.Dockerfile -t rt05-api:ci .
       - name: Build image website

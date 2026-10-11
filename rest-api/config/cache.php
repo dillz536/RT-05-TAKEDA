@@ -15,7 +15,8 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'database'),
+    // Tidak ada tabel cache (ADR16); staging/production memakai redis.
+    'default' => env('CACHE_STORE', 'file'),
 
     /*
     |--------------------------------------------------------------------------
@@ -78,10 +79,19 @@ return [
             ],
         ],
 
+        // Cache/rate limiter di instance cache (boleh dievict); lock (scheduler withoutOverlapping/
+        // onOneServer, Cache::lock) di instance queue yang noeviction + AOF.
         'redis' => [
             'driver' => 'redis',
             'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
-            'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'default'),
+            'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'queue'),
+        ],
+
+        // Data koordinasi kecil yang tidak boleh dievict, mis. heartbeat worker/scheduler.
+        'coordination' => [
+            'driver' => 'redis',
+            'connection' => 'queue',
+            'lock_connection' => 'queue',
         ],
 
         'dynamodb' => [

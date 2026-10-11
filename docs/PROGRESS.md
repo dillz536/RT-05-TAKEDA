@@ -1,19 +1,21 @@
 # Progress — RT05 TAKEDA
 
-Updated: 10 Oktober 2026.
+Updated: 11 Oktober 2026.
 
 ## Status
 
-Paket konteks diimpor ke repository pada M01 (10 Oktober 2026). Belum ada kode API/mobile, server, DNS, Neon, atau Redis yang diubah.
+Paket konteks diimpor pada M01. API/mobile dan staging telah dibangun pada sesi
+berikutnya; hasil dan keterbatasan ada di checkpoint di bawah. Status gate tidak
+ditentukan hanya oleh tersedianya kode.
 
 | Milestone | Status | Bukti/ketergantungan |
 | --- | --- | --- |
 | M00 | accepted_baseline | Handoff repo menyatakan desain accepted; M01 rerun QA baseline pada 34e9b21 dan dari website/ (lihat M01) |
 | M01 | passed | PR #10 merged (02d92a1); production alias rt05takeda.vercel.app 19/19 HTML + 26 aset cocok setelah merge |
 | M02 | passed | PR #11 merged (321db0d) |
-| M03 | in_progress | Outbox dispatcher + inbox + scheduler + Redis di compose production; queue worker belum diuji di server (PR #12) |
-| M04 | in_progress | Image API/web + gateway + compose Coolify dibangun & smoke di CI; deploy VPS dan DNS belum (lihat sesi 3) |
-| M05 | in_progress | Flutter 3.47.7 app warga/pengurus, 13 tes, analyze bersih; APK via CI; belum diuji di emulator |
+| M03 | in_progress | Tahap aktif: mengganti dispatcher inbox sinkron dengan Redis consumer/replay dan menguji recovery; belum ada bukti gate recovery lulus |
+| M04 | in_progress | Staging deploy/smoke sesi 5–6 sudah berhasil; patch PR #14 merged c644b84; gate M03, live write/heartbeat/restart masih perlu bukti |
+| M05 | in_progress | Analyze/13 tes historis dan emulator warga/pengurus sesi 4; APK staging terpasang sesi 6, login staging belum dibuktikan |
 | M06 | in_progress | Registrasi/login/token/approval + tes CI lulus; SMTP reset belum (log) |
 | M07 | in_progress | Rumah/keluarga/akun/permohonan API + layar mobile; tes CI lulus |
 | M08 | in_progress | Pengaduan + foto privat + anonim + status; tes CI lulus |
@@ -30,7 +32,14 @@ M00 memakai label accepted_baseline khusus, bukan status passed hasil tes baru. 
 
 ## Milestone aktif
 
-Belum ada. M02 passed (PR #11 menunggu merge). Berikutnya M03 (Redis/worker/outbox) dan M05 (Flutter) dapat dimulai; M04 butuh akses VPS.
+**M03 — Redis/worker/scheduler/outbox recovery**, branch `codex/m03-async-recovery`.
+Pemilik meminta pengerjaan bertahap dengan empat agent (P16), bukan membuka
+seluruh roadmap serentak. [COORDINATION.md](COORDINATION.md) mencatat ownership,
+gate, pemulihan setelah limit/listrik mati, dan urutan berikutnya.
+
+PR #14 digabung pada 11 Oktober 2026 setelah lima cek SUCCESS dan review patch;
+merge commit `c644b84`. `main` kini memuat routing/aset HTTPS yang sudah dipakai
+staging. Tidak ada redeploy server dari aksi merge ini.
 
 ### M02 — Laravel API dan Neon foundation
 
@@ -197,6 +206,59 @@ Belum ada. M02 passed (PR #11 menunggu merge). Berikutnya M03 (Redis/worker/outb
 - Temuan: password `rt05_owner` di `.env.staging` identik dengan `.env.production` (role disalin saat branch Neon dibuat), sehingga insiden sesi 5 juga mengenai credential owner production. Rotasi oleh agent ditolak pengaman (penulisan secret store); **blocked → pemilik**: reset password `rt05_owner` di branch production (dan staging/dev) serta buat APP_KEY production baru sebelum deploy production. Langkah ada di docs/DEPLOYMENT.md (Rotasi credential).
 
 ## Checkpoint sesi
+
+### Sesi 7 (11 Oktober 2026) — koordinasi dan pemulihan M03 setelah listrik mati
+
+- Instruksi terbaru: Codex mengelola Claude Code, Grok, dan Kimi dengan ownership
+  file terpisah, satu milestone beserta gate sebelum maju; target sampai M05
+  bertahap, semua perbedaan planning/Drive capstone dilaporkan. Pemilik menyediakan
+  Chrome Hostinger dan mengizinkan terminal/emulator serta akses deployment.
+  Otorisasi dicatat di DECISIONS dan COORDINATION; tidak meminta ulang akses.
+- Run Orca `run_2d500f79d407` dipulihkan dan coordinator diikat ulang pada runtime
+  setelah listrik mati. Sesi Claude yang sudah dipulihkan pemilik dipakai kembali;
+  tidak mereset konteks, provisioning, database, atau pekerjaan pengguna.
+- PR #14 diverifikasi lima cek SUCCESS, ditinjau, lalu merged dengan HEAD
+  `8a723f9` ke merge commit `c644b84`. Branch `codex/m03-async-recovery`
+  dibuat dari baseline itu. Server tidak berubah akibat merge lokal/GitHub.
+- Pembagian: Claude `rest-api/` (dispatcher, job, failure parking, heartbeat dan
+  tes); Grok `infra/` serta workflow API/infra (Redis terpisah, worker, recovery
+  drill); Kimi laporan penerimaan independen; Codex Git, kontrak, dokumen dan
+  verifikasi gabungan. Tidak ada agent lain mengubah Git pada tahap ini.
+- Audit awal Kimi menemukan dispatcher sinkron tanpa Redis job, satu Redis
+  untuk antrean/cache, serta bukti restart yang belum ada. Backend dan infra
+  diserahkan dengan worker_done diterima. Laporan di `docs/evidence/m03/`.
+- Kontrak: `ProcessOutboxEvent` membawa UUID, inbox/completion atomik di Postgres;
+  lease/stale replay; event gagal diparkir lewat `failed_at` dan retry per UUID.
+  Config queue `retry_after=180`, `after_commit=true`; connection queue/cache
+  terpisah; probe internal `rt05:heartbeat-check`. ERD/ASYNC_JOBS diperbarui;
+  tidak ada endpoint HTTP baru sehingga kontrak OpenAPI tidak berubah.
+- Validasi yang sudah dijalankan: `node infra/scripts/check-repo.mjs` lulus
+  (470 berkas pada checkpoint integrasi); `git diff --check` lulus;
+  `website/: php artisan test --compact` lulus 9 tes/155 assertion.
+  Website tidak diubah pada branch M03, sehingga tidak ada ekspor preview baru.
+- Backend lokal: Pint passed; `RT05_SKIP_TEST_MIGRATIONS=1 php vendor/bin/phpunit
+  tests/Feature/HeartbeatTest.php tests/Unit` passed 10 tes/50 assertion tanpa
+  koneksi database. Tes Postgres/Redis penuh menunggu CI; angka ini bukan
+  kelulusan gate recovery.
+- Infra statis `check-m03-compose.mjs` dan `bash -n` lulus. Sesudah handoff,
+  Codex memperbaiki kepemilikan PID worker/scheduler dengan exec PHP, memeriksa
+  inbox kosong/outbox committed sebelum SIGKILL, menunggu dua delivery drain,
+  mengikuti AOF everysec, dan menambah path filter CI skrip recovery.
+- Dokumen capstone Tugas 03/04 dibaca melalui Google Drive; sumber dicatat di
+  SOURCES; Logbook 1/2/3 dan brainstorm turut dibandingkan. Semua selisih yang
+  teridentifikasi dicatat di CAPSTONE_ALIGNMENT.md, termasuk flow approval
+  registrasi utama dan tipe nominal. Chrome Hostinger dapat diinspeksi melalui computer-use; emulator
+  Pixel_8a dinyalakan, `adb shell getprop sys.boot_completed` mengembalikan 1.
+  Belum ada login emulator atau redeploy staging pada checkpoint ini.
+- Batas bukti: PHP/Postgres/Redis recovery belum dinyatakan lulus. Docker/WSL
+  lokal tetap tidak dipasang sesuai ADR19; pengujian integrasi nyata memakai
+  Postgres/Redis sintetis di GitHub CI. Tidak menjalankan tes terhadap Neon.
+- Kimi aktif mengaudit meskipun composed startup Orca keliru menandai
+  `agent_prompt_stalled`; laporan tersimpan. Coordinator memulihkan tracking
+  tanpa menggandakan atau merestart agent yang masih bekerja.
+- Langkah berikutnya: review independen dengan CI API/infra
+  nyata, kemudian staging M04 jika gate M03 telah terbukti. Insiden credential
+  sesi 5–6 tetap open; production/UAT/signing/SMTP/FCM bukan hasil tahap ini.
 
 10 Oktober 2026 (M01): checkout lokal pemilik berada di `Documents/RT X TAKEDA/RT-05-TAKEDA/`; folder induk `RT X TAKEDA/` berisi paket MD asli (tidak di-commit). PR #10 merged. Sesi M02: branch `codex/m02-api-neon-foundation`, PR #11. Neon dev sudah dimigrasi (5 migration fondasi). `rest-api/.env` lokal menunjuk Neon dev. php.ini lokal: pdo_pgsql/pgsql/intl/sodium diaktifkan. Tidak ada migration, image, atau job. Input belum tersedia: credential Neon, akses VPS/DNS (ditawarkan pemilik via Chrome untuk M04), SMTP, FCM, signing key, Flutter SDK.
 

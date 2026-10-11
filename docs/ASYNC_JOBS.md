@@ -25,7 +25,7 @@ Limiter registrasi/login harus fail closed bila dependency gagal. Public read da
 
 retry_after connection=180 detik, lebih panjang dari timeout worker maksimum. Network timeouts 10–20 detik per call; tries=5; backoff rancangan 10/30/120/300 detik. Job besar dipecah, bukan menambah timeout tanpa batas.
 
-Contoh command yang dibentuk di M03:
+Command worker yang digunakan untuk M03:
 
 ```bash
 php artisan queue:work redis --queue=notifications,default --sleep=2 --tries=5 --timeout=60 --max-time=3600
@@ -48,6 +48,40 @@ Gunakan image API sama, restart policy/process manager, graceful SIGTERM, stop g
 Jangan menandai event completed hanya karena enqueue. Crash sesudah enqueue sebelum mark bisa menghasilkan duplikat; constraint consumer menangani. Crash sesudah mark tetapi Redis kehilangan job juga dipulihkan lewat stale published replay.
 
 Inbox dibuat idempotent lebih dahulu. Push eksternal tidak memiliki exactly-once guarantee; retry memakai logical notification ID dan payload/collapse behavior yang sesuai. Duplicate delivery bisa terjadi dan tidak boleh menggandakan finance.
+
+### Pemulihan implementasi M03
+
+`OutboxDispatcher` mengklaim event dengan lease `RT05_OUTBOX_LEASE_SECONDS`
+(default 120 detik). `ProcessOutboxEvent` membawa ID event saja dan mengunci row
+Postgres saat menulis inbox serta completion dalam transaksi yang sama. Event
+published tanpa completion dapat diantrekan ulang setelah
+`RT05_OUTBOX_STALE_SECONDS` (default 900 detik). Durasi ini lebih panjang dari
+jendela retry normal agar replay tidak segera menduplikasi pekerjaan yang masih
+berjalan. Gangguan enqueue meninggalkan event di Postgres dengan backoff dan
+kode kelas error; pesan exception/DSN tidak disimpan pada event.
+
+Setelah percobaan consumer habis, `failed_at` memarkir event sehingga dispatcher
+tidak mengulangnya otomatis tanpa batas. Operator memperbaiki penyebabnya lalu
+menggunakan `php artisan rt05:outbox-retry EVENT_UUID` untuk satu event. Event
+yang sudah completed tidak dikirim ulang. Kolom ini ditambahkan dengan migration
+nullable; tidak mengubah nominal tagihan atau ledger.
+
+Heartbeat bersifat internal. Probe
+`php artisan rt05:heartbeat-check --component=worker-default --component=scheduler`
+mengembalikan exit 0 jika seluruh komponen sehat, 1 jika missing/stale/store tidak
+tersedia, dan 2 jika argumen tidak valid. Probe tidak mengekspos data lewat API
+publik. Komponen media/exports mempunyai probe sendiri meskipun job domainnya
+belum menjadi bagian penerimaan tahap ini.
+
+Config Redis menggunakan koneksi `queue` dan `cache`, dengan env
+`REDIS_QUEUE_*` serta `REDIS_CACHE_*`. Alias `default` menunjuk queue untuk
+kompatibilitas. Cache/rate limit/session memakai cache; coordination store dan
+lock menggunakan queue agar tidak terpengaruh eviction cache. Compose memakai
+nama service queue `redis` untuk mempertahankan volume `redis-data` yang sudah
+ada; nama konsep `redis-queue` pada tabel bukan instruksi membuat instance ketiga.
+
+Implementasi dan skrip tes belum membuktikan recovery sampai hasil CI tercatat
+di [PROGRESS.md](PROGRESS.md) dan [evidence/m03](evidence/m03/).
 
 ## Job/domain
 

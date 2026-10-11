@@ -7,6 +7,9 @@ on:
       - 'redocly.yaml'
       - 'infra/sql/**'
       - 'infra/docker/postgres/**'
+      - 'infra/docker/redis*.sh'
+      - 'infra/scripts/ci-redis.sh'
+      - 'infra/scripts/m03-recovery-ci.sh'
       - '.github/workflows/api.yml'
   push:
     branches: [main]
@@ -16,6 +19,9 @@ on:
       - 'redocly.yaml'
       - 'infra/sql/**'
       - 'infra/docker/postgres/**'
+      - 'infra/docker/redis*.sh'
+      - 'infra/scripts/ci-redis.sh'
+      - 'infra/scripts/m03-recovery-ci.sh'
       - '.github/workflows/api.yml'
 permissions:
   contents: read
@@ -42,10 +48,13 @@ jobs:
         working-directory: rest-api
     steps:
       - uses: actions/checkout@v4
+      - name: Redis 7.4 sintetis (loopback, kebijakan, restart AOF, kunci prefix)
+        working-directory: .
+        run: bash infra/scripts/ci-redis.sh
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_pgsql, pgsql, intl, mbstring, gd
+          extensions: pdo_pgsql, pgsql, intl, mbstring, gd, redis, pcntl
           coverage: none
       - uses: actions/setup-node@v4
         with:
@@ -59,6 +68,9 @@ jobs:
       - run: php vendor/bin/pint --test
       - name: Tes (migration via pgsql_migrations, tes via role runtime)
         run: php artisan test
+      - name: Drill worker Redis nyata (kill, AOF, queue-loss, heartbeat)
+        working-directory: .
+        run: bash infra/scripts/m03-recovery-ci.sh
       - name: Smoke sintetis role runtime
         run: php artisan rt05:db-smoke --connection=pgsql
       - name: Smoke sintetis role migration

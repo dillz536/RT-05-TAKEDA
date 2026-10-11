@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Domain\Community\Notifications;
 use App\Domain\Finance\Dues;
 use App\Domain\Identity\Registration;
 use App\Domain\Identity\RegistrationToken;
+use App\Domain\Operations\OutboxDispatcher;
 use App\Domain\Services\Reports;
 use App\Models\Agenda;
 use App\Models\Akun;
@@ -85,7 +85,7 @@ class DemoSeed extends Command
             $p = Pengumuman::create(['dibuat_oleh_id' => $pengurus->id, 'judul' => 'Demo: pengumuman', 'isi' => 'Pengumuman sintetis untuk demo aplikasi.', 'published_at' => now()]);
             Outbox::record('pengumuman.terbit', 'pengumuman', $p->id);
         });
-        Notifications::dispatch();
+        OutboxDispatcher::dispatch();
 
         $this->info('Data demo sintetis dibuat. Token registrasi: '.$code);
         $this->table(['Email', 'Peran'], [

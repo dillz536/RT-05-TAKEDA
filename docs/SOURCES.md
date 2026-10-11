@@ -13,6 +13,15 @@
 
 ## Repository terinspeksi
 
+### Dokumen capstone dibaca ulang 11 Oktober 2026
+
+- [Tugas 03 Kelompok 8 — Dokumen Perancangan Solusi RT 05 Takeda](https://docs.google.com/document/d/1024MDDGIh6xQFAdJwLH4PXGsWnsEMgC6mU4bCqOVQBo/edit): dibaca melalui plugin Google Drive, versi modified 6 Oktober 2026. Kebutuhan platform, otoritas backend dan pencatatan iuran offline dipakai untuk memeriksa konsistensi, bukan mengganti keputusan v1 yang lebih baru.
+- [Tugas 04 Kelompok 8 — WBS](https://docs.google.com/document/d/1RfxvC_uQNg5Tt97yguz92L_YMfDYkgSU0v5pAF2KCJs/edit): dibaca melalui plugin Google Drive, versi modified 8 Oktober 2026. Deliverable mempunyai owner dan kriteria penerimaan; ilustrasi jam/biaya bukan hasil pengukuran RT05.
+
+Tidak ada edit, perubahan sharing, atau penyalinan identitas anggota dari Drive
+ke repository pada pembacaan ini. ERD v1.1 ditemukan sebagai metadata; isi PDF
+tidak dibaca ulang pada tahap M03 karena tidak ada perubahan domain bisnis.
+
 - Repository: https://github.com/morrispes5/RT-05-TAKEDA
 - Website preview: https://rt05takeda.vercel.app
 - Handoff: https://github.com/morrispes5/RT-05-TAKEDA/blob/web-frontend-approved-2026-10-10/docs/FRONTEND_HANDOFF.md (sejak M01: docs/website/FRONTEND_HANDOFF.md)
@@ -32,6 +41,11 @@ Paket ini tidak membangun ulang frontend, tidak menguji ulang deployment live, d
 Penelusuran halaman live melalui web retrieval tidak berhasil; status desain/preview dibaca dari source dan handoff. M01/M04 menguji runtime aktual.
 
 ## Dokumentasi resmi
+
+Pembacaan lanjutan 11 Oktober: Logbook 1/2/3 dan brainstorm historis juga
+dibaca melalui connector Drive. Daftar URL dan perbedaan terhadap keputusan
+repo ada pada [CAPSTONE_ALIGNMENT.md](CAPSTONE_ALIGNMENT.md). Logbook 3 yang
+dibaca masih template; tidak dianggap sebagai persetujuan metode/hasil tes.
 
 - Laravel Sanctum: https://laravel.com/docs/13.x/sanctum
 - Laravel queues: https://laravel.com/docs/13.x/queues
