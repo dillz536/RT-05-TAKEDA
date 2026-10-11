@@ -25,6 +25,13 @@ jobs:
           node-version: '22'
       - name: Kontrak statis Redis/worker M03
         run: node infra/scripts/check-m03-compose.mjs
+      - name: Kontrak CLI Compose untuk migrasi one-shot
+        run: |
+          docker compose run --help | grep -q -- --no-deps
+          docker compose run --help | grep -q -- --pull
+          if grep -E 'run .*--no-build' infra/scripts/deploy-staging-immutable.sh; then
+            echo 'compose run does not accept --no-build'; exit 1
+          fi
       - name: Validasi compose production + override VPS
         env:
           API_APP_KEY: x

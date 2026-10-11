@@ -202,7 +202,9 @@ deploy_sha() {
   "${DC[@]}" build api web
   echo ">>> Redis antrean dan cache, lalu migrasi direct, tanpa menghapus volume."
   "${DC[@]}" up -d --no-build redis redis-cache
-  "${DC[@]}" run --rm --no-build migrate
+  # compose run does not support --no-build; no --build + --pull never uses
+  # the already built immutable image, without starting dependencies again.
+  "${DC[@]}" run --rm --no-deps --pull never migrate
   # Orphan hanya di dalam project rt05-staging (worker tunggal lama, bila label-nya project ini).
   "${DC[@]}" up -d --no-build --remove-orphans "${SERVICES[@]}"
   echo ">>> Health ready (batas 120 detik, body tidak dicetak)"
