@@ -40,6 +40,13 @@ class StagingAuthTests(unittest.TestCase):
                     auth.prepare_content(original)
                 generate.assert_not_called()
 
+    def test_refuses_semantic_duplicates_hidden_by_export_or_whitespace(self):
+        for hidden in (b'export REDIS_PASSWORD=existing\n', b' REDIS_PASSWORD=existing\n', b'REDIS_CACHE_PASSWORD =existing\n'):
+            with self.subTest(hidden=hidden), patch.object(auth.secrets, 'token_hex') as generate:
+                with self.assertRaises(ValueError):
+                    auth.prepare_content(b'APP_ENV=staging\n' + hidden)
+                generate.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main()

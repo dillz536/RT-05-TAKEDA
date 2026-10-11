@@ -25,6 +25,14 @@ pemilik. Pemeriksaan awal bersifat baca saja; belum deploy kode M03/M04.
   diperlukan sebelum rollout; tidak melonggarkan AUTH dan tidak merotasi
   credential Neon/APP_KEY production yang sebelumnya diblokir.
   `stat -c %a` pada env staging mengembalikan 600.
+  Direktori `/root/.rt05` mode 700, sesuai guard private-directory helper.
+- Pembacaan hanya tiga identitas nonsecret mengonfirmasi `APP_ENV=staging`,
+  `RT05_ENV=stg`, dan `RT05_HOST=takeda-staging.morriz.tech`. Alias `stg`
+  dipertahankan untuk nama router Traefik; skrip menerima hanya alias ini
+  atau `staging`, dengan guard APP_ENV/host/project tetap khusus staging.
+  Daftar volume berlabel project existing: `rt05-staging_api-storage`,
+  `rt05-staging_apk-downloads`, `rt05-staging_redis-data`. Nama ini cocok
+  dengan guard volume; identitas CreatedAt/mount diperiksa saat rollout.
 - Percobaan SSH dengan key lokal VPS tidak diterima (publickey/password);
   tidak mencoba key milik layanan lain. Konsol Chrome dipakai sebagai akses.
 

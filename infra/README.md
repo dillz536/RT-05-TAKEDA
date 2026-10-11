@@ -26,6 +26,13 @@ Gunakan satu commit SHA 40 hex yang sudah dipush, lolos CI dan direview.
 `/opt/rt05-releases/<sha>`, memakai project `rt05-staging`, dan mempertahankan
 pohon server lama yang kotor. File env existing `/root/.rt05/.env.staging`
 tetap privat; jangan mencetak isinya atau keluaran Compose config.
+`APP_ENV` wajib `staging`, host wajib `takeda-staging.morriz.tech`; `RT05_ENV`
+menerima `staging` atau alias existing `stg` agar nama router Traefik lama
+dipertahankan. Project dan volume tetap `rt05-staging`.
+SHA harus merupakan leluhur `main` atau branch coordinator persis
+`codex/m04-staging-recovery`; objek SHA dari fork/PR sembarang ditolak sebelum
+worktree dieksekusi atau image dibangun. Branch rilis baru perlu keputusan
+allowlist eksplisit, bukan menerima seluruh ref `codex/*`.
 
 Jika dua credential Redis staging belum ada, jalankan file yang direview
 `python3 scripts/prepare-staging-redis-auth.py` di VPS. Helper menolak argumen,
@@ -33,12 +40,16 @@ platform selain Linux/root, env selain staging, symlink, direktori yang tidak
 privat, atau env yang bukan mode 600. Hanya key Redis kosong/hilang diisi
 secara atomik; semua nilai DB/APP_KEY dan credential yang sudah ada tetap.
 Tidak ada backup plaintext atau nilai secret pada stdout.
+Key guarded berprefix `export` atau whitespace ditolak agar tidak terbentuk
+duplikat semantik; lima tes sintetis memeriksa parser, bukan file env VPS.
 
 Setelah rollout, `bash scripts/staging-runtime-smoke.sh` memeriksa Neon
 pooled/direct dengan rollback, menghentikan satu worker staging, menerbitkan
 marker kosong, lalu membuktikan marker dan sentinel bertahan saat Redis AOF
 restart. Worker dipulihkan juga saat assertion gagal. Same-SHA image, mount
 volume, dan ID/StartedAt layanan lain diperiksa melalui metadata terpilih.
+API/worker/scheduler juga harus menggunakan image ID yang sama. Sentinel
+berumur 24 jam. Restart ini terkontrol; drill crash worker ada pada CI M03.
 Tes CI/helper sintetis tidak membuktikan operasi VPS ini.
 
 Rollback script menerima hanya SHA dengan kontrak image immutable, dua Redis

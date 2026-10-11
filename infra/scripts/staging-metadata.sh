@@ -50,7 +50,7 @@ assert_staging_volumes() {
 }
 
 assert_staging_images() {
-  local service expected container actual
+  local service expected container actual actual_id api_id=''
   for service in api web worker-default worker-media worker-exports scheduler; do
     expected="rt05-api:$RT05_IMAGE_TAG"
     [ "$service" != web ] || expected="rt05-web:$RT05_IMAGE_TAG"
@@ -58,6 +58,11 @@ assert_staging_images() {
     [ -n "$container" ] || fail "Missing staging service $service"
     actual=$(docker inspect --format '{{.Config.Image}}' "$container")
     [ "$actual" = "$expected" ] || fail "Image SHA mismatch for $service"
-    printf '%s image=%s\n' "$service" "$actual"
+    actual_id=$(docker inspect --format '{{.Image}}' "$container")
+    [ "$service" != api ] || api_id="$actual_id"
+    if [ "$service" != web ]; then
+      [ "$actual_id" = "$api_id" ] || fail "API image ID mismatch for $service"
+    fi
+    printf '%s image=%s image_id=%s\n' "$service" "$actual" "$actual_id"
   done
 }

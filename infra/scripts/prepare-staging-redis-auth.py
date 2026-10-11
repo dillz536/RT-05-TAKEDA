@@ -20,6 +20,11 @@ def prepare_content(original: bytes) -> tuple[bytes, list[str]]:
     values = {}
     for index, line in enumerate(lines):
         key, separator, value = line.rstrip(b'\r\n').partition(b'=')
+        normalized = key.strip()
+        if normalized.startswith(b'export '):
+            normalized = normalized[7:].strip()
+        if separator and normalized in (b'APP_ENV', *KEYS) and key != normalized:
+            raise ValueError('Noncanonical guarded env key')
         if separator and key in (b'APP_ENV', *KEYS):
             if key in values:
                 raise ValueError('Duplicate guarded env key')

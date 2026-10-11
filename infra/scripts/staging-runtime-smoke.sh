@@ -30,7 +30,7 @@ mode=$(stat -c '%a' "$ENV_FILE")
 grep -qE '^REDIS_PASSWORD=.+' "$ENV_FILE" || fail "REDIS_PASSWORD wajib nonempty. Nilai tidak dicetak."
 grep -qE '^REDIS_CACHE_PASSWORD=.+' "$ENV_FILE" || fail "REDIS_CACHE_PASSWORD wajib nonempty. Nilai tidak dicetak."
 grep -qE '^APP_ENV=staging$' "$ENV_FILE" || fail "APP_ENV harus staging. Nilai tidak dicetak."
-grep -qE '^RT05_ENV=staging$' "$ENV_FILE" || fail "RT05_ENV harus staging."
+grep -qE '^RT05_ENV=(staging|stg)$' "$ENV_FILE" || fail "RT05_ENV harus staging atau alias existing stg."
 grep -qE '^RT05_HOST=takeda-staging\.morriz\.tech$' "$ENV_FILE" || fail "RT05_HOST harus host staging yang ditetapkan."
 
 resolve_sha() {
@@ -139,7 +139,7 @@ if ! "${DC[@]}" exec -T redis /bin/sh -c 'set -eu
 export REDISCLI_AUTH="$REDIS_PASSWORD"
 redis-cli --no-auth-warning CONFIG GET appendonly | grep -qx yes
 redis-cli --no-auth-warning CONFIG GET appendfsync | grep -qx everysec
-redis-cli --no-auth-warning SET rt05-staging-aof-sentinel persisted | grep -qx OK'; then
+redis-cli --no-auth-warning SET rt05-staging-aof-sentinel persisted EX 86400 | grep -qx OK'; then
   fail "Kebijakan AOF antrean bukan appendonly/everysec, atau sentinel tidak tertulis."
 fi
 sleep 2

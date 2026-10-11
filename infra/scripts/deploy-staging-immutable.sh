@@ -77,7 +77,8 @@ preflight() {
   require_env REDIS_PASSWORD
   require_env REDIS_CACHE_PASSWORD
   require_identity APP_ENV staging
-  require_identity RT05_ENV staging
+  # Existing staging uses stg for its Traefik labels; preserve that routing name.
+  require_identity RT05_ENV '(staging|stg)'
   require_identity RT05_HOST 'takeda-staging\.morriz\.tech'
   echo ">>> Container berjalan (id, nama, status)"
   docker ps --format '{{.ID}} {{.Names}} {{.Status}}'
@@ -134,7 +135,21 @@ prepare_worktree() {
       ;;
     *) fail "Origin bare repo bukan repositori tepercaya. Remote tidak diubah." ;;
   esac
-  git -c safe.directory="$BARE" -C "$BARE" fetch --depth 1 origin "$sha"
+  # A GitHub object SHA may also belong to an unreviewed fork/PR. Require
+  # ancestry of main or the exact coordinator-owned M04 branch before source/build.
+  git -c safe.directory="$BARE" -C "$BARE" fetch --no-tags origin refs/heads/main
+  local approved_head trusted=0
+  approved_head=$(git -c safe.directory="$BARE" -C "$BARE" rev-parse FETCH_HEAD)
+  if git -c safe.directory="$BARE" -C "$BARE" merge-base --is-ancestor "$sha" "$approved_head"; then
+    trusted=1
+  else
+    git -c safe.directory="$BARE" -C "$BARE" fetch --no-tags origin refs/heads/codex/m04-staging-recovery
+    approved_head=$(git -c safe.directory="$BARE" -C "$BARE" rev-parse FETCH_HEAD)
+    if git -c safe.directory="$BARE" -C "$BARE" merge-base --is-ancestor "$sha" "$approved_head"; then
+      trusted=1
+    fi
+  fi
+  [ "$trusted" = 1 ] || fail "SHA is not an ancestor of an approved RT05 ref."
   git -c safe.directory="$BARE" -C "$BARE" cat-file -e "${sha}^{commit}"
   if [ -e "$dest" ]; then
     if [ ! -f "$dest/.git" ] && [ ! -d "$dest/.git" ]; then
