@@ -15,7 +15,8 @@ services:
     expose: ["80"]
 
   api: &api
-    image: rt05-api:${RT05_ENV:-local}
+    # SHA lewat RT05_IMAGE_TAG. Bila kosong, tag tetap RT05_ENV lalu local.
+    image: rt05-api:${RT05_IMAGE_TAG:-${RT05_ENV:-local}}
     build:
       context: ..
       dockerfile: infra/docker/api.Dockerfile
@@ -127,6 +128,7 @@ services:
     expose: []
 
   web:
+    image: rt05-web:${RT05_IMAGE_TAG:-${RT05_ENV:-local}}
     build:
       context: ..
       dockerfile: infra/docker/web.Dockerfile

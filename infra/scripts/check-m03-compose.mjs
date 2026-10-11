@@ -47,6 +47,8 @@ for (const needle of [
   'SESSION_CONNECTION: cache',
   'redis-data:/data',
   'image: redis:7.4-alpine',
+  'image: rt05-api:${RT05_IMAGE_TAG:-${RT05_ENV:-local}}',
+  'image: rt05-web:${RT05_IMAGE_TAG:-${RT05_ENV:-local}}',
   'rt05-redis-queue.sh',
   'rt05-redis-cache.sh',
 ]) {
@@ -106,8 +108,68 @@ for (const [label, text] of [['ci-redis.sh', ciRedis], ['redis-queue.sh', queue]
   if (/\bFLUSHALL\b|\bFLUSHDB\b/.test(text)) fail(`${label} memuat perintah hapus seluruh database`);
 }
 
+const stagingDeploy = read('infra/scripts/deploy-staging-immutable.sh');
+const stagingSmoke = read('infra/scripts/staging-runtime-smoke.sh');
+const infraWorkflow = read('.github/workflows/infra.yml');
+for (const needle of [
+  '/opt/rt05-releases',
+  'rt05-staging',
+  '/root/.rt05/.env.staging',
+  'build api web',
+  '--no-build',
+  'staging-previous-sha',
+  'worker-default worker-media worker-exports',
+  'health ready gagal',
+  'heartbeat $component tidak sehat',
+  '[0-9a-f]{40}',
+]) {
+  need(stagingDeploy, needle, 'deploy-staging-immutable.sh');
+}
+if (/reset\s+--hard/.test(stagingDeploy)) fail('deploy-staging-immutable.sh memuat hard reset');
+if (/checkout[\s\S]{0,80}rt05-takeda|rt05-takeda[\s\S]{0,80}checkout/.test(stagingDeploy)) {
+  fail('deploy-staging-immutable.sh menimpa pohon /opt/rt05-takeda');
+}
+for (const needle of [
+  'rt05:db-smoke',
+  '--connection=pgsql',
+  '--connection=pgsql_migrations',
+  'rt05:staging-smoke',
+  '--confirm-staging',
+  '--phase=prepare',
+  '--phase=verify',
+  'rt05:outbox-dispatch',
+  'rt05-staging-aof-sentinel',
+  'appendfsync',
+  'everysec',
+  'stop worker-default',
+  'start worker-default',
+  '"${DC[@]}" restart redis',
+  'PASS staging-runtime-smoke',
+  'rt05-staging',
+]) {
+  need(stagingSmoke, needle, 'staging-runtime-smoke.sh');
+}
+if (/restart redis-cache|restart gateway|restart api|restart web|restart scheduler|restart worker-media|restart worker-exports/.test(stagingSmoke)) {
+  fail('staging-runtime-smoke.sh merestart service di luar worker-default dan redis antrean');
+}
+if (!/--connection=pgsql(?!_)/.test(stagingSmoke)) {
+  fail('staging-runtime-smoke.sh kekurangan DbSmoke koneksi pgsql runtime');
+}
+if (apiWorkflow.includes('staging-runtime-smoke') || apiWorkflow.includes('deploy-staging-immutable')) {
+  fail('smoke atau deploy staging tidak boleh menjadi drill CI pada api.yml');
+}
+need(infraWorkflow, 'bash -n infra/scripts/deploy-staging-immutable.sh', 'infra.yml');
+need(infraWorkflow, 'bash -n infra/scripts/staging-runtime-smoke.sh', 'infra.yml');
+for (const [label, text] of [['deploy-staging-immutable.sh', stagingDeploy], ['staging-runtime-smoke.sh', stagingSmoke]]) {
+  if (/\bFLUSHALL\b|\bFLUSHDB\b/.test(text)) fail(`${label} memuat perintah hapus seluruh database`);
+  if (/down\s+-v/.test(text)) fail(`${label} memuat down -v`);
+  if (/volume\s+rm/.test(text)) fail(`${label} memuat volume rm`);
+  if (/system\s+prune/.test(text)) fail(`${label} memuat system prune`);
+  if (/\bdocker\s+push\b/.test(text)) fail(`${label} memuat docker push`);
+}
+
 if (failures.length) {
   console.error(failures.join('\n'));
   process.exit(1);
 }
-console.log('OK: kontrak statis M03 infra (Redis terpisah, worker, heartbeat, prefix drill, gateway PR14).');
+console.log('OK: kontrak statis M03 infra (Redis terpisah, worker, heartbeat, prefix drill, gateway PR14) dan skrip staging M04.');

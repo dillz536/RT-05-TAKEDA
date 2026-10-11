@@ -13,16 +13,17 @@ otomasi yang dijamin terus hidup saat komputer atau Orca mati.
 dan review final Kimi; bukti [CI_RESULTS.md](evidence/m03/CI_RESULTS.md).
 
 PR #14 telah digabung pada commit `c644b84`: perbaikan routing staging dan aset
-HTTPS sudah menjadi baseline main. Branch tahap ini: `codex/m03-async-recovery`.
+HTTPS sudah menjadi baseline main. PR #15 merged `27a3e5b` setelah lima cek
+SUCCESS pada HEAD `ea4179e`. Branch tahap ini: `codex/m04-staging-recovery`.
 Implementasi layanan M05–M12 yang sudah ada dipertahankan, tetapi status gate
 masing-masing tidak dinaikkan hanya karena kode tersedia. M13–M16 belum dibuka.
 
 | Agent | Tanggung jawab | File yang boleh diedit |
 | --- | --- | --- |
 | Codex | Rencana, keputusan integrasi, Git, review, tes gabungan, laporan | Dokumen utama dan perubahan integrasi setelah ownership diserahkan |
-| Claude Code | Dispatcher Redis, consumer idempotent, replay, heartbeat, tes backend | `rest-api/` dan laporan backend di `docs/evidence/m03/` |
-| Grok | Pemisahan Redis, worker containers, CI dan drill restart | `infra/`, workflow API/infra, dan laporan infra di `docs/evidence/m03/` |
-| Kimi | Review independen gate, privasi, transaksi, bukti dan urutan | Laporan penerimaan di `docs/evidence/m03/` |
+| Claude Code | Audit kesiapan M05 diserahkan; review independen integrasi infra M04 | `docs/evidence/m04/CLAUDE_INFRA_REVIEW.md` |
+| Grok | Skrip rollout dan smoke diserahkan; coordinator menutup temuan integrasi | Laporan infra M04; implementasi infra telah diserahkan ke Codex |
+| Kimi | Checkpoint diserahkan; review baru dijeda karena quota 403 batas 5 jam | Sesi tetap dipertahankan, tidak dimulai ulang |
 
 Semua bekerja pada checkout yang sama dengan ownership file terpisah. Hanya
 Codex melakukan switch branch, commit, push, dan merge. Agent meminta perubahan
@@ -100,8 +101,10 @@ credential pada checkpoint sebelumnya.
   pada sesi ini. WBS menuntut deliverable dengan ownership dan bukti, bukan daftar
   kode yang diklaim selesai. Dokumen kampus tidak ditulis ulang pada sesi ini.
 - Jika kuota agent habis, simpan file/status, perintah terakhir, gate yang belum
-  diuji dan langkah berikutnya. Tugas itu menunggu kuota pulih; tidak mengganti
-  akun untuk menghindari limit atau menandainya selesai.
+  diuji dan langkah berikutnya. Instruksi terbaru pemilik (11 Oktober 2026):
+  tugas Kimi yang terkena limit dialihkan ke Grok melalui Dispatch baru,
+  setelah kepemilikan file lama dihentikan dan checkpoint dibaca. Sesi Kimi
+  dipertahankan; tidak mengganti akun atau memalsukan completion.
 - Setelah listrik/Orca mati: periksa `status`, `terminal list`, `run-use`,
   `task-list`, mailbox, Git dan checkpoint; ambil handle terminal baru. Jangan
   memakai ID Dispatch lama untuk completion baru atau mengulang deploy/migration.

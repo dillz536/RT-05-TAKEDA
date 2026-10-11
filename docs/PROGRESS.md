@@ -14,7 +14,7 @@ ditentukan hanya oleh tersedianya kode.
 | M01 | passed | PR #10 merged (02d92a1); production alias rt05takeda.vercel.app 19/19 HTML + 26 aset cocok setelah merge |
 | M02 | passed | PR #11 merged (321db0d) |
 | M03 | passed | PR #15, kode 0d678bb: API CI 88 tes/727 assertion, recovery worker/Redis nyata dan build infra SUCCESS; review final Kimi PASS; docs/evidence/m03/CI_RESULTS.md |
-| M04 | in_progress | Staging deploy/smoke sesi 5–6 sudah berhasil; patch PR #14 merged c644b84; gate M03, live write/heartbeat/restart masih perlu bukti |
+| M04 | passed | Gate fungsional staging SHA12b4642: HTTPS, Neon pooled/direct rollback0, AOF pending job, empat heartbeat, volume/unrelated unchanged; Grok menerima bukti. Credential incident tetap open; production belum siap. docs/evidence/m04/LIVE_RESULTS.md |
 | M05 | in_progress | Analyze/13 tes historis dan emulator warga/pengurus sesi 4; APK staging terpasang sesi 6, login staging belum dibuktikan |
 | M06 | in_progress | Registrasi/login/token/approval + tes CI lulus; SMTP reset belum (log) |
 | M07 | in_progress | Rumah/keluarga/akun/permohonan API + layar mobile; tes CI lulus |
@@ -268,6 +268,82 @@ staging. Tidak ada redeploy server dari aksi merge ini.
 - Langkah berikutnya: merge penutupan M03, kemudian staging M04 karena gate
   M03 telah terbukti. Insiden credential
   sesi 5–6 tetap open; production/UAT/signing/SMTP/FCM bukan hasil tahap ini.
+
+### Sesi 8 (11 Oktober 2026) — M04 setelah M03 lulus
+
+- PR #15 merged `27a3e5b` sesudah lima cek SUCCESS pada `ea4179e`;
+  kode/API/infra diuji ulang, review final Kimi PASS. Branch M04:
+  `codex/m04-staging-recovery`, dari main yang sudah memuat M03.
+- Claude menyerahkan probe CLI `rt05:staging-smoke`: APP_ENV staging dan
+  flag konfirmasi wajib sebelum akses DB; satu event sintetis tanpa penerima,
+  akun, inbox atau keuangan. Guard *_test CI lama tidak dilonggarkan.
+- PR #16 pada `75dee91`: lima check SUCCESS. API run 38113599864 lulus
+  93 tes/766 assertion (lima StagingSmokeTest); infra 38113599888 dan hygiene
+  38113599875 SUCCESS. Bukti `docs/evidence/m04/CI_RESULTS.md`; ini belum
+  mencakup skrip rollout infra berikutnya maupun operasi live VPS.
+- Grok menyiapkan rollout SHA tetap dan checkout release terpisah; Kimi
+  memeriksa batas tindakan, schema/privasi, credential dan bukti live.
+- Preflight nyata Chrome Hostinger ada di `docs/evidence/m04/PREFLIGHT.md`.
+  Server mempunyai empat patch routing lama belum di-commit; dipertahankan.
+  Available RAM 5614 MiB dan disk 80G; Docker 29.8.2/Compose 5.6.0.
+  Coolify/aplikasi lain berjalan; tidak disentuh.
+- Dua password Redis staging belum ada. AUTH tetap wajib; provisioning
+  khusus staging harus menjaga credential/APP_KEY/DSN yang sudah ada.
+  Tidak merotasi credential production yang sebelumnya ditolak pengaman.
+- Setelah handoff Grok, Codex menutup temuan integrasi: same-SHA enam service,
+  snapshot volume/mount dan unrelated ID/StartedAt, compatibility rollback,
+  timeout probe, serta marker pending yang harus selesai dengan attempts
+  sama setelah Redis AOF restart. Helper Python hanya mengisi dua key Redis
+  staging kosong/hilang secara atomik pada env existing privat; tanpa output
+  nilai atau perubahan DSN/APP_KEY. `bash -n`, empat pure synthetic tests,
+  check-m03-compose, check-repo dan diff-check lokal lulus; belum dijalankan
+  terhadap file env/server nyata. Reviewer pengganti Claude memeriksa kode.
+- Gate live M04 masih pending: rollout baru, Neon read/write sintetis,
+  heartbeat empat komponen, restart/persistence dan pemeriksaan service lain.
+  M05 belum dibuka untuk implementasi baru sebelum bukti remote M04.
+- Audit baca-saja kesiapan M05 oleh Claude ada di
+  `docs/evidence/m05/READINESS_REVIEW.md`; belum implementasi baru atau gate
+  mobile. M05 dapat dibuktikan dengan health request nyata; login layanan
+  M06 dan UAT fitur berikutnya bukan prasyarat fondasi M05.
+- Kimi menyelesaikan checkpoint kode backend, tetapi dispatch review infra
+  berikutnya berhenti karena provider 403 batas penggunaan 5 jam. Task
+  `task_9689bdf377b5` ditandai blocked lewat pemulihan coordinator, tanpa
+  memalsukan worker_done. Sesi tidak ditutup/diganti atau diulang saat limit.
+  Review independen integrasi infra dialihkan kepada Claude.
+
+### Penutupan operasi M04 (11 Oktober, sesudah sesi/kuota dipulihkan)
+
+- Instruksi terbaru pemilik: bila Kimi limit, alihkan tugas ke Grok, pertahankan
+  sesi Kimi. Review acceptance final M04 memakai Grok, Dispatch baru
+  `ctx_457c94ed8b6a`; kepemilikan file review saja. Codex tetap pemilik Git/VPS.
+- Provisioning hanya dua key Redis staging kosong melalui helper yang blob
+  SHA256-nya cocok; file env root mode 600/direktori 700, credential lain
+  dipertahankan, tidak ada nilai dicetak. Ini sudah dieksekusi, bukan pending.
+- Rollout pertama62 menemukan kesalahan nyata opsi `compose run --no-build`;
+  berhenti sebelum migrasi/API. Dipulihkan dari image62 tanpa edit worktree:
+  migrasi failed_at applied, grant runtime DML, up stack hanya project sendiri.
+  Perbaikan opsi `run --rm --no-deps --pull never` dan guard CI di12b4642.
+- Lima cek PR #16 pada12b sukses: API38115505380 (93 tes/766 assertion),
+  infra38115505350, hygiene38115505386, Vercel dan Preview Comments.
+- Rollout otomatis final12b benar-benar selesai di Hostinger. Current-sha12b,
+  previous62; enam service image SHA sama dan worker/scheduler ID sama API.
+  Source legacy dengan empat patch routing belum commit tetap dipertahankan.
+- Runtime smoke final12b PASS: Neon staging pooled rt05_app verify-full
+  read/write rollback0 DDLdenied, direct owner rollback0; event published1
+  tetap tersimpan sesudah Redis antrean AOF restart dan completed1/inbox0.
+  Empat heartbeat sehat; tiga volume name/CreatedAt dan 13 unrelated ID/StartedAt
+  sama. Diff baseline unrelated dari sebelum operasi62 ke12 comparison=0.
+- GET luar VPS TLS valid: live/ready/API root dan empat rute website200;
+  ready databaseok; tanpa token auth/me401; rute tidak ada404. Profil Agus,
+  aset beranda/profil tidak memakai HTTP. API /profil belum M13 (404 expected).
+- Neon connector mengonfirmasi staging terpisah dari dev/production; pencarian
+  substring host yang diizinkan pada env cocok dengan compute staging, tanpa DSN.
+  Bukti lengkap `docs/evidence/m04/LIVE_RESULTS.md`. Review Grok final menerima
+  gate fungsional pada `docs/evidence/m04/GROK_ACCEPTANCE_REVIEW.md`.
+- Gate fungsional M04 terpenuhi. Rotasi credential DB/APP_KEY insiden lama
+  belum selesai karena pengaman otomatis sebelumnya menolak (secret store);
+  tidak dicoba lewat jalur lain. Tidak mengklaim keamanan production/M16.
+  M05 dibuka setelah review, pembukuan dan merge PR16; hanya fondasi mobile.
 
 10 Oktober 2026 (M01): checkout lokal pemilik berada di `Documents/RT X TAKEDA/RT-05-TAKEDA/`; folder induk `RT X TAKEDA/` berisi paket MD asli (tidak di-commit). PR #10 merged. Sesi M02: branch `codex/m02-api-neon-foundation`, PR #11. Neon dev sudah dimigrasi (5 migration fondasi). `rest-api/.env` lokal menunjuk Neon dev. php.ini lokal: pdo_pgsql/pgsql/intl/sodium diaktifkan. Tidak ada migration, image, atau job. Input belum tersedia: credential Neon, akses VPS/DNS (ditawarkan pemilik via Chrome untuk M04), SMTP, FCM, signing key, Flutter SDK.
 

@@ -35,6 +35,7 @@ Worker: `php artisan queue:work redis --queue=notifications,default --sleep=2 --
 | `rt05:outbox-retry {event}` | Ulang manual satu event yang diparkir/tertahan |
 | `rt05:heartbeat-check --component=…` | Probe internal heartbeat `worker-default`/`worker-media`/`worker-exports`/`scheduler`; exit 0 sehat, 1 basi/hilang/store gagal, 2 argumen salah |
 | `rt05:async-smoke --phase=prepare/verify/status` | Smoke sintetis untuk CI; hanya database `*_test` lokal/CI, Redis lokal/CI, non-production |
+| `rt05:staging-smoke --confirm-staging --phase=prepare/verify` | Smoke M04 di staging: satu event `rt05.smoke` tanpa penerima (tanpa akun/inbox/keuangan); hanya `APP_ENV=staging` + flag konfirmasi, dicek sebelum akses DB; prepare mencetak UUID saja |
 
 Redis: koneksi `queue` (antrean, lock scheduler, heartbeat; AOF + noeviction) dan `cache` (cache, sesi, rate limiter). `REDIS_QUEUE_*`/`REDIS_CACHE_*` jatuh ke `REDIS_HOST/PORT/PASSWORD` dengan DB 0/1. Prefix default `takeda:<APP_ENV>:`. Lokal tanpa Redis: `QUEUE_CONNECTION=sync` sehingga dispatch langsung memproses event.
 

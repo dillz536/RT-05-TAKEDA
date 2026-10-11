@@ -25,6 +25,13 @@ jobs:
           node-version: '22'
       - name: Kontrak statis Redis/worker M03
         run: node infra/scripts/check-m03-compose.mjs
+      - name: Kontrak CLI Compose untuk migrasi one-shot
+        run: |
+          docker compose run --help | grep -q -- --no-deps
+          docker compose run --help | grep -q -- --pull
+          if grep -E '^[^#]*run .*--no-build' infra/scripts/deploy-staging-immutable.sh; then
+            echo 'compose run does not accept --no-build'; exit 1
+          fi
       - name: Validasi compose production + override VPS
         env:
           API_APP_KEY: x
@@ -47,6 +54,10 @@ jobs:
           grep -Eq 'REDIS_QUEUE_CONNECTION: "?queue"?' /tmp/merged.yml
           if grep -E 'published: ["'\'']?6379' /tmp/merged.yml; then echo 'Redis terpublikasi'; exit 1; fi
           bash -n infra/scripts/deploy-vps.sh
+          bash -n infra/scripts/deploy-staging-immutable.sh
+          bash -n infra/scripts/staging-runtime-smoke.sh
+          bash -n infra/scripts/staging-metadata.sh
+          python3 -B infra/scripts/test_staging_redis_auth.py
           bash -n infra/scripts/ci-redis.sh
           bash -n infra/scripts/m03-recovery-ci.sh
           bash -n infra/docker/redis-queue.sh
