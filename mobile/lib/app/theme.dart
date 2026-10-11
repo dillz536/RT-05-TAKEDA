@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-/// Token brand website RT05 TAKEDA diterjemahkan ke komponen native (docs/FRONTEND.md):
-/// navy #123e65, kuning #f2cd5a, sky #eef5fa; Bricolage Grotesque (judul) + Public Sans (teks).
+/// Token brand website RT05 TAKEDA (`website/resources/css/app.css` :root) diterjemahkan ke komponen native:
+/// navy #123e65, kuning #f2cd5a, sky #eef5fa, ink #183b50, muted #536a79, line #d8e3e9;
+/// Bricolage Grotesque (judul) + Public Sans (teks), TTF terbundel di assets/fonts (tanpa unduhan runtime).
 class Brand {
   static const navy = Color(0xFF123E65);
   static const navyDeep = Color(0xFF0B2A47);
   static const yellow = Color(0xFFF2CD5A);
   static const sky = Color(0xFFEEF5FA);
-  static const ink = Color(0xFF14212E);
-  static const muted = Color(0xFF5B6B7B);
-  static const line = Color(0xFFD9E4EE);
+  static const skyDeep = Color(0xFFD9EAF6);
+  static const ink = Color(0xFF183B50);
+  static const muted = Color(0xFF536A79);
+  static const line = Color(0xFFD8E3E9);
+
+  static const fontBody = 'PublicSans';
+  static const fontDisplay = 'BricolageGrotesque';
   static const success = Color(0xFF1E7A4C);
   static const successBg = Color(0xFFE3F4EA);
   static const danger = Color(0xFFB3261E);
@@ -22,18 +26,12 @@ class Brand {
 ThemeData buildTheme() {
   final base = ThemeData(
     useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: Brand.navy,
-      primary: Brand.navy,
-      secondary: Brand.yellow,
-      surface: Colors.white,
-      error: Brand.danger,
-    ),
+    fontFamily: Brand.fontBody,
+    colorScheme: ColorScheme.fromSeed(seedColor: Brand.navy, primary: Brand.navy, secondary: Brand.yellow, surface: Colors.white, error: Brand.danger),
     scaffoldBackgroundColor: Brand.sky,
   );
-  final body = base.textTheme.apply(fontFamily: GoogleFonts.publicSans().fontFamily, bodyColor: Brand.ink, displayColor: Brand.ink);
-  final displayFamily = GoogleFonts.bricolageGrotesque().fontFamily;
-  TextStyle? display(TextStyle? s) => s?.copyWith(fontFamily: displayFamily, fontWeight: FontWeight.w700, color: Brand.ink);
+  final body = base.textTheme.apply(fontFamily: Brand.fontBody, bodyColor: Brand.ink, displayColor: Brand.ink);
+  TextStyle? display(TextStyle? s) => s?.copyWith(fontFamily: Brand.fontDisplay, fontWeight: FontWeight.w700, color: Brand.ink);
 
   return base.copyWith(
     textTheme: body.copyWith(
@@ -48,13 +46,16 @@ ThemeData buildTheme() {
       foregroundColor: Colors.white,
       elevation: 0,
       centerTitle: false,
-      titleTextStyle: GoogleFonts.bricolageGrotesque(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+      titleTextStyle: const TextStyle(fontFamily: Brand.fontDisplay, fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
     ),
     cardTheme: CardThemeData(
       color: Colors.white,
       elevation: 0,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Brand.line)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Brand.line),
+      ),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
@@ -76,9 +77,18 @@ ThemeData buildTheme() {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Colors.white,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Brand.line)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Brand.line)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Brand.navy, width: 2)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Brand.line),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Brand.line),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Brand.navy, width: 2),
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     ),
     navigationBarTheme: NavigationBarThemeData(

@@ -24,7 +24,8 @@ String periode(String yyyyMm) {
   return '${_bulan[int.parse(parts[1]) - 1]} ${parts[0]}';
 }
 
-String statusLabel(String s) => const {
+String statusLabel(String s) =>
+    const {
       'diajukan': 'Diajukan',
       'diproses': 'Diproses',
       'ditinjau': 'Ditinjau',

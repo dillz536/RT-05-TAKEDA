@@ -23,7 +23,15 @@ void main() {
 
   group('model', () {
     test('Laporan anonim tidak memiliki nama pelapor', () {
-      final l = Laporan({'id': 'x', 'judul': 'j', 'deskripsi': 'd', 'status': 'diajukan', 'versi': 1, 'sembunyikan_identitas': true, 'pelapor': null}, aspirasi: false);
+      final l = Laporan({
+        'id': 'x',
+        'judul': 'j',
+        'deskripsi': 'd',
+        'status': 'diajukan',
+        'versi': 1,
+        'sembunyikan_identitas': true,
+        'pelapor': null,
+      }, aspirasi: false);
       expect(l.anonim, isTrue);
       expect(l.namaPelapor, isNull);
     });
@@ -34,22 +42,40 @@ void main() {
 
   group('api error', () {
     test('error envelope dipetakan ke ApiException', () {
-      final e = ApiException.from(DioException(
-        requestOptions: RequestOptions(path: '/x'),
-        response: Response(requestOptions: RequestOptions(path: '/x'), statusCode: 409, data: {
-          'error': {'code': 'CHARGE_ALREADY_PAID', 'message': 'Sebagian periode sudah lunas.', 'request_id': 'r'}
-        }),
-      ));
+      final e = ApiException.from(
+        DioException(
+          requestOptions: RequestOptions(path: '/x'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/x'),
+            statusCode: 409,
+            data: {
+              'error': {'code': 'CHARGE_ALREADY_PAID', 'message': 'Sebagian periode sudah lunas.', 'request_id': 'r'},
+            },
+          ),
+        ),
+      );
       expect(e.status, 409);
       expect(e.code, 'CHARGE_ALREADY_PAID');
       expect(e.isConflict, isTrue);
     });
     test('timeout dianggap hasil belum diketahui', () {
-      final e = ApiException.from(DioException(requestOptions: RequestOptions(path: '/x'), type: DioExceptionType.receiveTimeout));
+      final e = ApiException.from(
+        DioException(
+          requestOptions: RequestOptions(path: '/x'),
+          type: DioExceptionType.receiveTimeout,
+        ),
+      );
       expect(e.isUnknownOutcome, isTrue);
     });
     test('field validasi ditampilkan lebih dulu', () {
-      final e = ApiException(422, 'VALIDATION_FAILED', 'Periksa isian.', fields: {'email': ['Email wajib diisi.']});
+      final e = ApiException(
+        422,
+        'VALIDATION_FAILED',
+        'Periksa isian.',
+        fields: {
+          'email': ['Email wajib diisi.'],
+        },
+      );
       expect(e.display, 'Email wajib diisi.');
     });
   });
@@ -61,19 +87,30 @@ void main() {
   });
 
   testWidgets('StatusChip selalu menampilkan teks, bukan hanya warna', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: Row(children: [StatusChip('belum_bayar'), StatusChip('lunas')]))));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: Row(children: [StatusChip('belum_bayar'), StatusChip('lunas')])),
+      ),
+    );
     expect(find.text('Belum dibayar'), findsOneWidget);
     expect(find.text('Lunas'), findsOneWidget);
   });
 
   testWidgets('BusyButton terkunci selama proses (anti ketuk ganda)', (tester) async {
     var calls = 0;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(body: BusyButton(label: 'Simpan', onPressed: () async {
-        calls++;
-        await Future<void>.delayed(const Duration(milliseconds: 200));
-      })),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: BusyButton(
+            label: 'Simpan',
+            onPressed: () async {
+              calls++;
+              await Future<void>.delayed(const Duration(milliseconds: 200));
+            },
+          ),
+        ),
+      ),
+    );
     await tester.tap(find.text('Simpan'));
     await tester.pump();
     await tester.tap(find.byType(FilledButton), warnIfMissed: false);
@@ -82,17 +119,19 @@ void main() {
   });
 
   testWidgets('AsyncView menampilkan pesan error API dan tombol coba lagi', (tester) async {
-    await tester.pumpWidget(ProviderScope(
-      child: MaterialApp(
-        home: Scaffold(
-          body: AsyncView<int>(
-            value: AsyncValue.error(ApiException(503, 'SERVICE_UNAVAILABLE', 'Layanan sementara tidak tersedia.'), StackTrace.empty),
-            onRetry: () {},
-            builder: (_) => const Text('data'),
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: AsyncView<int>(
+              value: AsyncValue.error(ApiException(503, 'SERVICE_UNAVAILABLE', 'Layanan sementara tidak tersedia.'), StackTrace.empty),
+              onRetry: () {},
+              builder: (_) => const Text('data'),
+            ),
           ),
         ),
       ),
-    ));
+    );
     expect(find.text('Layanan sementara tidak tersedia.'), findsOneWidget);
     expect(find.text('Coba lagi'), findsOneWidget);
   });

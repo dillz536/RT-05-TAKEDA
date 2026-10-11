@@ -18,6 +18,8 @@ Target terbaru pemilik sampai M05, bertahap. Tidak membuka implementasi M06+.
 
 | Butir | Implementasi minimal | Bukti |
 | --- | --- | --- |
+| Runtime/identitas | Flutter3.47.7/Dart3.13.5, Java17 CI, package Android existing tech.morriz.takeda, versi dari pubspec | Runtime aktual, manifest APK CI, tanpa pergantian identitas aplikasi |
+| State/komponen | Riverpod, DTO/error API existing; forms/loading/empty/error/retry reusable; fake adapter hanya dalam test | Analyze, unit/widget perilaku penting, review sumber |
 | Sesi/offline | Secure token tidak hilang karena timeout/503/403; 401/logout menghapus; retry manual; hasil restore lama tidak menimpa sesi baru | Tes storage/error/race bermakna |
 | Konfigurasi | dev/staging/prod nonsensitif; staging/prod wajib HTTPS; dev HTTP hanya host lokal yang disetujui; URL tanpa userinfo/query/fragment | Tes runtime dan guard CI menolak input tidak valid |
 | Health | GET nyata /health/live, status JSON ok, timeout bounded, unavailable/retry | Tes respons/error/retry dan request dari emulator ke staging |
@@ -42,3 +44,14 @@ tidak diubah; penyimpangan Drive/planning tetap [CAPSTONE_ALIGNMENT.md](../../CA
 diverifikasi lokal; emulator-5554 online. APK staging lama berlabel flavor dev
 adalah bukti historis dan akan diganti artifact baru. Tidak ada tes/factory
 terhadap Neon. Kode dan tes baru belum ada pada titik penulisan rencana ini.
+
+## Review rencana
+
+Kimi kembali menghasilkan audit setelah pemilik menyebut kuota mungkin pulih.
+Completion audit `task_ae3524560f81` / `ctx_820928d88366` diterima;
+`worker-show` mengonfirmasi completed/succeeded meski receipt awal sempat
+agent_prompt_stalled. Duplikat dari retry ditolak dan tidak dihitung review baru.
+Laporan [KIMI_PLAN_REVIEW.md](KIMI_PLAN_REVIEW.md) PASS untuk kelengkapan rencana
+saja. Tiga catatan implisit dijadikan butir eksplisit di atas; CI/artifact/emulator
+tetap wajib dibuktikan. Audit tambahan M04 yang tiba lewat konteks lama bukan
+alasan membuka kembali milestone atau redeploy.

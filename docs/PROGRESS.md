@@ -345,6 +345,26 @@ staging. Tidak ada redeploy server dari aksi merge ini.
   tidak dicoba lewat jalur lain. Tidak mengklaim keamanan production/M16.
   M05 dibuka setelah review, pembukuan dan merge PR16; hanya fondasi mobile.
 
+### Checkpoint M05 — implementasi dan review awal
+
+- Branch `codex/m05-mobile-foundation`, rencana dipush pada `0309f3e` setelah PR16 merged. Scope hanya fondasi M05; layanan bisnis historis M06+ belum diterima oleh gate baru.
+- Claude memiliki `mobile/**`: config, health, secure session, go_router, brand/font terbundel, lokalisasi dan tes skala teks. Overflow tata letak lama ditemukan lewat widget test dan sedang diperbaiki; tidak ada perubahan aturan bisnis.
+- Grok menyerahkan workflow/guard CI awal dan laporan `docs/evidence/m05/GROK_CI_RESULT.md`. Review Codex menemukan perbedaan penerimaan slash akhir/port dengan Dart; follow-up Grok aktif untuk menyamakan kontrak. Belum ada run GitHub atau APK baru.
+- Pemilik memperkirakan kuota Kimi tersedia lagi. Sesi sama mulai merespons audit, tetapi dua `worker-start` diberi `agent_prompt_stalled` oleh Orca; laporan completion konteks M04 lama ditolak `inactive_dispatch`. Ini bukan bukti gate baru. Sesi dipertahankan dan scope diarahkan ke audit rencana M05 saja; Grok tetap melanjutkan pekerjaan utamanya.
+- `docs/MOBILE.md` menjelaskan struktur fondasi aktual, konfigurasi origin/HTTPS, health publik sebagai gate M05, dan pilihan kecil label navigasi maksimum skala1,3 (isi layar mengikuti skala sistem). Gate analyze/test baru, artifact CI, health emulator, offline/retry dan review final masih pending.
+- `node infra/scripts/check-repo.mjs` (516 berkas pada pemeriksaan Codex) serta `git diff --check` lulus pada checkpoint dokumentasi; angka dapat bertambah saat worker menulis. Tidak menjalankan Gradle/APK lokal, tes/factory Neon, atau redeploy VPS.
+
+Integrasi setelah handoff: Claude menyelesaikan75 tes, Grok menyerahkan guard
+yang telah dikoreksi. Codex menambahkan validasi port/bentuk mentah URL dan dua
+tes config, flag Android `allowBackup=false`, serta self-test guard CI Node22.
+Hasil lokal Codex: `flutter analyze` No issues found; `flutter test`77/77;
+format25 file0changed; self-test guard, `check-repo`520 file dan diff-check lulus.
+Completion audit rencana Kimi akhirnya diterima pada ctx_820928d88366
+(worker-show completed/succeeded); retry duplikat ditolak, tidak dihitung ulang.
+Tiga butir rencana implisit dibuat eksplisit. CI/APK dan emulator tetap pending;
+scope fitur/business/API/ERD tidak berubah, sehingga kontrak API/schema tidak
+perlu diubah untuk fondasi ini.
+
 10 Oktober 2026 (M01): checkout lokal pemilik berada di `Documents/RT X TAKEDA/RT-05-TAKEDA/`; folder induk `RT X TAKEDA/` berisi paket MD asli (tidak di-commit). PR #10 merged. Sesi M02: branch `codex/m02-api-neon-foundation`, PR #11. Neon dev sudah dimigrasi (5 migration fondasi). `rest-api/.env` lokal menunjuk Neon dev. php.ini lokal: pdo_pgsql/pgsql/intl/sodium diaktifkan. Tidak ada migration, image, atau job. Input belum tersedia: credential Neon, akses VPS/DNS (ditawarkan pemilik via Chrome untuk M04), SMTP, FCM, signing key, Flutter SDK.
 
 Catat Git status, perubahan pengguna yang belum commit, migration yang sudah applied,
@@ -362,7 +382,7 @@ Selesaikan perubahan pengguna dengan hati-hati; tidak reset/force-push.
 | R03 | medium | deploy preview | Root Directory Vercel belum diubah; tanpa jembatan root, merge akan memutus preview | M01 | mitigated (ADR12), menunggu pemilik |
 | R04 | medium | mobile | Flutter SDK dahulu belum terpasang | M05 | resolved runtime: Flutter3.47.7/Dart3.13.5 terverifikasi 11 Oktober; gate analyze/test/APK baru masih pending |
 | R05 | high | database | pdo_pgsql named prepares + pooler Neon → transaksi gugur 25P02 pada tulis pertama | M02 | fixed (ADR14), terverifikasi di Neon pooled |
-| R06 | medium | dev env | Docker Desktop tidak jalan: WSL2 belum terpasang (Windows Home) | M02/M03 | open, menunggu pemilik |
+| R06 | medium | dev env | Docker Desktop tidak jalan: WSL2 belum terpasang (Windows Home) | M02/M03 | accepted limitation ADR19: build Docker/Postgres/Redis di CI, runtime staging di VPS; tidak perlu instalasi Docker/WSL lokal untuk gate ini |
 | R07 | low | security | Credential owner Neon dev tampil di keluaran tool agent saat pengambilan connection string | M02 | open: reset password rt05_owner (dev) disarankan |
 
 ## Bukti historis frontend

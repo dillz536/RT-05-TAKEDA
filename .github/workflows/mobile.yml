@@ -4,27 +4,54 @@ on:
     paths:
       - 'mobile/**'
       - '.github/workflows/mobile.yml'
+      - 'infra/scripts/check-mobile-build-config.mjs'
   push:
     branches: [main]
     paths:
       - 'mobile/**'
       - '.github/workflows/mobile.yml'
+      - 'infra/scripts/check-mobile-build-config.mjs'
   workflow_dispatch:
     inputs:
+      flavor:
+        description: 'Flavor debug APK (dev, staging, atau prod). Bukan rilis bertanda tangan.'
+        required: true
+        default: staging
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
       api_base_url:
-        description: 'API_BASE_URL untuk APK (default emulator → PC lokal)'
+        description: 'Origin API nonsensitif. Kosong memakai default flavor. Bukan secret.'
         required: false
-        default: 'http://10.0.2.2:8077'
+        default: ''
+        type: string
 permissions:
   contents: read
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      builds: ${{ steps.plan.outputs.builds }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node infra/scripts/check-mobile-build-config.mjs --self-test
+      - id: plan
+        env:
+          RT05_EVENT: ${{ github.event_name }}
+          RT05_FLAVOR: ${{ inputs.flavor || '' }}
+          RT05_API_BASE_URL: ${{ inputs.api_base_url || '' }}
+        run: node infra/scripts/check-mobile-build-config.mjs --plan
   verify:
+    needs: plan
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: mobile
-    env:
-      API_BASE_URL: ${{ inputs.api_base_url || 'http://10.0.2.2:8077' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -37,16 +64,42 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: dart format --output=none --set-exit-if-changed lib test || true
+      - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test
-      # APK debug (ditandatangani debug key) untuk demo emulator/HP uji; bukan rilis production.
-      - run: flutter build apk --debug --dart-define=API_BASE_URL=$API_BASE_URL --dart-define=FLAVOR=dev
-      - run: sha256sum build/app/outputs/flutter-apk/app-debug.apk | tee build/app/outputs/flutter-apk/app-debug.apk.sha256
+  apk:
+    needs: [plan, verify]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    strategy:
+      fail-fast: false
+      matrix:
+        build: ${{ fromJSON(needs.plan.outputs.builds) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      # Debug key saja. Bukan APK rilis production dan bukan klaim tanda tangan rilis.
+      - name: Build debug APK
+        env:
+          RT05_FLAVOR: ${{ matrix.build.flavor }}
+          RT05_API_BASE_URL: ${{ matrix.build.apiBaseUrl }}
+        run: node ../infra/scripts/check-mobile-build-config.mjs --build-debug
       - uses: actions/upload-artifact@v4
         with:
-          name: rt05-takeda-debug-apk
+          name: rt05-takeda-debug-${{ matrix.build.flavor }}
           path: |
-            mobile/build/app/outputs/flutter-apk/app-debug.apk
-            mobile/build/app/outputs/flutter-apk/app-debug.apk.sha256
+            mobile/build/app/outputs/flutter-apk/rt05-takeda-${{ matrix.build.flavor }}-debug.apk
+            mobile/build/app/outputs/flutter-apk/rt05-takeda-${{ matrix.build.flavor }}-debug.apk.sha256
           retention-days: 14
+          if-no-files-found: error

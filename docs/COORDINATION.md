@@ -23,9 +23,9 @@ masing-masing tidak dinaikkan hanya karena kode tersedia. M13–M16 belum dibuka
 | Agent | Tanggung jawab | File yang boleh diedit |
 | --- | --- | --- |
 | Codex | Rencana, keputusan integrasi, Git, review, tes gabungan, laporan | Dokumen utama dan perubahan integrasi setelah ownership diserahkan |
-| Claude Code | Fondasi Flutter, sesi/offline, router, health, brand dan tes | `mobile/**`, `docs/evidence/m05/CLAUDE_FOUNDATION_RESULT.md` |
-| Grok | CI, guard flavor/URL, APK dev/staging; menggantikan review Kimi saat limit | `.github/workflows/mobile.yml`, `infra/scripts/check-mobile-build-config.mjs`, `docs/evidence/m05/GROK_CI_RESULT.md` |
-| Kimi | Checkpoint diserahkan; review baru dijeda karena quota 403 batas 5 jam | Sesi tetap dipertahankan, tidak dimulai ulang |
+| Claude Code | Fondasi Flutter diserahkan: 75 tes lokal lulus; review CI berikutnya setelah integrasi | Laporan awal `docs/evidence/m05/CLAUDE_FOUNDATION_RESULT.md`; sumber kini milik Codex |
+| Grok | Workflow/guard diserahkan setelah koreksi kontrak URL; review mobile berikutnya | Laporan awal `docs/evidence/m05/GROK_CI_RESULT.md`; workflow/guard kini milik Codex |
+| Kimi | Kuota kembali merespons; audit rencana M05 PASS diterima, gate implementasi belum dinilai | `docs/evidence/m05/KIMI_PLAN_REVIEW.md`, sesi sama dipertahankan; bila quota 403 kembali, alihkan tugas baru ke Grok |
 
 Semua bekerja pada checkout yang sama dengan ownership file terpisah. Hanya
 Codex melakukan switch branch, commit, push, dan merge. Agent meminta perubahan
