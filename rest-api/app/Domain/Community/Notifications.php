@@ -39,7 +39,8 @@ final class Notifications
             'akun.permohonan_tambahan' => self::toPengurus($event, 'sistem', [], 'Permohonan akun tambahan', 'Ada permohonan akun tambahan yang menunggu persetujuan.'),
             'akun.permohonan_disetujui' => self::send($event, [$id], 'sistem', [], 'Akun disetujui', 'Akun Anda telah disetujui pengurus. Selamat datang di RT05 TAKEDA.'),
             'iuran.pembayaran_dicatat' => self::paymentRecorded($event),
-            // Event sintetis rt05:async-smoke; penerima hanya akun sintetis pada database *_test.
+            // Event sintetis: rt05:async-smoke (penerima akun sintetis, database *_test) atau
+            // rt05:staging-smoke (penerima kosong → tanpa inbox).
             'rt05.smoke' => self::send($event, $event->safe_payload['penerima'] ?? [], 'sistem', [], 'Uji antrean', 'Notifikasi sintetis uji worker.'),
             'iuran.pengingat' => self::send($event, $event->safe_payload['penerima'] ?? [], 'iuran', ['tagihan_id' => $event->safe_payload['tagihan_id'] ?? null],
                 'Pengingat iuran', 'Iuran RT bulan ini belum tercatat. Abaikan bila sudah membayar kepada pengurus.'),

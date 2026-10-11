@@ -13,16 +13,17 @@ otomasi yang dijamin terus hidup saat komputer atau Orca mati.
 dan review final Kimi; bukti [CI_RESULTS.md](evidence/m03/CI_RESULTS.md).
 
 PR #14 telah digabung pada commit `c644b84`: perbaikan routing staging dan aset
-HTTPS sudah menjadi baseline main. Branch tahap ini: `codex/m03-async-recovery`.
+HTTPS sudah menjadi baseline main. PR #15 merged `27a3e5b` setelah lima cek
+SUCCESS pada HEAD `ea4179e`. Branch tahap ini: `codex/m04-staging-recovery`.
 Implementasi layanan M05–M12 yang sudah ada dipertahankan, tetapi status gate
 masing-masing tidak dinaikkan hanya karena kode tersedia. M13–M16 belum dibuka.
 
 | Agent | Tanggung jawab | File yang boleh diedit |
 | --- | --- | --- |
 | Codex | Rencana, keputusan integrasi, Git, review, tes gabungan, laporan | Dokumen utama dan perubahan integrasi setelah ownership diserahkan |
-| Claude Code | Dispatcher Redis, consumer idempotent, replay, heartbeat, tes backend | `rest-api/` dan laporan backend di `docs/evidence/m03/` |
-| Grok | Pemisahan Redis, worker containers, CI dan drill restart | `infra/`, workflow API/infra, dan laporan infra di `docs/evidence/m03/` |
-| Kimi | Review independen gate, privasi, transaksi, bukti dan urutan | Laporan penerimaan di `docs/evidence/m03/` |
+| Claude Code | Probe sintetis staging terpisah dari guard tes CI | `rest-api/` dan laporan backend di `docs/evidence/m04/` |
+| Grok | Deploy staging dengan SHA tetap, checkout baru dan smoke operasi | `infra/`, workflow infra, dan laporan infra di `docs/evidence/m04/` |
+| Kimi | Review independen gate, privasi, transaksi, bukti dan urutan | Laporan penerimaan di `docs/evidence/m04/` |
 
 Semua bekerja pada checkout yang sama dengan ownership file terpisah. Hanya
 Codex melakukan switch branch, commit, push, dan merge. Agent meminta perubahan

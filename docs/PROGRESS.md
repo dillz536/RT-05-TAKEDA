@@ -269,6 +269,27 @@ staging. Tidak ada redeploy server dari aksi merge ini.
   M03 telah terbukti. Insiden credential
   sesi 5–6 tetap open; production/UAT/signing/SMTP/FCM bukan hasil tahap ini.
 
+### Sesi 8 (11 Oktober 2026) — M04 setelah M03 lulus
+
+- PR #15 merged `27a3e5b` sesudah lima cek SUCCESS pada `ea4179e`;
+  kode/API/infra diuji ulang, review final Kimi PASS. Branch M04:
+  `codex/m04-staging-recovery`, dari main yang sudah memuat M03.
+- Claude menyerahkan probe CLI `rt05:staging-smoke`: APP_ENV staging dan
+  flag konfirmasi wajib sebelum akses DB; satu event sintetis tanpa penerima,
+  akun, inbox atau keuangan. Guard *_test CI lama tidak dilonggarkan.
+- Grok menyiapkan rollout SHA tetap dan checkout release terpisah; Kimi
+  memeriksa batas tindakan, schema/privasi, credential dan bukti live.
+- Preflight nyata Chrome Hostinger ada di `docs/evidence/m04/PREFLIGHT.md`.
+  Server mempunyai empat patch routing lama belum di-commit; dipertahankan.
+  Available RAM 5614 MiB dan disk 80G; Docker 29.8.2/Compose 5.6.0.
+  Coolify/aplikasi lain berjalan; tidak disentuh.
+- Dua password Redis staging belum ada. AUTH tetap wajib; provisioning
+  khusus staging harus menjaga credential/APP_KEY/DSN yang sudah ada.
+  Tidak merotasi credential production yang sebelumnya ditolak pengaman.
+- Gate live M04 masih pending: rollout baru, Neon read/write sintetis,
+  heartbeat empat komponen, restart/persistence dan pemeriksaan service lain.
+  M05 belum dibuka untuk implementasi baru sebelum bukti remote M04.
+
 10 Oktober 2026 (M01): checkout lokal pemilik berada di `Documents/RT X TAKEDA/RT-05-TAKEDA/`; folder induk `RT X TAKEDA/` berisi paket MD asli (tidak di-commit). PR #10 merged. Sesi M02: branch `codex/m02-api-neon-foundation`, PR #11. Neon dev sudah dimigrasi (5 migration fondasi). `rest-api/.env` lokal menunjuk Neon dev. php.ini lokal: pdo_pgsql/pgsql/intl/sodium diaktifkan. Tidak ada migration, image, atau job. Input belum tersedia: credential Neon, akses VPS/DNS (ditawarkan pemilik via Chrome untuk M04), SMTP, FCM, signing key, Flutter SDK.
 
 Catat Git status, perubahan pengguna yang belum commit, migration yang sudah applied,
