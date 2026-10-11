@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dihasilkan tool/launcher_icon.py dari assets/brand/rt05-mark.svg (logo resmi website). Jangan diedit manual. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:translateX="26" android:translateY="27.1813" android:scaleX="0.875" android:scaleY="0.875">
+        <path android:pathData="M12.1,33 h4.8 a1.6,1.6 0 0 1 1.6,1.6 v17.3 a1.6,1.6 0 0 1 -1.6,1.6 h-4.8 a1.6,1.6 0 0 1 -1.6,-1.6 v-17.3 a1.6,1.6 0 0 1 1.6,-1.6 Z" android:fillColor="#FF123E65" />
+        <path android:pathData="M47.1,33 h4.8 a1.6,1.6 0 0 1 1.6,1.6 v17.3 a1.6,1.6 0 0 1 -1.6,1.6 h-4.8 a1.6,1.6 0 0 1 -1.6,-1.6 v-17.3 a1.6,1.6 0 0 1 1.6,-1.6 Z" android:fillColor="#FF123E65" />
+        <path android:pathData="M10.2,33 h8.6 a1.7,1.7 0 0 1 1.7,1.7 v0 a1.7,1.7 0 0 1 -1.7,1.7 h-8.6 a1.7,1.7 0 0 1 -1.7,-1.7 v0 a1.7,1.7 0 0 1 1.7,-1.7 Z" android:fillColor="#FF123E65" />
+        <path android:pathData="M45.2,33 h8.6 a1.7,1.7 0 0 1 1.7,1.7 v0 a1.7,1.7 0 0 1 -1.7,1.7 h-8.6 a1.7,1.7 0 0 1 -1.7,-1.7 v0 a1.7,1.7 0 0 1 1.7,-1.7 Z" android:fillColor="#FF123E65" />
+        <group>
+            <clip-path android:pathData="M7,29 L32,8.5 L57,29 L57,33 L7,33 Z" />
+            <path android:pathData="M7,6 h50 v30 h-50 Z" android:fillColor="#FFFFFFFF" />
+            <path android:pathData="M11,6 h4.6 v30 h-4.6 Z" android:fillColor="#FFC8102E" />
+            <path android:pathData="M20.2,6 h4.6 v30 h-4.6 Z" android:fillColor="#FFC8102E" />
+            <path android:pathData="M29.7,6 h4.6 v30 h-4.6 Z" android:fillColor="#FFC8102E" />
+            <path android:pathData="M39.2,6 h4.6 v30 h-4.6 Z" android:fillColor="#FFC8102E" />
+            <path android:pathData="M48.4,6 h4.6 v30 h-4.6 Z" android:fillColor="#FFC8102E" />
+        </group>
+        <path android:pathData="M7,29 L32,8.5 L57,29 L57,33 L7,33 Z" android:strokeColor="#FF123E65" android:strokeWidth="2.6" android:strokeLineJoin="round" />
+        <path android:pathData="M29.4,6.2 a2.6,2.6 0 1 0 5.2,0 a2.6,2.6 0 1 0 -5.2,0 Z" android:fillColor="#FFF2CD5A" />
+        <path android:pathData="M8.1,53.5 h47.8 a2.1,2.1 0 0 1 2.1,2.1 v0 a2.1,2.1 0 0 1 -2.1,2.1 h-47.8 a2.1,2.1 0 0 1 -2.1,-2.1 v0 a2.1,2.1 0 0 1 2.1,-2.1 Z" android:fillColor="#FFF2CD5A" />
+    </group>
+</vector>

@@ -4,7 +4,7 @@
 
 Satu Flutter/Dart application, Android first, layanan warga dan pengurus dalam aplikasi yang sama. UI berubah berdasarkan role/status dari API. Tidak membuat aplikasi admin terpisah atau memasukkan Laravel/Redis/Neon driver ke APK.
 
-Flutter adalah keputusan teknis paket v1, bukan klaim sudah dibangun pada repo. Pin versi Flutter/Dart/Android SDK/plugin tepat setelah kompatibilitas dicek di M05.
+Implementasi fondasi M05 sedang diverifikasi pada Flutter 3.47.7 stable / Dart 3.13.5. Android memakai Java 17 di CI; versi aplikasi berasal dari `mobile/pubspec.yaml`. Keberadaan kode tidak membuktikan gate CI/APK/emulator: hasil aktual dicatat di PROGRESS.md dan docs/evidence/m05/.
 
 ## Struktur
 
@@ -24,6 +24,10 @@ mobile/lib/
 ```
 
 State management v1: Riverpod; router: go_router; HTTP: Dio; secure storage plugin; kamera/galeri: image_picker; push: firebase_messaging. Verifikasi versi/maintenance/plugin permissions sebelum lockfile. Tidak perlu domain layer/use case class untuk setiap GET sederhana; business rule tetap di server.
+
+Struktur di atas adalah rancangan domain v1. Fondasi aktual menggunakan `app/config.dart`, `router.dart`, `startup.dart`, `shell.dart`, `theme.dart` dan file sederhana `core/api.dart`, `health.dart`, `session.dart`, `widgets.dart`; belum memerlukan pemecahan folder/layer tambahan. Routing tingkat atas memakai go_router, detail fitur historis tetap boleh Navigator. Firebase/push adalah tahap M10, bukan dependensi gate M05.
+
+Brand menggunakan SVG gapura resmi yang byte-identik dengan website, warna navy/kuning/sky, serta Public Sans dan Bricolage Grotesque terbundel beserta lisensi OFL. Tidak ada unduhan font runtime. Lokalisasi aplikasi Indonesia. Label lima tab navigasi dibatasi skala teks 1,3 agar muat dan label chip status 1,5; isi halaman tetap mengikuti skala sistem dan harus diuji pada 1,3 serta 2,0.
 
 Gunakan repository interface untuk fake fixtures dan API nyata; fake adapter hanya local/test flavor dan diberi indikator. Production build tidak boleh diam-diam fallback ke fake data.
 
@@ -65,6 +69,14 @@ Navigasi admin: Ringkasan, Warga, Layanan, Keuangan, Lainnya. Form finance menam
 ## Integrasi
 
 dev/staging/prod flavors dengan API_BASE_URL melalui compile-time configuration nonsensitive. Tidak ada secret Neon/Redis/SMTP/FCM server di --dart-define. API host menggunakan HTTPS valid; release tidak mempercayai semua sertifikat.
+
+Fondasi M05 memvalidasi `FLAVOR=dev|staging|prod` dan origin root API (tanpa kredensial, query, fragment, atau path bisnis). Staging/prod wajib HTTPS; HTTP dev hanya `10.0.2.2` atau `127.0.0.1` sesuai kebijakan jaringan Android debug. Default dev `http://10.0.2.2:8077`; staging `https://takeda-staging.morriz.tech`. Konfigurasi tidak valid menampilkan layar kesalahan tanpa request jaringan.
+
+Bootstrap memanggil `/health/live` tanpa token dengan timeout terbatas. Diagnostik nonproduction menampilkan flavor/host dan UUID request_id, tanpa nilai token. Pemulihan secure token memvalidasi `/auth/me`: hanya 401/logout menghapus token; offline/timeout/503/403 mempertahankannya, menampilkan unavailable/retry, dan tidak membuka data akun yang belum divalidasi. Respons sesi lama tidak boleh mengakhiri atau menimpa login baru.
+
+Gate koneksi M05 cukup dengan request health publik nyata dari emulator/HP. Registrasi, login akun, iuran, SMTP, FCM, signed release dan UAT bisnis berada pada milestone berikutnya; APK debug CI tidak membuktikan gate tersebut.
+
+Port eksplisit harus 1 sampai 65535; slash akhir origin dan port default dinormalisasi. Whitespace/control, backslash, empty userinfo/query/fragment, serta path yang bisa dinormalisasi parser tetap ditolak dari bentuk mentah. Manifest Android menetapkan `allowBackup=false` sesuai petunjuk [flutter_secure_storage](https://pub.dev/packages/flutter_secure_storage); token tetap memakai storage OS.
 
 401 →hapus session token lokal/arah login; 403 inactive/pending →tampilkan status; 409 →refetch dan beri pilihan; 422→field errors; 429→retry-after; 503→retry manual. Interceptor tidak auto-retry POST finance dengan key baru.
 

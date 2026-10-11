@@ -65,3 +65,52 @@ Konsisten dan relevan gate:
 ## Verdict checkpoint
 
 Implementasi backend M04 (staging-smoke berguard) **dinilai baik secara statis**, tetapi **seluruh gate M04 PENDING**: menunggu handoff infra Grok (M04-B1), provisioning credential Redis staging (M04-B2), hasil CI `75dee91` (M04-B3), dan bukti deploy live Hostinger (M04-B4). Reviewer siap menilai handoff Grok dan bukti live segera setelah tersedia; tidak ada klaim keberhasilan dari kode saja.
+
+---
+
+## REVIEW FINAL M04 — setelah handoff Grok + bukti live (11 Oktober 2026)
+
+Catatan provenance Codex: audit tambahan ini tiba setelah PR16 merged melalui
+konteks task M04 yang sudah settled; Orca menolak completion `inactive_dispatch`.
+Isinya disimpan sebagai audit postmerge atas dokumen/sumber, bukan completion
+orchestration baru atau bukti reviewer menjalankan operasi VPS. Gate M04 telah
+diterima melalui review Grok yang tercatat sebelum merge; tidak ada redeploy.
+
+Checkpoint di atas sudah stale; bagian ini menggantikannya. M04 telah dieksekusi ke VPS dan di-merge sebagai PR #16 (`3a8be79`); staging aktif menjalankan SHA `12b4642`.
+
+### Penutupan blocker checkpoint
+
+| ID | Status | Bukti |
+| --- | --- | --- |
+| M04-B1 (infra Grok belum ada) | **CLOSED** | `infra/scripts/deploy-staging-immutable.sh`, `staging-metadata.sh`, `staging-runtime-smoke.sh`, `prepare-staging-redis-auth.py` (+`test_staging_redis_auth.py`), `staging-metadata.sh`, dan pin `image: rt05-api/web:${RT05_IMAGE_TAG:...}` di compose — direview penuh, lihat penilaian di bawah. |
+| M04-B2 (credential Redis staging missing) | **CLOSED** | `prepare-staging-redis-auth.py` benar-benar dijalankan di console: "Provisioned staging keys: REDIS_PASSWORD, REDIS_CACHE_PASSWORD; mode 600; existing other values preserved" (LIVE_RESULTS.md); tanpa nilai dicetak. |
+| M04-B3 (CI 75dee91 belum lengkap) | **CLOSED** | CI_RESULTS.md: API run 38113599864 SUCCESS **93 tes/766 assertion** termasuk 5 StagingSmokeTest; lima check SUCCESS pada 75dee91, dan lagi pada 03b4ac6, 62a863f, 12b4642, 9cad5de. Reviewer memverifikasi independen via `gh run list`: ketiga workflow success pada 12b4642 dan 9cad5de. |
+| M04-B4 (gate live) | **CLOSED oleh bukti coordinator** | LIVE_RESULTS.md mencatat rollout aktual + smoke PASS; reviewer tidak menyaksikan langsung tetapi menilai bukti terdokumentasi lengkap, spesifik (PID, SHA256 artefak, marker), dan konsisten dengan desain script yang direview. |
+
+### Penilaian script infra Grok (checklist tugas)
+
+| Item | Penilaian |
+| --- | --- |
+| Guard khusus staging | `deploy-staging-immutable.sh`: menolak argumen "production"; `require_identity` APP_ENV=staging, RT05_ENV staging/stg (alias existing), RT05_HOST persis host staging; env wajib ada, mode 600, bukan symlink; menolak Redis terpublikasi. Smoke script mengulangi guard yang sama. |
+| Immutable same-SHA api/web/workers | Build hanya `api web` dengan `RT05_IMAGE_TAG=<sha>`; `assert_staging_images` membuktikan keenam service memakai tag SHA sama dan worker/scheduler memakai **image ID** yang sama dengan api; `up --no-build`, `run --pull never` (koreksi live Compose 5.6.0 didokumentasikan). |
+| Preservasi pohon legacy kotor | Rilis di `/opt/rt05-releases/<sha>` via bare clone + worktree detach; `/opt/rt05-takeda` tidak pernah di-fetch/ditimpa/dijadikan rilis; worktree kotor → ditolak, bukan di-reset; SHA wajib ancestor `main` atau branch M04 coordinator (anti fork/PR arbitrer). |
+| Volume project sama | `list_staging_volumes`/`assert_staging_volumes`: tiga volume existing (`redis-data`, `api-storage`, `apk-downloads`) diverifikasi Name+CreatedAt tidak berubah dan ter-mount pada service yang benar; rollback tidak menghapus volume. |
+| Unrelated StartedAt tidak berubah | `list_unrelated`/`assert_unrelated` membandingkan ID/name/StartedAt seluruh container non-project sebelum/sesudah; LIVE_RESULTS mencatat 13 container lain tetap (comparison=0). |
+| Bounded checks | Semua loop berbatas: ready 120 dtk, heartbeat 180 dtk, PONG 120 dtk; smoke verify timeout 120. |
+| AUTH provisioning fill-missing-only | Python: tanpa argumen/path, root+Linux saja, `O_NOFOLLOW`, mode 600 dipertahankan, hanya mengisi key kosong, replace atomik dengan deteksi perubahan konkuren, output hanya nama key; menolak key nonkanonik/duplikat; tidak pernah mencetak nilai. |
+| Kompatibilitas rollback | `staging-previous-sha` dicatat dari image api berjalan; `rollback` men-deploy ulang SHA itu tanpa menghapus volume; pointer current/previous terdokumentasi di LIVE_RESULTS; rollback tidak dieksekusi (dicatat jujur). |
+
+### Bukti live (dokumen coordinator, LIVE_RESULTS.md)
+
+Rollout `12b4642`: migration additive DONE, grant DML ok; runtime smoke `PASS staging-runtime-smoke` dua kali (62a863f dan 12b4642) — marker published sebelum restart Redis, sentinel AOF everysec bertahan, completed attempts=1 inbox=0 (tanpa replay); empat heartbeat ok; enam service satu tag SHA; tiga volume CreatedAt tetap; 13 container luar project tetap; DbSmoke pooled/direct verify-full dengan sisa rollback 0; GET eksternal TLS default: /health/live, /health/ready, /api/v1, /, /profil, /artikel, /dokumentasi 200; /api/v1/auth/me 401; rute tak dikenal 404; /profil memuat Agus Ferdiansyah (fakta RT benar). Branch Neon staging terpisah dari dev/production diverifikasi ulang lewat metadata connector.
+
+### Catatan residual (bukan gate M04)
+
+- R01: Rollback otomatis ke stack pra-M04 tidak tersedia (rollout pertama); image/tree legacy dipertahankan manual — dicatat di "Batas operasi".
+- R02: DSN migrator hadir di container API — temuan hardening untuk M16, diakui LIVE_RESULTS.
+- R03: Insiden credential sesi 5–6 tetap **open** (rotasi Neon/APP_KEY belum, pernah ditolak pengaman); menghalangi klaim production M16, bukan gate M04.
+- R04: Reviewer tidak menyaksikan console Hostinger secara langsung; penerimaan live mengandalkan dokumen bukti coordinator + review Grok (pengganti saat reviewer limit) + konsistensi dengan script yang direview reviewer.
+
+### Jawaban final reviewer M04
+
+**Gate live M04 (HTTPS, routing, Neon read/write sintetis, heartbeat worker/scheduler, restart persistence AOF, tanpa gangguan service lain, smoke eksternal) terpenuhi berdasarkan bukti terdokumentasi yang konsisten dengan implementasi yang direview independen.** Tidak ada blocker penerimaan tersisa untuk M04. Rekomendasi: M04 **passed**; keterbatasan R01–R04 diteruskan ke PROGRESS. Staging menjalankan SHA `12b4642`; production/M05+ bukan cakupan review ini.

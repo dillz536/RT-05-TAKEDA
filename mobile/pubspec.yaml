@@ -1,5 +1,5 @@
 name: rt05_takeda
-description: "A new Flutter project."
+description: "Aplikasi Android RT05 TAKEDA untuk warga dan pengurus RT 05 Taman Kedaung."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -10,9 +10,12 @@ dependencies:
   dio: ^5.11.1
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   flutter_riverpod: ^3.4.3
   flutter_secure_storage: ^11.2.0
-  google_fonts: ^9.0.0
+  flutter_svg: ^2.3.0
+  go_router: ^18.0.2
   image_picker: ^1.2.4
   intl: ^0.20.3
   url_launcher: ^6.3.3
@@ -25,3 +28,27 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    # Salinan byte-identik website/public/images/logo (diuji test/brand_test.dart).
+    - assets/brand/
+  # TTF statis dari sumber resmi (lisensi OFL di assets/fonts/); tidak ada unduhan font saat runtime.
+  fonts:
+    - family: PublicSans
+      fonts:
+        - asset: assets/fonts/PublicSans-Regular.ttf
+        - asset: assets/fonts/PublicSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/PublicSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PublicSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/PublicSans-ExtraBold.ttf
+          weight: 800
+    - family: BricolageGrotesque
+      fonts:
+        - asset: assets/fonts/BricolageGrotesque-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/BricolageGrotesque-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/BricolageGrotesque-ExtraBold.ttf
+          weight: 800

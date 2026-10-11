@@ -4,3 +4,7 @@ analyzer:
   exclude:
     - build/**
     - android/**
+
+# Lebar baris formatter (dart format membaca nilai ini; CI memakai konfigurasi yang sama).
+formatter:
+  page_width: 160

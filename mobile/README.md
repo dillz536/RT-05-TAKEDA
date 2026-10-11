@@ -2,7 +2,20 @@
 
 Satu aplikasi Android; navigasi mengikuti peran dari API. Semua data dan aturan bisnis dari `rest-api/` lewat `/api/v1`. Aplikasi tidak terhubung langsung ke Neon/Redis dan tidak menghitung saldo/tunggakan sendiri.
 
-Flutter **3.47.7** (Dart 3.13.5). Paket: flutter_riverpod 3, dio 5, flutter_secure_storage 11 (token di keystore OS), image_picker, url_launcher, intl, google_fonts.
+Flutter **3.47.7** (Dart 3.13.5). Paket: flutter_riverpod 3, go_router 18, dio 5, flutter_secure_storage 11 (token di keystore OS), flutter_svg 2, flutter_localizations (Material bahasa Indonesia), image_picker, url_launcher, intl.
+
+## Fondasi (M05)
+
+| Bagian | Isi |
+| --- | --- |
+| Konfigurasi | `lib/app/config.dart`: `--dart-define=FLAVOR` wajib persis `dev`/`staging`/`prod`; `API_BASE_URL` origin root tanpa kredensial/query/fragment/path. staging/prod wajib HTTPS; dev boleh HTTP hanya ke `10.0.2.2`/`127.0.0.1`. Tidak valid → layar "Konfigurasi aplikasi tidak valid" tanpa request jaringan. Badge DEV/STAGING; production tanpa badge. Versi aplikasi hanya dari `pubspec.yaml` |
+| Bootstrap | `GET /health/live` nyata (tanpa token, connect/receive 8 detik + batas total, wajib JSON `status: ok`) paralel dengan pemulihan sesi. Gagal → splash + "Coba lagi". Nonproduction menampilkan host + `request_id` health untuk dicocokkan dengan log API |
+| Sesi | Token di secure storage. Hanya 401 (atau logout) menghapus token; offline/timeout/5xx/403 mempertahankan token dan menampilkan status tidak tersedia tanpa membuka data akun. Hasil async lama tidak menimpa logout/login baru |
+| Router | go_router: `/splash`, `/login`, `/register` (`?jenis=tambahan`), `/forgot`, `/pending`, `/home`, `/notifications`, dengan redirect sesi (`sessionRedirect`). Halaman detail fitur tetap `Navigator.push` |
+| Brand | Logo `assets/brand/` = salinan byte-identik `website/public/images/logo/` (dirender flutter_svg). Font Public Sans + Bricolage Grotesque TTF terbundel di `assets/fonts/` (OFL), tanpa unduhan runtime. Token warna = `:root` CSS website |
+| Ikon launcher | Adaptive icon (API 26+) + PNG legacy dihasilkan `python tool/launcher_icon.py` dari logo resmi; jangan edit hasilnya manual |
+
+Sumber font: Public Sans v2.001 (`uswds/public-sans` commit c7923167), Bricolage Grotesque (`ateliertriay/bricolage` commit 84745e5b, sumber yang sama dengan Google Fonts).
 
 ## Layar
 
@@ -28,19 +41,22 @@ Push FCM belum aktif (butuh project Firebase); inbox notifikasi berjalan tanpa p
 APK di-build di GitHub Actions (`.github/workflows/mobile.yml`) sehingga cache Gradle tidak memenuhi disk PC.
 
 1. Jalankan API lokal: `cd rest-api && php artisan serve --port=8077` (memakai Neon dev dari `.env`).
-2. Unduh artifact `rt05-takeda-debug-apk` dari run workflow terbaru (`gh run download -n rt05-takeda-debug-apk`).
+2. Unduh artifact `rt05-takeda-debug-<flavor>` dari run workflow terbaru (mis. `gh run download -n rt05-takeda-debug-staging`; nama mengikuti `.github/workflows/mobile.yml`).
 3. Nyalakan emulator: `%LOCALAPPDATA%\Android\Sdk\emulator\emulator -avd Pixel_8a`.
-4. Pasang: `%LOCALAPPDATA%\Android\Sdk\platform-tools\adb install -r app-debug.apk`.
+4. Pasang: `%LOCALAPPDATA%\Android\Sdk\platform-tools\adb install -r rt05-takeda-<flavor>-debug.apk`.
 
-APK debug default memanggil `http://10.0.2.2:8077` (alamat PC dari emulator). Untuk server lain: jalankan workflow manual dengan input `api_base_url` (HTTPS). Build release hanya mengizinkan HTTPS.
+APK debug default (`FLAVOR=dev`) memanggil `http://10.0.2.2:8077` (alamat PC dari emulator). Untuk staging: workflow manual dengan `flavor=staging` (origin HTTPS). Build release hanya mengizinkan HTTPS.
 
 ## Pengembangan
 
 ```powershell
 $env:Path = "C:\Users\USER\dev\flutter\bin;$env:Path"
 flutter pub get
+dart format lib test        # lebar 160 dari analysis_options.yaml
 flutter analyze
 flutter test
 ```
+
+Tes memakai storage token memori dan transport HTTP palsu dari `test/support/` (tidak pernah ke Neon atau server nyata). Tidak ada adapter palsu di kode aplikasi.
 
 Signing key rilis, `key.properties`, dan `google-services.json` tidak pernah di-commit.

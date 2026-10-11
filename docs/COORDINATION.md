@@ -9,25 +9,32 @@ otomasi yang dijamin terus hidup saat komputer atau Orca mati.
 
 ## Tahap aktif
 
-**M04 — staging dan bukti operasi VPS.** M03 lulus kode/CI pada `0d678bb`
-dan review final Kimi; bukti [CI_RESULTS.md](evidence/m03/CI_RESULTS.md).
+**Penutupan M05 — fondasi mobile PASS, PR17 dalam penutupan.** Source13de24e:
+77 tes dan dua APK CI lulus; emulator health HTTPS/offline/retry/brand/text
+scaling lulus; review final Kimi PASS. Bukti [LIVE_RESULTS.md](evidence/m05/LIVE_RESULTS.md)
+dan [CI_RESULTS.md](evidence/m05/CI_RESULTS.md). Tidak membuka fitur M06+.
+PR #16 merged
+`3a8be79` setelah lima cek sukses pada `9cad5de`. Staging menjalankan SHA
+`12b4642` yang telah diuji; merge dokumentasi tidak memicu redeploy.
+M03 lulus kode/CI pada `0d678bb` dan review final Kimi.
 
 PR #14 telah digabung pada commit `c644b84`: perbaikan routing staging dan aset
 HTTPS sudah menjadi baseline main. PR #15 merged `27a3e5b` setelah lima cek
-SUCCESS pada HEAD `ea4179e`. Branch tahap ini: `codex/m04-staging-recovery`.
+SUCCESS pada HEAD `ea4179e`. Branch tahap ini: `codex/m05-mobile-foundation`.
 Implementasi layanan M05–M12 yang sudah ada dipertahankan, tetapi status gate
 masing-masing tidak dinaikkan hanya karena kode tersedia. M13–M16 belum dibuka.
 
 | Agent | Tanggung jawab | File yang boleh diedit |
 | --- | --- | --- |
 | Codex | Rencana, keputusan integrasi, Git, review, tes gabungan, laporan | Dokumen utama dan perubahan integrasi setelah ownership diserahkan |
-| Claude Code | Audit kesiapan M05 diserahkan; review independen integrasi infra M04 | `docs/evidence/m04/CLAUDE_INFRA_REVIEW.md` |
-| Grok | Skrip rollout dan smoke diserahkan; coordinator menutup temuan integrasi | Laporan infra M04; implementasi infra telah diserahkan ke Codex |
-| Kimi | Checkpoint diserahkan; review baru dijeda karena quota 403 batas 5 jam | Sesi tetap dipertahankan, tidak dimulai ulang |
+| Claude Code | Fondasi Flutter diserahkan; review independen CI PASS, sekarang idle | Laporan foundation dan CLAUDE_CI_REVIEW.md; sumber milik Codex |
+| Grok | Workflow/guard diserahkan; review independen mobile PASS, sekarang idle | GROK_CI_RESULT.md dan GROK_MOBILE_REVIEW.md; workflow/guard milik Codex |
+| Kimi | Audit rencana dan acceptance final M05 PASS diterima; sekarang retained user_requested | KIMI_PLAN_REVIEW.md dan KIMI_ACCEPTANCE_REVIEW.md; sesi sama dipertahankan, bila quota403 kembali tugas baru dialihkan ke Grok |
 
 Semua bekerja pada checkout yang sama dengan ownership file terpisah. Hanya
 Codex melakukan switch branch, commit, push, dan merge. Agent meminta perubahan
 lintas ownership melalui mailbox coordinator; tidak mengedit diam-diam.
+Rencana dan gate tahap ini: [M05_PLAN.md](evidence/m05/M05_PLAN.md).
 
 ## Kontrak integrasi M03
 

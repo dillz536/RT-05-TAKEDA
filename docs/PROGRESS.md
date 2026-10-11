@@ -15,7 +15,7 @@ ditentukan hanya oleh tersedianya kode.
 | M02 | passed | PR #11 merged (321db0d) |
 | M03 | passed | PR #15, kode 0d678bb: API CI 88 tes/727 assertion, recovery worker/Redis nyata dan build infra SUCCESS; review final Kimi PASS; docs/evidence/m03/CI_RESULTS.md |
 | M04 | passed | Gate fungsional staging SHA12b4642: HTTPS, Neon pooled/direct rollback0, AOF pending job, empat heartbeat, volume/unrelated unchanged; Grok menerima bukti. Credential incident tetap open; production belum siap. docs/evidence/m04/LIVE_RESULTS.md |
-| M05 | in_progress | Analyze/13 tes historis dan emulator warga/pengurus sesi 4; APK staging terpasang sesi 6, login staging belum dibuktikan |
+| M05 | passed | PR17, source13de24e: 77 tes/analyzer/dua APK CI SUCCESS, checksum cocok; emulator health HTTPS, offline/retry proses sama, ikon dan skala teks1,3/2,0; review final Kimi PASS. docs/evidence/m05/LIVE_RESULTS.md |
 | M06 | in_progress | Registrasi/login/token/approval + tes CI lulus; SMTP reset belum (log) |
 | M07 | in_progress | Rumah/keluarga/akun/permohonan API + layar mobile; tes CI lulus |
 | M08 | in_progress | Pengaduan + foto privat + anonim + status; tes CI lulus |
@@ -32,8 +32,9 @@ M00 memakai label accepted_baseline khusus, bukan status passed hasil tes baru. 
 
 ## Milestone aktif
 
-**M04 — staging setelah gate M03**, penutupan branch `codex/m03-async-recovery`
-dan tahap berikutnya pada `codex/m04-staging-recovery`.
+**Penutupan M05 — fondasi mobile diterima**, branch `codex/m05-mobile-foundation`.
+Gate M05 lulus source13de24e dan review final Kimi; PR17 sedang ditutup.
+M04 sebelumnya merged `3a8be79`, staging live tetap SHA `12b4642`.
 Pemilik meminta pengerjaan bertahap dengan empat agent (P16), bukan membuka
 seluruh roadmap serentak. [COORDINATION.md](COORDINATION.md) mencatat ownership,
 gate, pemulihan setelah limit/listrik mati, dan urutan berikutnya.
@@ -345,6 +346,62 @@ staging. Tidak ada redeploy server dari aksi merge ini.
   tidak dicoba lewat jalur lain. Tidak mengklaim keamanan production/M16.
   M05 dibuka setelah review, pembukuan dan merge PR16; hanya fondasi mobile.
 
+### Checkpoint M05 — implementasi dan review awal
+
+- Branch `codex/m05-mobile-foundation`, rencana dipush pada `0309f3e` setelah PR16 merged. Scope hanya fondasi M05; layanan bisnis historis M06+ belum diterima oleh gate baru.
+- Claude memiliki `mobile/**`: config, health, secure session, go_router, brand/font terbundel, lokalisasi dan tes skala teks. Overflow tata letak lama ditemukan lewat widget test dan sedang diperbaiki; tidak ada perubahan aturan bisnis.
+- Grok menyerahkan workflow/guard CI awal dan laporan `docs/evidence/m05/GROK_CI_RESULT.md`. Review Codex menemukan perbedaan penerimaan slash akhir/port dengan Dart; follow-up Grok aktif untuk menyamakan kontrak. Belum ada run GitHub atau APK baru.
+- Pemilik memperkirakan kuota Kimi tersedia lagi. Sesi sama mulai merespons audit, tetapi dua `worker-start` diberi `agent_prompt_stalled` oleh Orca; laporan completion konteks M04 lama ditolak `inactive_dispatch`. Ini bukan bukti gate baru. Sesi dipertahankan dan scope diarahkan ke audit rencana M05 saja; Grok tetap melanjutkan pekerjaan utamanya.
+- `docs/MOBILE.md` menjelaskan struktur fondasi aktual, konfigurasi origin/HTTPS, health publik sebagai gate M05, dan pilihan kecil label navigasi maksimum skala1,3 (isi layar mengikuti skala sistem). Gate analyze/test baru, artifact CI, health emulator, offline/retry dan review final masih pending.
+- `node infra/scripts/check-repo.mjs` (516 berkas pada pemeriksaan Codex) serta `git diff --check` lulus pada checkpoint dokumentasi; angka dapat bertambah saat worker menulis. Tidak menjalankan Gradle/APK lokal, tes/factory Neon, atau redeploy VPS.
+
+Integrasi setelah handoff: Claude menyelesaikan75 tes, Grok menyerahkan guard
+yang telah dikoreksi. Codex menambahkan validasi port/bentuk mentah URL dan dua
+tes config, flag Android `allowBackup=false`, serta self-test guard CI Node22.
+Hasil lokal Codex: `flutter analyze` No issues found; `flutter test`77/77;
+format25 file0changed; self-test guard, `check-repo`520 file dan diff-check lulus.
+Completion audit rencana Kimi akhirnya diterima pada ctx_820928d88366
+(worker-show completed/succeeded); retry duplikat ditolak, tidak dihitung ulang.
+Tiga butir rencana implisit dibuat eksplisit. CI/APK dan emulator tetap pending;
+scope fitur/business/API/ERD tidak berubah, sehingga kontrak API/schema tidak
+perlu diubah untuk fondasi ini.
+
+### M05 — bukti source final dan emulator, gate PASS
+
+- Source `13de24e230b44dd78b382260013108b5daf1d84a`, PR17. Seluruh delapan
+  checks SUCCESS: Mobile38135976078 (format25 file0changed, analyzer bersih,
+  77 tes dan APK dev/staging), Infra38135976074, Hygiene38135976098,
+  Vercel dan Preview Comments. [CI_RESULTS.md](evidence/m05/CI_RESULTS.md).
+- `gh run download`, `Get-FileHash`/scan ZIP Python, `aapt2 dump badging/xmltree`
+  dan `adb install`: dua checksum cocok, aset SVG identik website, delapan
+  TTF, nol pola DSN/credential yang diperiksa; allowBackup=false dan cleartext
+  debug hanya host lokal. Instalasi staging Success setelah hanya paket uji
+  lama kosong dihapus karena signing debug berbeda.
+- Emulator Pixel_8a: startup staging health HTTPS nyata PASS, airplane/Wi-Fi/data
+  offline menampilkan error; jaringan dipulihkan dan Coba lagi pada PID yang
+  sama kembali health ok. UUID response tercatat di UI/logcat. Skala Android
+  1,3/2,0 terbaca, scroll tombol tetap dapat dijangkau, ikon native resmi;
+  tidak ada exception/overflow/crash. [LIVE_RESULTS.md](evidence/m05/LIVE_RESULTS.md)
+  dan tujuh screenshot aman tanpa akun/data warga. Pengaturan emulator restored.
+- Drill runtime memakai guest; preservasi token/race dibuktikan 14 session
+  tests dalam77 CI, bukan autentikasi akun nyata. Tidak mengklaim korelasi
+  UUID access log VPS, UAT, APK signed, SMTP/FCM atau gate M06+.
+- Claude review CI PASS dan Grok review sumber mobile PASS. Kimi sesi sama
+  membaca tujuh screenshot dan bukti aktual, verdict akhir PASS pada
+  `task_84918b406e92` / `ctx_94fad7e0330f`. Worker_done `msg_7b7c8f755a8a`
+  seq156 diterima, completed/succeeded; receipt awal agent_prompt_stalled
+  tidak membuktikan limit. Sesi retained user_requested sebelum ack delivery.
+  Tidak membuat retry duplikat. [KIMI_ACCEPTANCE_REVIEW.md](evidence/m05/KIMI_ACCEPTANCE_REVIEW.md).
+- `check-repo`532 berkas dan `git diff --check` PASS pada checkpoint bukti.
+  Perbedaan kosmetik banner STAGING dengan jam status bar dicatat di
+  CAPSTONE_ALIGNMENT; source frozen, tidak ada perubahan schema/API atau deploy.
+- Root menerima gate M05 berdasarkan bukti aktual dan review independen.
+  Commit berikutnya hanya dokumentasi/screenshot aman; source mobile/workflow
+  identik source13de24e. Sebelum merge PR17, check terbaru harus SUCCESS.
+  Target sampai M05 terpenuhi secara fungsional; pekerjaan baru M06 tidak
+  dibuka. Tahap berikutnya nanti: rekonsiliasi flow approval Drive/aturan bisnis
+  dan gate identitas M06, dengan insiden credential historis tetap open.
+
 10 Oktober 2026 (M01): checkout lokal pemilik berada di `Documents/RT X TAKEDA/RT-05-TAKEDA/`; folder induk `RT X TAKEDA/` berisi paket MD asli (tidak di-commit). PR #10 merged. Sesi M02: branch `codex/m02-api-neon-foundation`, PR #11. Neon dev sudah dimigrasi (5 migration fondasi). `rest-api/.env` lokal menunjuk Neon dev. php.ini lokal: pdo_pgsql/pgsql/intl/sodium diaktifkan. Tidak ada migration, image, atau job. Input belum tersedia: credential Neon, akses VPS/DNS (ditawarkan pemilik via Chrome untuk M04), SMTP, FCM, signing key, Flutter SDK.
 
 Catat Git status, perubahan pengguna yang belum commit, migration yang sudah applied,
@@ -360,9 +417,9 @@ Selesaikan perubahan pengguna dengan hati-hati; tidak reset/force-push.
 | R01 | medium | website/release | `package-frontend.ps1` setelah dipindah ke `website/` menghasilkan ZIP kosong yang lolos verifikasi (filesVerified 0), lalu CRLF pada arsip subtree | M01 | fixed (350390a), diverifikasi 201/201 |
 | R02 | low | docs | FRONTEND.md/SOURCES.md menyebut 34e9b21 sebagai Git tree; sebenarnya commit | M01 | fixed |
 | R03 | medium | deploy preview | Root Directory Vercel belum diubah; tanpa jembatan root, merge akan memutus preview | M01 | mitigated (ADR12), menunggu pemilik |
-| R04 | medium | mobile | Flutter SDK tidak terpasang | M05 | open |
+| R04 | medium | mobile | Flutter SDK dahulu belum terpasang | M05 | resolved: Flutter3.47.7/Dart3.13.5; analyze77 tests/dua APK CI dan emulator staging lulus11 Oktober |
 | R05 | high | database | pdo_pgsql named prepares + pooler Neon → transaksi gugur 25P02 pada tulis pertama | M02 | fixed (ADR14), terverifikasi di Neon pooled |
-| R06 | medium | dev env | Docker Desktop tidak jalan: WSL2 belum terpasang (Windows Home) | M02/M03 | open, menunggu pemilik |
+| R06 | medium | dev env | Docker Desktop tidak jalan: WSL2 belum terpasang (Windows Home) | M02/M03 | accepted limitation ADR19: build Docker/Postgres/Redis di CI, runtime staging di VPS; tidak perlu instalasi Docker/WSL lokal untuk gate ini |
 | R07 | low | security | Credential owner Neon dev tampil di keluaran tool agent saat pengambilan connection string | M02 | open: reset password rt05_owner (dev) disarankan |
 
 ## Bukti historis frontend
