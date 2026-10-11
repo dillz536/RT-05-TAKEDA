@@ -21,9 +21,9 @@ masing-masing tidak dinaikkan hanya karena kode tersedia. M13–M16 belum dibuka
 | Agent | Tanggung jawab | File yang boleh diedit |
 | --- | --- | --- |
 | Codex | Rencana, keputusan integrasi, Git, review, tes gabungan, laporan | Dokumen utama dan perubahan integrasi setelah ownership diserahkan |
-| Claude Code | Probe sintetis staging terpisah dari guard tes CI | `rest-api/` dan laporan backend di `docs/evidence/m04/` |
-| Grok | Deploy staging dengan SHA tetap, checkout baru dan smoke operasi | `infra/`, workflow infra, dan laporan infra di `docs/evidence/m04/` |
-| Kimi | Review independen gate, privasi, transaksi, bukti dan urutan | Laporan penerimaan di `docs/evidence/m04/` |
+| Claude Code | Audit kesiapan M05 diserahkan; review independen integrasi infra M04 | `docs/evidence/m04/CLAUDE_INFRA_REVIEW.md` |
+| Grok | Skrip rollout dan smoke diserahkan; coordinator menutup temuan integrasi | Laporan infra M04; implementasi infra telah diserahkan ke Codex |
+| Kimi | Checkpoint diserahkan; review baru dijeda karena quota 403 batas 5 jam | Sesi tetap dipertahankan, tidak dimulai ulang |
 
 Semua bekerja pada checkout yang sama dengan ownership file terpisah. Hanya
 Codex melakukan switch branch, commit, push, dan merge. Agent meminta perubahan

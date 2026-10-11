@@ -277,6 +277,10 @@ staging. Tidak ada redeploy server dari aksi merge ini.
 - Claude menyerahkan probe CLI `rt05:staging-smoke`: APP_ENV staging dan
   flag konfirmasi wajib sebelum akses DB; satu event sintetis tanpa penerima,
   akun, inbox atau keuangan. Guard *_test CI lama tidak dilonggarkan.
+- PR #16 pada `75dee91`: lima check SUCCESS. API run 38113599864 lulus
+  93 tes/766 assertion (lima StagingSmokeTest); infra 38113599888 dan hygiene
+  38113599875 SUCCESS. Bukti `docs/evidence/m04/CI_RESULTS.md`; ini belum
+  mencakup skrip rollout infra berikutnya maupun operasi live VPS.
 - Grok menyiapkan rollout SHA tetap dan checkout release terpisah; Kimi
   memeriksa batas tindakan, schema/privasi, credential dan bukti live.
 - Preflight nyata Chrome Hostinger ada di `docs/evidence/m04/PREFLIGHT.md`.
@@ -286,9 +290,26 @@ staging. Tidak ada redeploy server dari aksi merge ini.
 - Dua password Redis staging belum ada. AUTH tetap wajib; provisioning
   khusus staging harus menjaga credential/APP_KEY/DSN yang sudah ada.
   Tidak merotasi credential production yang sebelumnya ditolak pengaman.
+- Setelah handoff Grok, Codex menutup temuan integrasi: same-SHA enam service,
+  snapshot volume/mount dan unrelated ID/StartedAt, compatibility rollback,
+  timeout probe, serta marker pending yang harus selesai dengan attempts
+  sama setelah Redis AOF restart. Helper Python hanya mengisi dua key Redis
+  staging kosong/hilang secara atomik pada env existing privat; tanpa output
+  nilai atau perubahan DSN/APP_KEY. `bash -n`, empat pure synthetic tests,
+  check-m03-compose, check-repo dan diff-check lokal lulus; belum dijalankan
+  terhadap file env/server nyata. Reviewer pengganti Claude memeriksa kode.
 - Gate live M04 masih pending: rollout baru, Neon read/write sintetis,
   heartbeat empat komponen, restart/persistence dan pemeriksaan service lain.
   M05 belum dibuka untuk implementasi baru sebelum bukti remote M04.
+- Audit baca-saja kesiapan M05 oleh Claude ada di
+  `docs/evidence/m05/READINESS_REVIEW.md`; belum implementasi baru atau gate
+  mobile. M05 dapat dibuktikan dengan health request nyata; login layanan
+  M06 dan UAT fitur berikutnya bukan prasyarat fondasi M05.
+- Kimi menyelesaikan checkpoint kode backend, tetapi dispatch review infra
+  berikutnya berhenti karena provider 403 batas penggunaan 5 jam. Task
+  `task_9689bdf377b5` ditandai blocked lewat pemulihan coordinator, tanpa
+  memalsukan worker_done. Sesi tidak ditutup/diganti atau diulang saat limit.
+  Review independen integrasi infra dialihkan kepada Claude.
 
 10 Oktober 2026 (M01): checkout lokal pemilik berada di `Documents/RT X TAKEDA/RT-05-TAKEDA/`; folder induk `RT X TAKEDA/` berisi paket MD asli (tidak di-commit). PR #10 merged. Sesi M02: branch `codex/m02-api-neon-foundation`, PR #11. Neon dev sudah dimigrasi (5 migration fondasi). `rest-api/.env` lokal menunjuk Neon dev. php.ini lokal: pdo_pgsql/pgsql/intl/sodium diaktifkan. Tidak ada migration, image, atau job. Input belum tersedia: credential Neon, akses VPS/DNS (ditawarkan pemilik via Chrome untuk M04), SMTP, FCM, signing key, Flutter SDK.
 

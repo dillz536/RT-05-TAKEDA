@@ -17,6 +17,8 @@ pemilik. Pemeriksaan awal bersifat baca saja; belum deploy kode M03/M04.
   `infra/compose.production.yml`, `infra/compose.vps.yml`,
   `infra/docker/gateway.Caddyfile`, `website/bootstrap/app.php`.
   Semua dipertahankan; deployment harus memakai checkout release lain.
+  `git rev-parse HEAD` melalui console mengembalikan
+  `53a8b10c9156fa6dcbd57d623863efb238f39d64` sebelum rollout baru.
 - Pemeriksaan keberadaan (tanpa nilai) pada env staging:
   `REDIS_PASSWORD=missing`, `REDIS_CACHE_PASSWORD=missing`. Compose baru
   mewajibkan keduanya. Provisioning credential baru khusus Redis staging
