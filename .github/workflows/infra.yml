@@ -29,7 +29,7 @@ jobs:
         run: |
           docker compose run --help | grep -q -- --no-deps
           docker compose run --help | grep -q -- --pull
-          if grep -E 'run .*--no-build' infra/scripts/deploy-staging-immutable.sh; then
+          if grep -E '^[^#]*run .*--no-build' infra/scripts/deploy-staging-immutable.sh; then
             echo 'compose run does not accept --no-build'; exit 1
           fi
       - name: Validasi compose production + override VPS
