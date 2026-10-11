@@ -101,8 +101,10 @@ credential pada checkpoint sebelumnya.
   pada sesi ini. WBS menuntut deliverable dengan ownership dan bukti, bukan daftar
   kode yang diklaim selesai. Dokumen kampus tidak ditulis ulang pada sesi ini.
 - Jika kuota agent habis, simpan file/status, perintah terakhir, gate yang belum
-  diuji dan langkah berikutnya. Tugas itu menunggu kuota pulih; tidak mengganti
-  akun untuk menghindari limit atau menandainya selesai.
+  diuji dan langkah berikutnya. Instruksi terbaru pemilik (11 Oktober 2026):
+  tugas Kimi yang terkena limit dialihkan ke Grok melalui Dispatch baru,
+  setelah kepemilikan file lama dihentikan dan checkpoint dibaca. Sesi Kimi
+  dipertahankan; tidak mengganti akun atau memalsukan completion.
 - Setelah listrik/Orca mati: periksa `status`, `terminal list`, `run-use`,
   `task-list`, mailbox, Git dan checkpoint; ambil handle terminal baru. Jangan
   memakai ID Dispatch lama untuk completion baru atau mengulang deploy/migration.
