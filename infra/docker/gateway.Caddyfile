@@ -3,6 +3,11 @@
 {
 	admin off
 	auto_https off
+	# Pertahankan protokol HTTPS dari proxy Coolify pada jaringan privat.
+	servers {
+		trusted_proxies static private_ranges
+		trusted_proxies_strict
+	}
 }
 
 :80 {
