@@ -87,7 +87,7 @@ FK transaksi ke user/house tidak ON DELETE CASCADE. Arsip parent tidak menghapus
 | Tabel | Kolom penting dan relasi |
 | --- | --- |
 | audit_logs | id, actor_id nullable untuk sistem, action, entity_type/id, safe_diff json, request_id, created_at |
-| outbox_events | id UUID, type, aggregate_type/id, safe_payload json, available_at, dispatch_lease_until, attempts, published_at, completed_at, last_error_code |
+| outbox_events | id UUID, type, aggregate_type/id, safe_payload json, available_at, dispatch_lease_until, attempts, published_at, completed_at, failed_at nullable, last_error_code |
 | idempotency_requests | id, actor_id, route_scope, key, request_hash, state, response_status/body aman, created_at, completed_at |
 | export_requests | id, requested_by, type, filter json, state, file_media_id, expires_at, error_code, created_at |
 | system_settings | key unique, value json terstruktur, version, updated_by; tidak menyimpan credential |

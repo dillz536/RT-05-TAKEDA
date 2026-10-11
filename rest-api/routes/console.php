@@ -3,8 +3,10 @@
 use App\Domain\Community\Notifications;
 use App\Domain\Finance\Dues;
 use App\Domain\Identity\RegistrationToken;
+use App\Domain\Operations\OutboxDispatcher;
 use App\Models\Agenda;
 use App\Models\TagihanIuran;
+use App\Support\Heartbeat;
 use App\Support\Outbox;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Artisan;
@@ -17,9 +19,12 @@ use Illuminate\Support\Facades\Schedule;
 */
 
 Artisan::command('rt05:outbox-dispatch {--limit=100}', function () {
-    $n = Notifications::dispatch((int) $this->option('limit'));
-    $this->info("Event diproses: $n");
-})->purpose('Proses outbox_events menjadi notifikasi inbox');
+    $r = OutboxDispatcher::dispatch((int) $this->option('limit'));
+    $this->info("Event diklaim: {$r['claimed']}, dikirim ke antrean: {$r['enqueued']}, gagal enqueue: {$r['failed']}");
+
+    // Antrean tidak tersedia: event tetap pending di Postgres; exit non-zero agar terlihat di log scheduler.
+    return $r['failed'] > 0 ? 1 : 0;
+})->purpose('Klaim outbox_events lalu kirim ID event ke antrean notifications');
 
 Artisan::command('rt05:tagihan-generate {periode? : YYYY-MM; kosong = catch-up sampai bulan berjalan}', function () {
     $p = $this->argument('periode');
@@ -65,6 +70,8 @@ Artisan::command('rt05:token-rotate', function () {
     $this->info('Token registrasi dirotasi.');
 })->purpose('Rotasi token registrasi RT');
 
+// Heartbeat scheduler M03: dibaca rt05:heartbeat-check, tidak lewat endpoint publik.
+Schedule::call(fn () => Heartbeat::beat('scheduler'))->everyMinute()->name('rt05:heartbeat-scheduler');
 Schedule::command('rt05:outbox-dispatch')->everyMinute()->withoutOverlapping()->onOneServer();
 Schedule::command('rt05:tagihan-generate')->dailyAt('00:10')->timezone('Asia/Jakarta')->withoutOverlapping()->onOneServer();
 Schedule::command('rt05:pengingat-agenda')->hourly()->withoutOverlapping()->onOneServer();

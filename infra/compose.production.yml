@@ -2,6 +2,7 @@
 # Domain Coolify diarahkan HANYA ke service "gateway" (port 80): takeda.morriz.tech / takeda-staging.morriz.tech.
 # Semua nilai ${...} diisi di Coolify → Environment Variables (lihat infra/env/production.env.example).
 # Redis/API/web tidak dipublikasikan ke internet; hanya gateway yang menerima trafik dari proxy Coolify.
+# Service "redis" tetap antrean dan memakai volume redis-data. redis-cache terpisah, tanpa volume.
 
 services:
   gateway:
@@ -14,6 +15,7 @@ services:
     expose: ["80"]
 
   api: &api
+    image: rt05-api:${RT05_ENV:-local}
     build:
       context: ..
       dockerfile: infra/docker/api.Dockerfile
@@ -30,12 +32,27 @@ services:
       DB_SSLMODE: verify-full
       DB_SSLROOTCERT: /etc/ssl/certs/ca-certificates.crt
       REDIS_CLIENT: phpredis
+      # Antrean: service redis + volume redis-data. Cache: service redis-cache.
+      # Koneksi Laravel "queue" memakai REDIS_QUEUE_*; "cache" memakai REDIS_CACHE_*.
+      # REDIS_PREFIX eksplisit (prefix lama) dihormati; bila kosong, takeda:<APP_ENV>:.
       REDIS_HOST: redis
       REDIS_PORT: "6379"
-      REDIS_PREFIX: ${REDIS_PREFIX:-rt05prod_}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD wajib untuk staging dan production}
+      REDIS_QUEUE_HOST: redis
+      REDIS_QUEUE_PORT: "6379"
+      REDIS_QUEUE_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD wajib untuk staging dan production}
+      REDIS_QUEUE_DB: "0"
+      REDIS_QUEUE_CONNECTION: queue
+      REDIS_QUEUE_RETRY_AFTER: "180"
+      REDIS_PREFIX: ${REDIS_PREFIX:-takeda:${APP_ENV:-production}:}
+      REDIS_CACHE_HOST: redis-cache
+      REDIS_CACHE_PORT: "6379"
+      REDIS_CACHE_PASSWORD: ${REDIS_CACHE_PASSWORD:?REDIS_CACHE_PASSWORD wajib untuk staging dan production}
+      REDIS_CACHE_DB: "1"
       CACHE_STORE: redis
       QUEUE_CONNECTION: redis
       SESSION_DRIVER: redis
+      SESSION_CONNECTION: cache
       TRUSTED_PROXIES: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
       MAIL_MAILER: ${MAIL_MAILER:-log}
       MAIL_HOST: ${MAIL_HOST:-}
@@ -48,20 +65,56 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      redis-cache:
+        condition: service_healthy
     expose: ["80"]
 
-  worker:
+  worker-default:
     <<: *api
-    command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--max-time=3600"]
+    command: ["php", "artisan", "queue:work", "redis", "--queue=notifications,default", "--sleep=2", "--tries=5", "--timeout=60", "--max-time=3600"]
+    stop_grace_period: 180s
     healthcheck:
-      disable: true
+      test: ["CMD", "php", "artisan", "rt05:heartbeat-check", "--component", "worker-default"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+    expose: []
+
+  worker-media:
+    <<: *api
+    command: ["php", "artisan", "queue:work", "redis", "--queue=media", "--sleep=2", "--tries=5", "--timeout=120", "--max-time=3600"]
+    stop_grace_period: 180s
+    healthcheck:
+      test: ["CMD", "php", "artisan", "rt05:heartbeat-check", "--component", "worker-media"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+    expose: []
+
+  worker-exports:
+    <<: *api
+    command: ["php", "artisan", "queue:work", "redis", "--queue=exports", "--sleep=2", "--tries=5", "--timeout=120", "--max-time=3600"]
+    stop_grace_period: 180s
+    healthcheck:
+      test: ["CMD", "php", "artisan", "rt05:heartbeat-check", "--component", "worker-exports"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
     expose: []
 
   scheduler:
     <<: *api
     command: ["php", "artisan", "schedule:work"]
+    stop_grace_period: 180s
     healthcheck:
-      disable: true
+      test: ["CMD", "php", "artisan", "rt05:heartbeat-check", "--component", "scheduler"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
     expose: []
 
   # Sekali jalan per deploy: migration additive lewat endpoint direct, lalu hak role runtime.
@@ -90,11 +143,30 @@ services:
   redis:
     image: redis:7.4-alpine
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD wajib untuk staging dan production}
+    command: ["/bin/sh", "/usr/local/bin/rt05-redis-queue.sh"]
     volumes:
       - redis-data:/data
+      - ./docker/redis-queue.sh:/usr/local/bin/rt05-redis-queue.sh:ro
+      - ./docker/redis-health.sh:/usr/local/bin/rt05-redis-health.sh:ro
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "/bin/sh", "/usr/local/bin/rt05-redis-health.sh"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  redis-cache:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_CACHE_PASSWORD:?REDIS_CACHE_PASSWORD wajib untuk staging dan production}
+    command: ["/bin/sh", "/usr/local/bin/rt05-redis-cache.sh"]
+    volumes:
+      - ./docker/redis-cache.sh:/usr/local/bin/rt05-redis-cache.sh:ro
+      - ./docker/redis-health.sh:/usr/local/bin/rt05-redis-health.sh:ro
+    healthcheck:
+      test: ["CMD", "/bin/sh", "/usr/local/bin/rt05-redis-health.sh"]
       interval: 10s
       timeout: 3s
       retries: 10

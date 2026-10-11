@@ -3,9 +3,12 @@
 namespace App\Providers;
 
 use App\Models\Akun;
+use App\Support\Heartbeat;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Queue\Events\Looping;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,5 +30,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Email reset memuat token untuk dimasukkan di aplikasi (deep link rt05takeda://).
         ResetPassword::createUrlUsing(fn (Akun $akun, string $token) => 'rt05takeda://reset-password?'.http_build_query(['token' => $token, 'email' => $akun->email]));
+
+        // Heartbeat worker tiap putaran loop queue:work (dibatasi write_interval). Listener tidak
+        // mengembalikan nilai: return false pada event Looping akan menghentikan worker.
+        Event::listen(function (Looping $event): void {
+            Heartbeat::beat(Heartbeat::workerComponent($event->queue), throttle: true);
+        });
     }
 }

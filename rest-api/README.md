@@ -1,6 +1,6 @@
 # rest-api/ — Laravel REST API RT05 TAKEDA
 
-**Status: fondasi M02.** Laravel 13.35 (sama dengan `website/`), PHP 8.4, PostgreSQL saja. `rest-api/` adalah pemilik tunggal database dan aturan bisnis; website dan mobile hanya memanggil `/api/v1`. Kontrak: [docs/openapi.yaml](../docs/openapi.yaml) (mesin) dan [docs/API.md](../docs/API.md) (desain).
+**Status: fondasi M02, layanan M06–M12 dan async M03 (lihat docs/PROGRESS.md).** Laravel 13.35 (sama dengan `website/`), PHP 8.4, PostgreSQL saja. `rest-api/` adalah pemilik tunggal database dan aturan bisnis; website dan mobile hanya memanggil `/api/v1`. Kontrak: [docs/openapi.yaml](../docs/openapi.yaml) (mesin) dan [docs/API.md](../docs/API.md) (desain).
 
 ## Yang sudah ada (M02)
 
@@ -13,7 +13,30 @@
 | Command | `rt05:db-smoke`, `rt05:db-grant-runtime-role` |
 | Tes | Postgres nyata dengan role runtime; contract test OpenAPI; CI `.github/workflows/api.yml` |
 
-Belum ada: users/auth (M06), Redis/queue/outbox dispatcher (M03), domain bisnis (M07+). Endpoint yang dirancang tercatat `x-status: planned` di OpenAPI dan menghasilkan 404 sampai milestone-nya.
+Endpoint yang dirancang tetapi belum dibangun tercatat `x-status: planned` di OpenAPI dan menghasilkan 404 sampai milestone-nya.
+
+## Async (M03)
+
+Alur: transaksi domain menulis `outbox_events` → scheduler `rt05:outbox-dispatch` (tiap menit) mengklaim event dengan lease `FOR UPDATE SKIP LOCKED`, mengirim ID event ke antrean Redis `notifications`, lalu mengisi `published_at` → worker menjalankan `App\Jobs\ProcessOutboxEvent` yang mengunci event, menulis inbox, dan mengisi `completed_at` dalam satu transaksi. Detail rancangan: [docs/ASYNC_JOBS.md](../docs/ASYNC_JOBS.md).
+
+| Kondisi | Perilaku |
+| --- | --- |
+| Redis tidak tersedia saat enqueue | Event tetap pending, `last_error_code=enqueue_failed:<Kelas>`, dicoba lagi dengan backoff ≤15 menit; transaksi domain tidak terpengaruh |
+| Dispatcher mati sebelum enqueue | Lease (`RT05_OUTBOX_LEASE_SECONDS`, 120) habis → diklaim ulang |
+| Job hilang dari Redis | `published_at` tanpa `completed_at` > `RT05_OUTBOX_STALE_SECONDS` (900) → dikirim ulang |
+| Job/event ganda | Consumer berhenti bila event sudah completed; inbox `UNIQUE(event_id, penerima_id)` |
+| Consumer gagal | Rollback; retry 5× (backoff 10/30/120/300 detik, timeout 60); habis → `failed_at` (diparkir). Jenis event tak dikenal langsung diparkir. `failed_jobs`/log hanya memuat kelas + SQLSTATE |
+
+Worker: `php artisan queue:work redis --queue=notifications,default --sleep=2 --tries=5 --timeout=60 --max-time=3600` (media/exports: `--queue=media` atau `--queue=exports`, `--timeout=120`). Scheduler: `php artisan schedule:work`.
+
+| Command | Kegunaan |
+| --- | --- |
+| `rt05:outbox-dispatch` | Klaim + enqueue; exit 1 bila ada enqueue gagal |
+| `rt05:outbox-retry {event}` | Ulang manual satu event yang diparkir/tertahan |
+| `rt05:heartbeat-check --component=…` | Probe internal heartbeat `worker-default`/`worker-media`/`worker-exports`/`scheduler`; exit 0 sehat, 1 basi/hilang/store gagal, 2 argumen salah |
+| `rt05:async-smoke --phase=prepare/verify/status` | Smoke sintetis untuk CI; hanya database `*_test` lokal/CI, Redis lokal/CI, non-production |
+
+Redis: koneksi `queue` (antrean, lock scheduler, heartbeat; AOF + noeviction) dan `cache` (cache, sesi, rate limiter). `REDIS_QUEUE_*`/`REDIS_CACHE_*` jatuh ke `REDIS_HOST/PORT/PASSWORD` dengan DB 0/1. Prefix default `takeda:<APP_ENV>:`. Lokal tanpa Redis: `QUEUE_CONNECTION=sync` sehingga dispatch langsung memproses event.
 
 ## Struktur dan konvensi domain
 

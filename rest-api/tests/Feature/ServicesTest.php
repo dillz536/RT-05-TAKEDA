@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Domain\Community\Notifications;
+use App\Domain\Operations\OutboxDispatcher;
 use App\Models\KategoriPengaduan;
 use App\Models\Pengaduan;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -90,9 +90,9 @@ class ServicesTest extends TestCase
         $id = $this->complaint($a)->json('data.id');
         $this->as($admin)->postJson("/api/v1/admin/complaints/$id/status", ['status' => 'diproses', 'expected_version' => 1])->assertOk();
 
-        Notifications::dispatch();
-        DB::table('outbox_events')->update(['completed_at' => null, 'dispatch_lease_until' => null]);
-        Notifications::dispatch();
+        OutboxDispatcher::dispatch();
+        DB::table('outbox_events')->update(['completed_at' => null, 'dispatch_lease_until' => null, 'published_at' => null]);
+        OutboxDispatcher::dispatch();
 
         $this->assertSame(1, DB::table('notifikasi')->where('penerima_id', $a->id)->where('pengaduan_id', $id)->count(), $this->outboxDiagnostics());
         $this->assertSame(1, DB::table('notifikasi')->where('penerima_id', $admin->id)->where('pengaduan_id', $id)->count(), 'pengurus diberi tahu pengaduan baru');
@@ -149,7 +149,7 @@ class ServicesTest extends TestCase
             'nama' => 'Uji kerja bakti', 'deskripsi' => 'd', 'lokasi' => 'Lapangan', 'mulai_at' => now()->addDays(2)->toIso8601String(),
         ])->assertCreated();
         $this->as($admin)->postJson('/api/v1/admin/announcements', ['judul' => 'Uji pengumuman', 'isi' => 'Isi'])->assertCreated();
-        Notifications::dispatch();
+        OutboxDispatcher::dispatch();
 
         $this->as($a)->get('/api/v1/agendas/'.$agenda->json('data.id').'/calendar')->assertOk()->assertHeader('Content-Type', 'text/calendar; charset=utf-8');
         $this->assertStringStartsWith('https://calendar.google.com/', $agenda->json('data.google_calendar_url'));

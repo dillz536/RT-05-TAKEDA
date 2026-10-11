@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
 use Pdo\Pgsql;
 
 /*
@@ -57,42 +56,43 @@ return [
         'update_date_on_publish' => true,
     ],
 
-    'redis' => [
-
-        'client' => env('REDIS_CLIENT', 'phpredis'),
-
-        'options' => [
-            'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
-            'persistent' => env('REDIS_PERSISTENT', false),
-        ],
-
-        'default' => [
-            'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_DB', '0'),
+    /*
+    | Redis (docs/ASYNC_JOBS.md, docs/ARCHITECTURE.md §8). Dua instance terpisah:
+    | - queue: antrean + lock koordinasi (scheduler, heartbeat); AOF, noeviction.
+    | - cache: cache/session/rate limiter; TTL + eviction, boleh hilang.
+    | Host/port/password per instance jatuh ke REDIS_HOST/REDIS_PORT/REDIS_PASSWORD bila satu
+    | instance dipakai bersama (DB index berbeda). "default" = alias queue untuk kompatibilitas.
+    | Prefix per lingkungan (takeda:<env>:); staging dan production tidak boleh berbagi prefix.
+    */
+    'redis' => (function () {
+        $instance = fn (string $name, string $db) => [
+            'host' => env("REDIS_{$name}_HOST", env('REDIS_HOST', '127.0.0.1')),
+            'username' => env("REDIS_{$name}_USERNAME", env('REDIS_USERNAME')),
+            'password' => env("REDIS_{$name}_PASSWORD", env('REDIS_PASSWORD')),
+            'port' => env("REDIS_{$name}_PORT", env('REDIS_PORT', '6379')),
+            'database' => env("REDIS_{$name}_DB", $db),
+            // Gagal cepat: enqueue yang gagal membiarkan event outbox pending, bukan menggantung dispatcher.
+            'timeout' => (float) env('REDIS_TIMEOUT', 2),
+            'read_timeout' => (float) env('REDIS_READ_TIMEOUT', 5),
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
             'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
             'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
-        ],
+        ];
 
-        'cache' => [
-            'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_CACHE_DB', '1'),
-            'max_retries' => env('REDIS_MAX_RETRIES', 3),
-            'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
-            'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
-            'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
-        ],
+        return [
+            'client' => env('REDIS_CLIENT', 'phpredis'),
 
-    ],
+            'options' => [
+                'cluster' => env('REDIS_CLUSTER', 'redis'),
+                'prefix' => env('REDIS_PREFIX', 'takeda:'.env('APP_ENV', 'local').':'),
+                'persistent' => env('REDIS_PERSISTENT', false),
+            ],
+
+            'queue' => $instance('QUEUE', '0'),
+            'default' => $instance('QUEUE', '0'),
+            'cache' => $instance('CACHE', '1'),
+        ];
+    })(),
 
 ];

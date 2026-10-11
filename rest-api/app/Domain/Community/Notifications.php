@@ -2,6 +2,7 @@
 
 namespace App\Domain\Community;
 
+use App\Exceptions\UnknownOutboxEvent;
 use App\Models\Agenda;
 use App\Models\Akun;
 use App\Models\AlokasiPembayaran;
@@ -15,55 +16,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * Konsumen outbox → inbox notifikasi (FR20, BR21). Idempotent: UNIQUE(event_id, penerima_id)
+ * Konsumen outbox → inbox notifikasi (FR20, BR21), dipanggil job ProcessOutboxEvent setelah
+ * OutboxDispatcher mengirim ID event ke antrean. Idempotent: UNIQUE(event_id, penerima_id)
  * sehingga replay event tidak menggandakan notifikasi. Teks aman: tidak memuat identitas pelapor
  * anonim, data keluarga, atau nominal pribadi rumah lain. Push FCM menyusul (adapter M10).
  */
 final class Notifications
 {
-    /** Proses event pending dengan lease (SKIP LOCKED) agar beberapa dispatcher aman berjalan. */
-    public static function dispatch(int $limit = 100): int
-    {
-        $processed = 0;
-        // Semua pembanding waktu memakai jam database agar selisih jam host tidak menahan event.
-        $events = DB::transaction(function () use ($limit) {
-            $ids = DB::table('outbox_events')
-                ->whereNull('completed_at')
-                ->whereRaw('available_at <= now()')
-                ->where(fn ($q) => $q->whereNull('dispatch_lease_until')->orWhereRaw('dispatch_lease_until < now()'))
-                ->orderBy('created_at')
-                ->limit($limit)
-                ->lock('for update skip locked')
-                ->pluck('id');
-            DB::table('outbox_events')->whereIn('id', $ids)->update([
-                'dispatch_lease_until' => DB::raw("now() + interval '5 minutes'"),
-                'attempts' => DB::raw('attempts + 1'),
-                'published_at' => DB::raw('now()'),
-            ]);
-
-            return OutboxEvent::whereIn('id', $ids)->orderBy('created_at')->get();
-        });
-
-        foreach ($events as $event) {
-            try {
-                DB::transaction(function () use ($event) {
-                    self::handle($event);
-                    DB::table('outbox_events')->where('id', $event->id)->update(['completed_at' => DB::raw('greatest(now(), created_at)'), 'last_error_code' => null]);
-                });
-                $processed++;
-            } catch (\Throwable $e) {
-                // Event tetap pending; lease habis → dicoba ulang. Simpan kelas error saja (tanpa PII).
-                DB::table('outbox_events')->where('id', $event->id)->update([
-                    'last_error_code' => substr(class_basename($e), 0, 100),
-                    'available_at' => DB::raw("now() + interval '".min(60, 2 ** min($event->attempts, 6))." minutes'"),
-                ]);
-                report($e);
-            }
-        }
-
-        return $processed;
-    }
-
     public static function handle(OutboxEvent $event): void
     {
         $id = $event->aggregate_id;
@@ -80,9 +39,13 @@ final class Notifications
             'akun.permohonan_tambahan' => self::toPengurus($event, 'sistem', [], 'Permohonan akun tambahan', 'Ada permohonan akun tambahan yang menunggu persetujuan.'),
             'akun.permohonan_disetujui' => self::send($event, [$id], 'sistem', [], 'Akun disetujui', 'Akun Anda telah disetujui pengurus. Selamat datang di RT05 TAKEDA.'),
             'iuran.pembayaran_dicatat' => self::paymentRecorded($event),
+            // Event sintetis rt05:async-smoke; penerima hanya akun sintetis pada database *_test.
+            'rt05.smoke' => self::send($event, $event->safe_payload['penerima'] ?? [], 'sistem', [], 'Uji antrean', 'Notifikasi sintetis uji worker.'),
             'iuran.pengingat' => self::send($event, $event->safe_payload['penerima'] ?? [], 'iuran', ['tagihan_id' => $event->safe_payload['tagihan_id'] ?? null],
                 'Pengingat iuran', 'Iuran RT bulan ini belum tercatat. Abaikan bila sudah membayar kepada pengurus.'),
-            default => null,
+            // Dicatat untuk audit/integrasi berikutnya; v1 sengaja tanpa notifikasi inbox.
+            'akun.registrasi_utama', 'iuran.tagihan_dibuat', 'iuran.pembayaran_dibalik' => null,
+            default => throw new UnknownOutboxEvent($event->type),
         };
     }
 
