@@ -108,6 +108,16 @@ Stack RT05 berjalan sebagai project Docker Compose tersendiri (`rt05-staging` / 
 
 Rollback cepat: `docker compose -p rt05-<env> ... down` menghentikan stack RT05 saja (volume tetap). Jangan `docker system prune` atau menghapus volume.
 
+### Rotasi credential (dijalankan pemilik)
+
+Branch Neon menyalin role beserta password dari induknya, jadi `rt05_owner` di production, dev, dan staging awalnya berbagi password yang sama. Setelah sebuah env bocor, rotasi semua branch yang berbagi password.
+
+1. Neon Console → project rt05-takeda → Branches → pilih branch → Roles → `rt05_owner` → Reset password. Salin password baru (hanya tampil sekali) ke bagian password `DATABASE_URL_UNPOOLED` di `infra/env/.env.<env>`. Untuk dev, perbarui `rest-api/.env`.
+2. Jika `rt05_app` ikut bocor (staging/dev berbagi password), reset juga lalu perbarui `DATABASE_URL`.
+3. APP_KEY baru: `cd rest-api && php artisan key:generate --show`, isi ke `API_APP_KEY` (dan `WEB_APP_KEY` dengan nilai lain). Di staging, token registrasi terenkripsi lama tidak bisa dibuka setelah rotasi; jalankan `rt05:token-rotate`.
+4. Server: `rm /root/.rt05/.env.<env> && bash /root/rt05-deploy.sh <env>`, lalu tempel env baru **secara manual** (jangan lewat agent yang membaca halaman browser), Ctrl-D.
+5. Verifikasi `/health/ready` → database ok.
+
 ## Pipeline rilis
 
 1. CI lint/tests/contract/build mengeluarkan image immutable dengan tag commit SHA.
