@@ -56,3 +56,17 @@ bukti worker mengirim sampai inbox serta link/kode reset sekali pakai masih
 blocked. Stitch baru juga belum tersedia sesudah timeout/listing40existing.
 M06 belum passed; implementasi baru M07 terkunci. Production/data warga nyata
 dan insiden credential tetap mengikuti gate M16.
+
+## Android pada source 7d42d56
+
+CI commit `7d42d56` lulus: pemeriksaan repositori, API, image infra, serta
+mobile (format, analyze, tes, APK dev dan staging). APK staging dipasang di
+`emulator-5554` setelah package guest diganti karena sertifikat debug berbeda.
+Skala teks 2,0 pada 1080x2400. Form reset terbuka untuk alamat sintetis
+`warga.uji@example.test`. Helper `Minimal 8 karakter, berisi huruf dan angka.`
+tampil dua baris. Pesan `Pengulangan kata sandi tidak sama.` tampil utuh dua
+baris, tanpa elipsis. Skala teks dikembalikan ke 1,0.
+
+[Reset skala 2,0](screenshots/reset-scale20-7d42d56.png)
+
+Ini belum membuktikan login, inbox reset, atau rollout M06 di VPS.

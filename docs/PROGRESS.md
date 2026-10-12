@@ -152,7 +152,9 @@ lalu `errorMaxLines: 16` dipasang pada error layar masuk, daftar, lupa sandi,
 dan ganti sandi. Analyze bersih dan 117 tes lulus. Laporan
 [GROK_EMULATOR_UI_FIX.md](evidence/m06/GROK_EMULATOR_UI_FIX.md) dan
 [CLAUDE_PASSWORD_UI_REVIEW.md](evidence/m06/CLAUDE_PASSWORD_UI_REVIEW.md).
-APK commit ini belum diperiksa. M06 belum passed. M07 tetap terkunci.
+CI `7d42d56` lulus untuk repositori, API, infra, dan kedua APK. Di emulator,
+skala 2,0, pesan pengulangan reset tampil utuh. [LIVE_RESULTS.md](evidence/m06/LIVE_RESULTS.md).
+M06 belum passed. M07 tetap terkunci.
 [LIVE_RESULTS.md](evidence/m06/LIVE_RESULTS.md) memisahkan bukti yang tersedia
 dari gate registrasi/login/approval/keluarga dan sesi yang masih blocked.
 
