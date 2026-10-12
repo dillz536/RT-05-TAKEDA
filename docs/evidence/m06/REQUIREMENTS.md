@@ -7,6 +7,14 @@ diverifikasi; tambahan menunggu pengurus; tanpa OAuth dan tanpa auto-merge rumah
 `passed` pada matriks hanya berlaku terhadap bukti yang disebut, bukan seluruh
 milestone. Status akan diperbarui setelah tes dan integrasi selesai.
 
+Checkpoint pemulihan malam12Oktober: baris `in_progress` di bawah berasal dari
+checkpoint sebelum rollout. Bukti terbaru pada CLAUDE_RESUMED_ACCEPTANCE.md
+dan GROK_RESUMED_ACCEPTANCE.md: staging26a0b7e, API52alur/17mekanika reset,
+bootstrap dan Android registrasi/password/sesi passed dalam lingkup sintetis.
+Panduan native Drive24halaman/19gambar/4tabel sudah diterbitkan dan diperiksa.
+Reset sampai inbox tetap blocked karena pengirim valid belum tersedia;
+mekanika reset server bukan bukti pengiriman. M06 belum passed; M07 planned.
+
 | Kebutuhan | Sumber | Implementasi | Tes | Bukti | Status |
 | --- | --- | --- | --- | --- | --- |
 | Registrasi utama atomik, termasuk bearer perangkat | FR03, BR03/05/06, keputusan pemilik | Registration + AuthController; form Flutter | M06RegistrationTest rollback;M06ConcurrencyTest proses independen | CLAUDE_FIXES/CI_RESULTS:API171tes pass;emulator menunggu | in_progress |

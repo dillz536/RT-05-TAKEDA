@@ -2,6 +2,102 @@
 
 Updated: 12 Oktober 2026.
 
+## Pemulihan sesi12 Oktober malam — M06 lalu M07
+
+- Pemilik meminta Claude Code backend/database, Grok mobile/build/infra,
+  Codex koordinasi/Chrome, Kimi dokumentasi manusia di Drive. Otorisasi akun
+  existing GitHub/Vercel/Drive/VPS Hostinger tercatat sebagai P19. Run Orca
+  `run_d783036e0906`; tidak mengulang provisioning fondasi atau mereset data.
+- Preflight konsol root srv2030339: Linux6.8.0-139, disk /opt tersedia79G,
+  MemAvailable5454MB, env staging mode600, service existing sehat. Script
+  immutable SHA256 `ad80d976f8b04f3a9d6969d9e8f70995c55b645170202cdcea7a340bbd75a096`
+  sesuai source. Job2130943 menghasilkan footer **Selesai staging
+  SHA26a0b7e22cfe96941266cb9c194072512eca707e** sekitar20.21WIB.
+  Log privat `/root/rt05-m06-26a0b7e-deploy.log`; tidak memasukkan env ke Git.
+  Smoke runtime kemudian **PASS** melalui SSH: marker
+  `01a1305b-6267-72eb-970d-0023e9912c44` published→completed dengan attempts1
+  sesudah restart Redis/worker-default; sentinel AOF bertahan, empat heartbeat
+  sehat, DML pooled/direct rollback0, DDL runtime ditolak, volume dan container
+  lain tetap. Hash script smoke
+  `d74df7482c514c61812bd8153ba05ed5dbccce266d888b1f722f1997134aa93f`
+  sesuai source. Hasil akun Claude/Grok dicatat pada checkpoint akhir di bawah.
+- Key SSH publik existing ditambahkan idempotent lewat konsol root ke
+  authorized_keys mode600; entry existing dipertahankan. Probe SSH strict
+  host-key/BatchMode keluar0, hostname srv2030339 dan UID0. Tidak memindahkan
+  password root atau menulis DB/SMTP secret store. Bootstrap sintetis dan
+  penerimaan staging dialihkan ke Claude melalui akses SSH tersebut.
+- Kimi menyusun panduan manusia16bagian,4tabel,6diagram dan6screenshot nyata.
+  Folder Drive existing diverifikasi memiliki parent Tugas dan Project dalam
+  `[Kamis] PG194 - Capstone Project`. Panduan native:
+  https://docs.google.com/document/d/18yoO1-BY7-ylFyujpkDrpp_NkPQOwq-9-mTRPK_-KlM/edit
+  Readback16heading/4tabel/12inlineImages; ekspor PDF16halaman. Pemeriksaan
+  halaman4/6/8/14 menunjukkan diagram/layar terbaca; seluruh gambar di dalam
+  batas halaman. Laporan existing ditambah checkpoint dan tautan panduan,
+  tanpa mengubah dokumen akademik asli. Artefak sumber pada
+  `docs/evidence/m06/drive/RT05-TAKEDA-Dokumentasi-Akses-M06.docx`.
+- Stitch menghasilkan referensi M07 lalu koreksi aturan pada layar
+  `e267c2b12d8b4021861da1cda87716e8` (MOBILE780×3256). Referensi belum menjadi
+  bukti aplikasi M07; asumsi KK/SQLite dari keluaran awal tidak diterapkan.
+- Claude rerun PostgreSQL lokal184tes/1679assertion dan Pint passed. Root
+  `node infra/scripts/check-repo.mjs`653berkas dan diff-check lulus sebelum
+  tambahan artefak berikutnya; pemeriksaan akhir dicatat sesudah semua worker.
+  SMTP pengirim belum tersedia; pilihan pengirim ditanyakan sambil pekerjaan
+  lain dilanjutkan. M06 belum passed; implementasi M07 tetap menunggu gate.
+- Penerimaan backend live Claude:52/52alur akun,17/17mekanika reset dengan
+  token buatan server (bukan inbox). Probe tambahan29/30 awal terkena pacing
+  limiter; rerun terisolasi memenuhi respons yang diharapkan. OpenAPI kini
+  menjelaskan kuota bersama mobile-login/web-login5permintaan/menit/IP+email,
+  sesuai source dan uji live. Tidak ada perubahan implementasi backend.
+- Android Grok membuktikan registrasi utama aktif/keluarga belum diverifikasi,
+  tambahan pending, logout/login dan sesi offline→retry PID sama. Follow-up
+  terbatas membuktikan ganti sandi/logout-all. Drill runtime Grok yang terpisah juga
+  PASS dengan event `01a1305e-6dbe-71f3-bec4-ff4af89c01c9`; tidak menggabungkan
+  event itu dengan event root atau menganggap dua drill sebagai satu event.
+- Pengirim existing Resend di project lain diperiksa read-only untuk metadata,
+  credential tetap di memori server dan tidak disalin/dipakai mengirim RT05:
+  GET `/domains` HTTP401. Tidak membuat key atau mengubah env/service proyek
+  lain. Pilihan akun Google Chrome tidak cocok dengan inbox uji privat.
+  Dibutuhkan login akun pengirim yang tepat atau credential SMTP RT05 valid;
+  helper inbox privat siap, tetapi belum dijalankan. Ini blocker akses/input
+  nyata, terpisah dari insiden rotasi DB/APP_KEY historis yang tetap tidak diubah.
+- Kimi menyelesaikan panduan utama dan koreksi atribusi sebelum quota403.
+  Suplemen5diagram UML/sequence/ERD dikerjakan Claude, bukan diklaim karya Kimi.
+  Review root meminta label kardinalitas M07 di luar kotak dan akses keluarga
+  tambahan hanya setelah approval sebelum suplemen dipublikasikan.
+- Suplemen tersebut sudah dipublikasikan ke native Doc yang sama, ditambah
+  dua screenshot Android terautentikasi. Readback19inlineImages; ekspor23halaman
+  sebelum direktori tautan PNG ukuran penuh ditambahkan. Root memeriksa halaman
+  17/19/20/21/22: gambar/caption dan penjelasan berada dalam halaman. Lima PNG
+  ukuran penuh terverifikasi MIME/parents pada folder existing; narasi plain
+  Google Docs dibersihkan dari penanda Markdown/karakter rusak. Tidak menambah
+  folder atau mengubah sharing/dokumen akademik asli.
+- Checkpoint akhir: native panduan **24halaman/19gambar inline/4tabel** sesudah
+  direktori tautan PNG ukuran penuh. Ekspor PDF terakhir menunjukkan nol gambar
+  di luar halaman; halaman diagram, screenshot dan direktori diperiksa visual.
+  Google Doc adalah versi terbaru; DOCX Kimi tetap sumber checkpoint sebelumnya.
+- Android terakhir membuktikan sandi lama ditolak, sandi baru berhasil, bearer
+  dicabut menghasilkan Sesi berakhir tanpa data akun, dan logout-all kembali
+  ke form kosong. Sandi akun perangkat sintetis dipulihkan dan dibuktikan login.
+  Login fixture bersama ditolak sekali dan tidak diulang; pemeriksaan memakai
+  akun perangkat yang sudah terdaftar. Font1,0/jaringan pulih, emulator tetap.
+- Prompt bootstrap milik sesi ini yang tertinggal dibersihkan: cmdline lengkap
+  PID2138345 dicocokkan dengan perintah bootstrap sintetis sendiri, lalu SIGTERM
+  hanya proses tersebut. Admin valid sudah dibuat lewat stdin SSH oleh Claude;
+  tidak menghentikan service atau proses milik pekerjaan lain.
+- Semua worker penerimaan/dokumentasi selesai. Tugas suplemen Kimi gagal quota
+  provider403 dan dialihkan ke Claude tanpa pembelian/bypass. Gate M06 sekarang
+  **blocked** pada input pengirim valid/inbox nyata, bukan izin VPS. M07 tetap
+  planned. Langkah berikut: login pengirim atau konfigurasi SMTP RT05 valid,
+  recreate API/worker-default sesuai runbook, lalu buktikan inbox browser dan
+  Android sebelum membuka implementasi M07. Jangan mengulang rollout/drill PASS.
+- Validasi penutupan bukti: `node infra/scripts/check-repo.mjs` PASS682berkas;
+  `git diff --check` PASS; Redocly2 lint OpenAPI exit0. Perubahan sesi pemulihan
+  hanya README/dokumentasi/deskripsi OpenAPI/artefak diagram dan screenshot;
+  source rest-api/mobile/infra/website/workflow identik26a0b7e yang diuji.
+  Laporan Drive existing menerima checkpoint akhir dan readback verified;
+  PR21 tetap draft karena gate inbox belum lulus. Tidak mengklaim deploy kode
+  baru hanya dari commit dokumentasi berikutnya.
+
 ## Status
 
 Paket konteks diimpor pada M01. API/mobile dan staging telah dibangun pada sesi
@@ -16,7 +112,7 @@ ditentukan hanya oleh tersedianya kode.
 | M03 | passed | PR #15, kode 0d678bb: API CI 88 tes/727 assertion, recovery worker/Redis nyata dan build infra SUCCESS; review final Kimi PASS; docs/evidence/m03/CI_RESULTS.md |
 | M04 | passed | Gate fungsional sebelumnya12b4642; patch isolasi credential6a8d4f8 diterapkan12 Oktober: runtime tanpa migrator, DML/DDLdenied, direct job rollback0, heartbeat dan volume/unrelated preserved. Insiden rotasi tetap open; production belum siap. Checkpoint keamanan di bawah. |
 | M05 | passed | PR17, source13de24e: 77 tes/analyzer/dua APK CI SUCCESS, checksum cocok; emulator health HTTPS, offline/retry proses sama, ikon dan skala teks1,3/2,0; review final Kimi PASS. docs/evidence/m05/LIVE_RESULTS.md |
-| M06 | in_progress | Paket akses akun12Oktober sedang diverifikasi; bukti lokal dan online album terpisah di evidence/m06; SMTP inbox belum terbukti |
+| M06 | blocked | Staging26a0b7e, API52alur/17mekanika reset dan Android akun/sesi terbukti; pengirim valid belum tersedia (provider401), inbox reset belum terbukti; helper privat siap |
 | M07 | planned | Kode rumah/keluarga/akun existing dipertahankan; implementasi baru dan penerimaan M07 terkunci sampai M06 passed |
 | M08 | in_progress | Pengaduan + foto privat + anonim + status; tes CI lulus |
 | M09 | in_progress | Aspirasi terpisah; tes CI lulus |

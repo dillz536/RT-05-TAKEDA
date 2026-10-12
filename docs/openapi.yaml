@@ -1110,6 +1110,7 @@ paths:
       tags:
         - Identity
       summary: Login mobile, bearer token per perangkat
+      description: Berbagi kuota login dengan web-login, maksimum 5 permintaan per menit untuk kombinasi IP dan email yang dinormalisasi. Kuota habis menghasilkan 429.
       x-status: implemented
       x-milestone: M06
       security: []
@@ -1210,7 +1211,7 @@ paths:
       x-status: implemented
       x-milestone: M06
       security: []
-      description: Cookie API HttpOnly/Secure/SameSite=Lax untuk pengurus aktif. GET csrf-cookie dahulu lalu X-XSRF-TOKEN; sesi idle 120 menit. Tidak menghasilkan bearer.
+      description: Cookie API HttpOnly/Secure/SameSite=Lax untuk pengurus aktif. GET csrf-cookie dahulu lalu X-XSRF-TOKEN; sesi idle 120 menit. Tidak menghasilkan bearer. Berbagi kuota login dengan mobile-login, maksimum 5 permintaan per menit untuk kombinasi IP dan email yang dinormalisasi; kuota habis menghasilkan 429.
       requestBody:
         required: true
         content:

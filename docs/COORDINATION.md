@@ -7,15 +7,32 @@ bertahap; setiap perbedaan terhadap planning/Drive capstone dilaporkan kepada
 pemilik. Dokumen ini adalah checkpoint proyek, bukan layanan
 otomasi yang dijamin terus hidup saat komputer atau Orca mati.
 
-Instruksi terbaru12 Oktober membuka M06, lalu M07 hanya sesudah M06 passed,
-dengan Claude dan Grok yang masih terhubung. Kimi tidak diberi tugas M06 baru.
+Instruksi terbaru setelah pemulihan sesi12 Oktober menargetkan M06, lalu M07
+hanya sesudah M06 passed. Claude Code menangani backend/database, Grok
+mobile/build/infrastruktur, dan Codex membantu Chrome serta koordinasi Orca.
+Kimi Code diminta memperbarui dokumentasi manusia di folder Drive existing,
+termasuk user flow, use case, diagram, layar nyata, dan penjelasan perubahan.
+Pengelolaan akun existing GitHub/Vercel/Drive/VPS Hostinger diotorisasi dalam
+lingkup ini; credential privat dan batas data sintetis tetap dipertahankan.
+
+Run pemulihan: `run_d783036e0906`. Claude `task_a48b08a965dc` /
+`ctx_b78db9af3f87`; Grok `task_593ef31250a7` / `ctx_eaf951e6dc27`.
+Kimi `task_b9a7fa2bad17` / `ctx_d7f1339207a6`: penerimaan prompt sempat dilaporkan
+`agent_prompt_stalled`, tetapi worker_done valid kemudian diterima dan task
+completed. Tugas koreksi juga selesai; suplemen baru gagal quota403 lalu
+dipindahkan ke Claude setelah ownership Kimi dilepas. Codex menjaga Git dan dokumen koordinasi; ownership
+kode/domain tidak tumpang tindih. Folder Drive existing
+`1_WweESw5u0iHaDlw6LUfFAuUgOzAstpj` dan laporan native
+`1Dxax50Kckfuc2cCO4_PlanRIlNNQVLpsIN0S42s5VMU` diverifikasi ulang lewat
+connector. Status provider/deploy/M07 tidak dianggap selesai hanya oleh dispatch.
 
 ## Tahap aktif
 
 **M06, instruksi rencana pemilik12 Oktober2026.** Baseline `fb6e59f` pada
 `codex/m06-account-access`. Kontrak [CONTRACT.md](evidence/m06/CONTRACT.md),
 matriks [REQUIREMENTS.md](evidence/m06/REQUIREMENTS.md). Run baru
-`run_f3422d73e850`; sesi Claude dan Grok existing digunakan lewat worker-start.
+`run_f3422d73e850` adalah run implementasi awal; pemulihan sekarang memakai
+`run_d783036e0906`. Sesi Claude dan Grok existing digunakan lewat worker-start.
 Claude memiliki `rest-api/` dan CLAUDE_RESULT; Grok `mobile/` dan GROK_RESULT;
 Codex dokumen/OpenAPI/ERD, website, infra integrasi, Stitch/Drive, Git/CI.
 Kontrak berubah melalui mailbox. Hanya Codex switch/commit/push/merge.
@@ -157,3 +174,19 @@ tersedia. M07 tidak dibuka. Run tetap `run_f3422d73e850`.
 Catat perubahan/file/commit, task tiap agent, perintah dan hasil nyata, link CI,
 review independen, gate passed/blocked, batas lingkungan, serta tahap berikutnya.
 Sesi berakhir pada checkpoint yang bisa dilanjutkan tanpa mengulang pekerjaan.
+
+### Pemulihan akhir12 Oktober malam
+
+Run baru `run_d783036e0906`: Claude penerimaan backend, Grok Android/infra,
+Kimi panduan Drive, Codex Chrome/SSH/integrasi. Semua penerimaan selesai;
+Kimi suplemen gagal quota403 lalu ownership dipindahkan ke Claude. Tidak
+memakai identitas/model lain seolah-olah Kimi atau mengarang completion.
+Staging source26a0b7e terpasang; API52alur dan17mekanika reset serta Android
+akun/password/revocation/logout-all terbukti. Dua event drill root/Grok
+berbeda dan keduanya dicatat, tidak perlu restart/deploy/tes ulang.
+Panduan native Drive24halaman/19gambar/4tabel memiliki user flow, UML,
+sequence, ERD, perubahan sebelum/sesudah dan screenshot nyata; ekspor terakhir
+diinspeksi visual dan tidak ada gambar melewati halaman. M06 blocked hanya
+untuk gate reset inbox: pengirim valid belum tersedia, metadata provider401,
+akun Chrome tidak cocok dengan inbox privat. M07 belum dibuka. Input berikut
+adalah akses pengirim/SMTP, bukan otorisasi VPS baru. Insiden historis tetap open.

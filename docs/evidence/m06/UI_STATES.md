@@ -4,11 +4,20 @@ Sumber desain: proyek Stitch `7802748177711352102`, RT05 Penyempurnaan Website,
 baseline yang diterima serta theme Flutter. Logo SVG gapura, Public Sans dan
 Bricolage Grotesque terbundel; navy/kuning/sky dipertahankan.
 
-Generasi layar akses baru diminta melalui Stitch12Oktober; tool timeout setelah
-300detik. Listing berikutnya masih40 layar existing, tanpa layar M06 baru.
-Tidak mengulang generation atau menganggap timeout sebagai hasil berhasil.
-Implementasi Flutter mengikuti brand existing dan spesifikasi keadaan berikut;
-screenshot aplikasi nyata dibedakan dari referensi Stitch.
+Generasi layar akses M06 sebelumnya timeout300detik; hasil itu tetap tidak
+dianggap berhasil. Pada pemulihan sesi malam, permintaan baru referensi M07
+menghasilkan `3f36e8c8361c4de78df370e412c79b0e`, lalu koreksi
+`e267c2b12d8b4021861da1cda87716e8` (MOBILE780×3256), diverifikasi get_screen.
+Listing proyek tetap mengembalikan40layar existing; tidak mengklaim inventaris
+lengkap berubah. Pratinjau URL default hanya123×512; pemeriksaan visual memakai
+unduhan ukuran penuh780×3256. Dua permintaan koreksi berikutnya mengembalikan
+narasi tetapi screenshot tidak berubah.
+
+Referensi hanya membantu hierarki kartu. Status akun utama yang masih tertulis
+menunggu admin, istilah JWT, logo gambar ulang, serta panel spesifikasi teknis
+tidak sesuai kontrak/brand dan tidak diterapkan. Data keluarga belum diverifikasi
+harus dibedakan dari akun utama aktif. Implementasi Flutter tetap mengikuti brand
+existing dan spesifikasi berikut; screenshot aplikasi nyata dipisahkan dari Stitch.
 
 | Layar | Keadaan yang wajib terlihat | Tindakan |
 | --- | --- | --- |
