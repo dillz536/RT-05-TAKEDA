@@ -9,7 +9,13 @@ otomasi yang dijamin terus hidup saat komputer atau Orca mati.
 
 ## Tahap aktif
 
-**Penutupan M05 — fondasi mobile PASS, PR17 dalam penutupan.** Source13de24e:
+**Remediasi keamanan fondasi M04, instruksi12 Oktober.** Branch
+`codex/m04-runtime-credential-isolation`: Codex memperbaiki aliran migrator
+dan build context; investigator/reviewer independen baca-saja. Source/runtime
+patch menunggu CI/rollout; rotasi DB/APP_KEY historis tetap open, tindakan
+secret-store sebelumnya ditolak dan tidak diakali. Tidak membuka M06+.
+
+M05 PASS, PR17 merged ba3528d. Source13de24e:
 77 tes dan dua APK CI lulus; emulator health HTTPS/offline/retry/brand/text
 scaling lulus; review final Kimi PASS. Bukti [LIVE_RESULTS.md](evidence/m05/LIVE_RESULTS.md)
 dan [CI_RESULTS.md](evidence/m05/CI_RESULTS.md). Tidak membuka fitur M06+.
@@ -20,7 +26,7 @@ M03 lulus kode/CI pada `0d678bb` dan review final Kimi.
 
 PR #14 telah digabung pada commit `c644b84`: perbaikan routing staging dan aset
 HTTPS sudah menjadi baseline main. PR #15 merged `27a3e5b` setelah lima cek
-SUCCESS pada HEAD `ea4179e`. Branch tahap ini: `codex/m05-mobile-foundation`.
+SUCCESS pada HEAD `ea4179e`. Branch M05 sebelumnya: `codex/m05-mobile-foundation`.
 Implementasi layanan M05–M12 yang sudah ada dipertahankan, tetapi status gate
 masing-masing tidak dinaikkan hanya karena kode tersedia. M13–M16 belum dibuka.
 

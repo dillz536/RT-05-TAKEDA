@@ -35,6 +35,18 @@ Implementasi M02 (rest-api/config/database.php): kedua koneksi memakai `timezone
 
 Role runtime memiliki DML yang diperlukan, bukan superuser/DDL. Role migration terpisah. Website/mobile tidak menerima URL database. Credential direct hanya diberikan kepada migration/backup job/operator, bukan bundle frontend.
 
+Isolasi runtime (perbaikan12 Oktober): Compose hanya memberikan
+`DATABASE_URL_UNPOOLED` kepada job sekali jalan `migrate`. Konfigurasi PHP
+tidak mendaftarkan `pgsql_migrations` tanpa URL direct eksplisit; tidak ada
+fallback ke runtime maupun DB_* untuk koneksi migrasi yang tidak tersedia.
+TLS runtime tetap wajib verify-full; koneksi migrasi diperiksa bila tersedia.
+Smoke direct/grant dijalankan melalui job migrasi, bukan `exec api`.
+Guard memeriksa JSON Compose yang sudah mengurai inheritance dan override,
+tanpa mencetak URL. Username/password harus pada authority URL; override
+credential via query ditolak karena Laravel mendahulukan opsi query.
+Query TLS/channel_binding tetap diperbolehkan. Root `.dockerignore` mengecualikan env/cache konfigurasi
+dan state privat sebelum COPY di setiap build stage.
+
 ## Tipe dan identitas
 
 - UUID untuk domain ID publik; jangan jadikan UUID pengganti policy.

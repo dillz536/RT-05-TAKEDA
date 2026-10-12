@@ -183,6 +183,8 @@ deploy_sha() {
   grep -Fq 'REDIS_PASSWORD: ${REDIS_CACHE_PASSWORD:?' "$dest/infra/compose.production.yml" || fail "SHA lacks required cache AUTH."
   grep -q '^  worker-default:' "$dest/infra/compose.production.yml" || fail "SHA lacks compatible worker topology."
   [ -f "$dest/infra/scripts/staging-metadata.sh" ] || fail "SHA lacks staging metadata guards."
+  [ -f "$dest/.dockerignore" ] || fail "SHA lacks secret build-context exclusions; unsafe rollback refused."
+  [ -f "$dest/infra/scripts/check_database_isolation.py" ] || fail "SHA lacks database credential isolation; unsafe rollback refused."
   # shellcheck source=staging-metadata.sh
   source "$dest/infra/scripts/staging-metadata.sh"
   before=$(list_unrelated)
@@ -198,6 +200,8 @@ deploy_sha() {
   cd "$dest/infra"
   local -a DC
   DC=(docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f compose.production.yml -f compose.vps.yml)
+  # Validate resolved inheritance/overrides without printing credential values.
+  "${DC[@]}" config --format json | python3 "$dest/infra/scripts/check_database_isolation.py"
   echo ">>> Build hanya api dan web. Tidak ada push registry."
   "${DC[@]}" build api web
   echo ">>> Redis antrean dan cache, lalu migrasi direct, tanpa menghapus volume."

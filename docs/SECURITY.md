@@ -70,6 +70,19 @@ Port public hanya reverse proxy 80/443 dan SSH sesuai policy host. Redis/FPM/int
 
 DB runtime role minimal DML; migration role DDL hanya job. TLS Neon diverifikasi. Container nonroot bila kompatibel, filesystem read-only kecuali volume writable yang ditentukan.
 
+API, tiga worker dan scheduler tidak menerima `DATABASE_URL_UNPOOLED` atau
+salinannya lewat alias/command. Job migrasi memiliki env tersendiri;
+`pgsql_migrations` tidak tersedia pada proses runtime tanpa URL direct.
+Tidak memasukkan `.env`, cache konfigurasi PHP atau storage privat ke build
+context; menghapus secret pada layer berikutnya bukan bukti secret tidak
+pernah masuk image. Deployment memeriksa konfigurasi Compose yang sudah
+di-resolve; rollback ke release yang belum memiliki isolasi ditolak.
+
+Insiden DB/APP_KEY historis tetap terbuka hingga bukti rotasi/revokasi pada
+semua lingkungan terdampak diterima. Patch isolasi dan build CI tidak merotasi
+credential yang sudah terpapar. Data warga nyata dan production tetap blocked
+oleh insiden ini; status passed M04/M05 adalah penerimaan fungsional.
+
 ## Release gates
 
 IDOR/role/CSRF/anonim/resource media/CSV abuse tests lulus; secrets scan; dependency review; public preview tidak mengandung PII; session revoked diuji; backup encryption/restore diuji; privacy notice final; seluruh blocker data nyata resolved.

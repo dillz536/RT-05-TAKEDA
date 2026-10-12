@@ -29,7 +29,6 @@ services:
       APP_TIMEZONE: UTC
       DB_CONNECTION: pgsql
       DATABASE_URL: ${DATABASE_URL}
-      DATABASE_URL_UNPOOLED: ${DATABASE_URL_UNPOOLED}
       DB_SSLMODE: verify-full
       DB_SSLROOTCERT: /etc/ssl/certs/ca-certificates.crt
       REDIS_CLIENT: phpredis
@@ -121,6 +120,10 @@ services:
   # Sekali jalan per deploy: migration additive lewat endpoint direct, lalu hak role runtime.
   migrate:
     <<: *api
+    # DDL credential exists only in this disposable job, never in runtime services.
+    environment:
+      <<: *api-env
+      DATABASE_URL_UNPOOLED: ${DATABASE_URL_UNPOOLED:?DATABASE_URL_UNPOOLED wajib untuk job migrasi}
     restart: "no"
     command: ["sh", "-c", "php artisan migrate --database=pgsql_migrations --force && php artisan rt05:db-grant-runtime-role ${DB_RUNTIME_ROLE:-rt05_app}"]
     healthcheck:

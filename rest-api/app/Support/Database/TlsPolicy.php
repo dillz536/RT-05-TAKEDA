@@ -36,6 +36,9 @@ final class TlsPolicy
 
         $violations = [];
         foreach (self::CONNECTIONS as $connection) {
+            if ($connection === 'pgsql_migrations' && config("database.connections.$connection") === null) {
+                continue; // Optional only for runtime; any configured migration connection remains strict.
+            }
             $tls = self::effective($connection);
             if ($tls['sslmode'] !== 'verify-full') {
                 $violations[] = "$connection: sslmode harus verify-full (sekarang {$tls['sslmode']})";
