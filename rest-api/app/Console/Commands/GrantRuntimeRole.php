@@ -26,6 +26,12 @@ class GrantRuntimeRole extends Command
             return self::INVALID;
         }
 
+        if (config('database.connections.pgsql_migrations') === null) {
+            $this->error('Koneksi migrasi tidak tersedia pada proses ini. Gunakan job migrasi.');
+
+            return self::INVALID;
+        }
+
         $db = DB::connection('pgsql_migrations');
         $ownerRole = $db->selectOne('select current_user as role')->role;
         if ($ownerRole === $appRole) {

@@ -101,7 +101,7 @@ assert_staging_private
 echo ">>> DbSmoke runtime pooled (transaksi di-rollback oleh command)"
 "${DC[@]}" exec -T api php artisan --no-ansi --no-interaction rt05:db-smoke --connection=pgsql
 echo ">>> DbSmoke direct migrasi (transaksi di-rollback oleh command)"
-"${DC[@]}" exec -T api php artisan --no-ansi --no-interaction rt05:db-smoke --connection=pgsql_migrations
+"${DC[@]}" run --rm --no-deps --pull never migrate php artisan --no-ansi --no-interaction rt05:db-smoke --connection=pgsql_migrations
 
 echo ">>> Stop only worker-default before queuing the synthetic marker"
 # Restore this worker on any failed assertion; never delete queued jobs.

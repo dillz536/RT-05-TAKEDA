@@ -56,12 +56,14 @@ require_env() {
   fi
 }
 require_env DATABASE_URL
+require_env DATABASE_URL_UNPOOLED
 require_env REDIS_PASSWORD
 require_env REDIS_CACHE_PASSWORD
 require_env API_APP_KEY
 
 cd "$DIR/infra"
 DC=(docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f compose.production.yml -f compose.vps.yml)
+"${DC[@]}" config --format json | python3 scripts/check_database_isolation.py
 
 echo ">>> Build image (beberapa menit pada build pertama)"
 "${DC[@]}" build

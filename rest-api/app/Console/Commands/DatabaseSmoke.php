@@ -29,6 +29,11 @@ class DatabaseSmoke extends Command
 
             return self::INVALID;
         }
+        if (config("database.connections.$name") === null) {
+            $this->error('Koneksi tidak tersedia pada proses ini. Gunakan job migrasi untuk koneksi DDL.');
+
+            return self::INVALID;
+        }
 
         $failures = TlsPolicy::violations();
         $db = DB::connection($name);

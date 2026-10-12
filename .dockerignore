@@ -1,0 +1,14 @@
+# Secrets and runtime state must never enter any build stage/layer.
+**/.env*
+!**/.env.example
+**/bootstrap/cache/*.php
+**/storage/**
+**/vendor
+**/node_modules
+**/.git
+.agents
+**/.dart_tool
+**/.gradle
+**/*.jks
+**/*.keystore
+**/key.properties

@@ -1,6 +1,6 @@
 # Progress — RT05 TAKEDA
 
-Updated: 11 Oktober 2026.
+Updated: 12 Oktober 2026.
 
 ## Status
 
@@ -32,8 +32,11 @@ M00 memakai label accepted_baseline khusus, bukan status passed hasil tes baru. 
 
 ## Milestone aktif
 
-**Penutupan M05 — fondasi mobile diterima**, branch `codex/m05-mobile-foundation`.
-Gate M05 lulus source13de24e dan review final Kimi; PR17 sedang ditutup.
+**Remediasi keamanan fondasi M04**, branch `codex/m04-runtime-credential-isolation`.
+Instruksi12 Oktober: prioritaskan insiden DB/APP_KEY dan isolasi migrator sebelum
+data warga nyata. Gate M05 lulus source13de24e dan review final Kimi; PR17
+sudah merged `ba3528d` pada11 Oktober12:02:22UTC. Seluruh delapan checks pada
+head da42063 sukses, termasuk Mobile38137327953 (77 tes).
 M04 sebelumnya merged `3a8be79`, staging live tetap SHA `12b4642`.
 Pemilik meminta pengerjaan bertahap dengan empat agent (P16), bukan membuka
 seluruh roadmap serentak. [COORDINATION.md](COORDINATION.md) mencatat ownership,
@@ -366,6 +369,50 @@ Tiga butir rencana implisit dibuat eksplisit. CI/APK dan emulator tetap pending;
 scope fitur/business/API/ERD tidak berubah, sehingga kontrak API/schema tidak
 perlu diubah untuk fondasi ini.
 
+### Remediasi credential12 Oktober — kandidat patch, CI/live pending
+
+- Insiden historis DB/APP_KEY tetap open dan menghalangi data warga nyata/
+  production. Pemisahan role DDL semestinya ditutup pada fondasi staging,
+  tidak ditunda ke M16. Tidak mencoba ulang atau mengakali penolakan otomatis
+  penulisan secret store; operator harus memberikan bukti rotasi nonsecret.
+- Baseline ba3528d: reproduksi `docker compose --env-file` example eksplisit
+  dan env sintetis, production+VPS `config --format json` menunjukkan key
+  DATABASE_URL_UNPOOLED pada API, tiga worker, scheduler dan migrate.
+  Nilai env/DSN asli tidak dibaca/dicetak dan tidak ada koneksi DB.
+- Patch: key direct hanya `migrate.environment`; PHP tidak mendaftarkan
+  pgsql_migrations bila URL direct tidak tersedia; TLS hanya melewati koneksi
+  migrasi yang tidak tersedia, runtime tetap strict; smoke/grant menolak
+  sebelum DB call. Direct smoke lewat job migrate sementara. Deploy/rollback
+  memeriksa graph Compose efektif, release lama tanpa isolasi ditolak.
+- Root .dockerignore menutup jalur COPY env/cache/storage privat pada semua
+  stage. CI BuildKit menguji canary env/cache sintetis beserta kontrol sumber,
+  logo dan contoh env yang harus tetap tersedia. Tidak mengganti website/mobile,
+  aturan bisnis, schema atau kontrak HTTP/OpenAPI/ERD.
+- File: infra/compose.production.yml; check_database_isolation.py;
+  check-build-context.sh; deploy-vps.sh/deploy-staging-immutable.sh;
+  staging-runtime-smoke.sh; .github/workflows/infra.yml; config/database.php,
+  TlsPolicy, DatabaseSmoke/GrantRuntimeRole; DatabaseIsolationTest,
+  TlsPolicyTest dan HealthTest; SECURITY/DATABASE/DEPLOYMENT/PROGRESS.
+- Validasi lokal: Compose5.2.0 production+VPS resolved graph PASS setelah patch;
+  guard --self-test PASS19 kasus bocor/misconfig dan dua kontrol valid; phpunit filter
+  DatabaseIsolationTest|TlsPolicyTest PASS11 tes48 assertion. Bootstrap tetap
+  menolak host nonlokal/database selain *_test; RT05_SKIP_TEST_MIGRATIONS=1
+  hanya untuk focused tests tanpa DB. Tidak melakukan factory/tes Neon.
+- PHP syntax empat file PASS, Bash syntax empat script PASS, Pint PASS,
+  check-m03-compose PASS, check-repo538 berkas dan diff-check PASS.
+  Docker CLI tersedia tetapi daemon lokal tidak jalan; tidak menghidupkan/
+  memasang Docker/WSL atau mengklaim BuildKit lokal. Full API/BuildKit/image
+  verifikasi menunggu CI. Investigator independen selesai; reviewer kandidat
+  menemukan bypass query username/password terhadap parser Laravel. Root
+  mengonfirmasi sumber dan menolak override credential, termasuk percent/
+  array/NUL dan username JSON encoded; opsi TLS/channel_binding tetap valid.
+  Tidak ada temuan konkret lain pada satu siklus review. Folder pengguna
+  .agents/ tetap untracked.
+- Pada checkpoint ini VPS masih deployment yang terakhir diverifikasi12b4642;
+  source patch belum di-deploy. Status kode dan operasi live harus dipisahkan.
+  Runbook rotasi kini menjaga env atomik, inventaris data terenkripsi/revokasi
+  sesi, dan bukti penolakan credential lama; tidak menghapus env terlebih dulu.
+
 ### M05 — bukti source final dan emulator, gate PASS
 
 - Source `13de24e230b44dd78b382260013108b5daf1d84a`, PR17. Seluruh delapan
@@ -420,7 +467,8 @@ Selesaikan perubahan pengguna dengan hati-hati; tidak reset/force-push.
 | R04 | medium | mobile | Flutter SDK dahulu belum terpasang | M05 | resolved: Flutter3.47.7/Dart3.13.5; analyze77 tests/dua APK CI dan emulator staging lulus11 Oktober |
 | R05 | high | database | pdo_pgsql named prepares + pooler Neon → transaksi gugur 25P02 pada tulis pertama | M02 | fixed (ADR14), terverifikasi di Neon pooled |
 | R06 | medium | dev env | Docker Desktop tidak jalan: WSL2 belum terpasang (Windows Home) | M02/M03 | accepted limitation ADR19: build Docker/Postgres/Redis di CI, runtime staging di VPS; tidak perlu instalasi Docker/WSL lokal untuk gate ini |
-| R07 | low | security | Credential owner Neon dev tampil di keluaran tool agent saat pengambilan connection string | M02 | open: reset password rt05_owner (dev) disarankan |
+| R07 | high | security | Credential DB dan APP_KEY historis terpapar; role/password diwariskan antar branch | M02/M04 | open: rotasi/revokasi semua lingkungan terdampak dan audit belum terbukti; data nyata/production blocked |
+| R08 | high | security | DATABASE_URL_UNPOOLED diwariskan ke lima runtime; COPY dapat memasukkan env/cache sebelum penghapusan layer | M04 | candidate patch12 Oktober; graph/focused tests lokal PASS, CI dan rollout nyata pending |
 
 ## Bukti historis frontend
 

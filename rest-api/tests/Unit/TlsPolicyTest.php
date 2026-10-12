@@ -50,6 +50,24 @@ class TlsPolicyTest extends TestCase
         $this->assertStringNotContainsString('pw', $text);
     }
 
+    public function test_runtime_only_configuration_still_enforces_strict_tls(): void
+    {
+        $this->useUrl('sslmode=verify-full&sslrootcert=system');
+        config(['database.connections.pgsql_migrations' => null]);
+        $this->assertSame([], TlsPolicy::violations('staging'));
+        $this->assertSame([], TlsPolicy::violations('production'));
+
+        config(['database.connections.pgsql.url' => null, 'database.connections.pgsql.sslmode' => 'prefer']);
+        $this->assertNotEmpty(TlsPolicy::violations('production'));
+    }
+
+    public function test_configured_migration_connection_cannot_skip_strict_tls(): void
+    {
+        $this->useUrl('sslmode=verify-full&sslrootcert=system');
+        config(['database.connections.pgsql_migrations.sslmode' => 'prefer', 'database.connections.pgsql_migrations.url' => null]);
+        $this->assertNotEmpty(TlsPolicy::violations('staging'));
+    }
+
     public function test_grant_statements_come_from_single_sql_source_and_quote_roles(): void
     {
         $statements = GrantRuntimeRole::statements('rt05_owner', 'rt05_app');

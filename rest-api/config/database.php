@@ -39,17 +39,18 @@ $pgsql = fn (?string $url, string $appName) => [
     ],
 ];
 
+$connections = ['pgsql' => $pgsql(env('DATABASE_URL'), 'rt05-api')];
+$migrationUrl = env('DATABASE_URL_UNPOOLED');
+// Runtime has no migration connection and cannot fall back to DATABASE_URL/DB_*.
+if (is_string($migrationUrl) && $migrationUrl !== '') {
+    $connections['pgsql_migrations'] = $pgsql($migrationUrl, 'rt05-migrations');
+}
+
 return [
 
     'default' => env('DB_CONNECTION', 'pgsql'),
 
-    'connections' => [
-
-        'pgsql' => $pgsql(env('DATABASE_URL'), 'rt05-api'),
-
-        'pgsql_migrations' => $pgsql(env('DATABASE_URL_UNPOOLED', env('DATABASE_URL')), 'rt05-migrations'),
-
-    ],
+    'connections' => $connections,
 
     'migrations' => [
         'table' => 'migrations',

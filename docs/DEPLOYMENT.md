@@ -58,6 +58,14 @@ Staging push/email memakai test recipient/project; tidak mengirim notifikasi ke 
 
 Hanya API/worker menyimpan database URL. Runtime pooled; migrate/backup direct role. FCM service account file mount read-only. Secret tidak dikirim sebagai build arg yang masuk layer image.
 
+`DATABASE_URL_UNPOOLED` hanya diberikan ke `migrate`, tidak ke API/worker/
+scheduler. `python3 scripts/check_database_isolation.py` memeriksa JSON
+`docker compose config --format json` sebelum build/rollout; jangan menampilkan
+hasil config dengan env nyata. Smoke direct menggunakan
+`docker compose ... run --rm --no-deps --pull never migrate php artisan rt05:db-smoke --connection=pgsql_migrations`.
+Root `.dockerignore` wajib dipakai; `.env` dan cached PHP config tidak masuk
+build context. Jangan memakai cache/image lama sebagai bukti bebas credential.
+
 Health:
 
 - live: proses HTTP sehat tanpa memanggil DB.
@@ -114,9 +122,34 @@ Branch Neon menyalin role beserta password dari induknya, jadi `rt05_owner` di p
 
 1. Neon Console → project rt05-takeda → Branches → pilih branch → Roles → `rt05_owner` → Reset password. Salin password baru (hanya tampil sekali) ke bagian password `DATABASE_URL_UNPOOLED` di `infra/env/.env.<env>`. Untuk dev, perbarui `rest-api/.env`.
 2. Jika `rt05_app` ikut bocor (staging/dev berbagi password), reset juga lalu perbarui `DATABASE_URL`.
-3. APP_KEY baru: `cd rest-api && php artisan key:generate --show`, isi ke `API_APP_KEY` (dan `WEB_APP_KEY` dengan nilai lain). Di staging, token registrasi terenkripsi lama tidak bisa dibuka setelah rotasi; jalankan `rt05:token-rotate`.
-4. Server: `rm /root/.rt05/.env.<env> && bash /root/rt05-deploy.sh <env>`, lalu tempel env baru **secara manual** (jangan lewat agent yang membaca halaman browser), Ctrl-D.
-5. Verifikasi `/health/ready` → database ok.
+3. APP_KEY baru dibuat/disimpan oleh pemilik dalam konsol privat/secret store,
+   tanpa output tool agent/screenshot. `API_APP_KEY` dan `WEB_APP_KEY` berbeda
+   per lingkungan. Backup kunci/konfigurasi lama secara terenkripsi untuk
+   pemulihan terkontrol, inventaris data terenkripsi sebelum mengganti key.
+   Token registrasi staging dibuat ulang melalui `rt05:token-rotate` sesudah
+   key baru aktif; jangan menghapus data bisnis untuk memudahkan rotasi.
+   Jangan meninggalkan key yang terpapar pada `APP_PREVIOUS_KEYS` runtime:
+   key tersebut masih dapat dipakai mendekripsi/menerima payload lama.
+   APP_KEY baru tidak otomatis mencabut bearer Sanctum; revokasi token/sesi
+   terdampak memerlukan tindakan operator terpisah yang tercatat.
+4. Pemilik memperbarui env privat server secara atomik, mode600/direktori700,
+   menjaga field lain dan salinan pemulihan; **jangan menghapus env existing
+   terlebih dahulu**. Tidak menempel nilai melalui percakapan/agent/browser
+   yang sedang dibaca agent. Setelah patch merged dan CI sukses, gunakan
+   rollout staging SHA tetap; production mengikuti gate M16 sendiri.
+5. Recreate lima container runtime RT05 agar env/config cache lama hilang;
+   verifikasi `/health/ready`, DML smoke dengan DDL denied, heartbeat, serta
+   env runtime tidak mempunyai direct credential. Direct smoke hanya job
+   migrasi sementara. Audit akses dan tutup sesi DB lama yang terkait role
+   terdampak dengan tindakan operator yang dibatasi pada environment RT05.
+
+Penolakan otomatis sebelumnya atas penulisan secret store tetap berlaku:
+agent menyiapkan patch/runbook dan bukti nonsecret, tidak menyiasati penolakan
+dengan browser/helper lain. Sampai pemilik melakukan rotasi yang sah, insiden
+tetap open. Bukti penutupan hanya tanggal/environment/nama role atau key,
+hasil penolakan credential lama, readiness/role baru, revokasi sesi dan audit;
+**tanpa nilai password/APP_KEY/DSN atau data warga**. Build/migrasi sukses
+bukan bukti rotasi.
 
 ## Pipeline rilis
 
@@ -150,6 +183,10 @@ Queue AOF membantu restart; bukan pengganti backup DB atau outbox. RPO nyata ber
 - Ganti traffic/image ke versi sebelumnya; restart worker ke versi compatible event schema.
 - Jangan otomatis migrate:rollback pada production setelah ada transaksi baru.
 - Skema additive memungkinkan aplikasi lama tetap berfungsi; destructive schema memerlukan release terpisah.
+- Release sebelum isolasi credential12 Oktober tidak lagi menjadi target
+  rollback yang aman. Guard menolaknya sebelum perubahan service. Siapkan
+  release kompatibel yang juga memuat patch keamanan; jangan mengembalikan
+  credential DDL ke runtime demi rollback.
 - Jika data rusak, hentikan mutation terkait, buat snapshot evidence, rencanakan restore/reconcile; jangan restore seluruh production hingga menghapus transaksi valid tanpa persetujuan.
 
 ## Runbook

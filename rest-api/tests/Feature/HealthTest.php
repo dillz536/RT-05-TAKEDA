@@ -39,6 +39,14 @@ class HealthTest extends TestCase
             ->assertExactJson(['status' => 'ready', 'checks' => ['database' => 'ok']]);
     }
 
+    public function test_ready_works_without_a_migration_connection(): void
+    {
+        config(['database.connections.pgsql_migrations' => null]);
+        $this->getJson('/health/ready')
+            ->assertOk()
+            ->assertExactJson(['status' => 'ready', 'checks' => ['database' => 'ok']]);
+    }
+
     public function test_ready_returns_503_without_leaking_connection_details(): void
     {
         $this->breakDatabase();

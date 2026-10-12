@@ -2,6 +2,7 @@ name: Infra images
 on:
   pull_request:
     paths:
+      - '.dockerignore'
       - 'infra/**'
       - 'rest-api/**'
       - 'website/**'
@@ -9,6 +10,7 @@ on:
   push:
     branches: [main]
     paths:
+      - '.dockerignore'
       - 'infra/**'
       - 'rest-api/**'
       - 'website/**'
@@ -25,6 +27,10 @@ jobs:
           node-version: '22'
       - name: Kontrak statis Redis/worker M03
         run: node infra/scripts/check-m03-compose.mjs
+      - name: Regresi isolasi credential DB
+        run: python3 -B infra/scripts/check_database_isolation.py --self-test
+      - name: Secrets/cache tidak masuk build context
+        run: bash infra/scripts/check-build-context.sh
       - name: Kontrak CLI Compose untuk migrasi one-shot
         run: |
           docker compose run --help | grep -q -- --no-deps
@@ -37,8 +43,8 @@ jobs:
           API_APP_KEY: x
           WEB_APP_KEY: x
           APP_URL: https://example.test
-          DATABASE_URL: x
-          DATABASE_URL_UNPOOLED: x
+          DATABASE_URL: postgresql://rt05_app:local-dev-only@127.0.0.1:5432/rt05_test
+          DATABASE_URL_UNPOOLED: postgresql://rt05_migrator:local-dev-only@127.0.0.1:5432/rt05_test
           RT05_ENV: ci
           RT05_HOST: example.test
           APP_ENV: ci
@@ -46,6 +52,8 @@ jobs:
           REDIS_CACHE_PASSWORD: ci-only-cache
         run: |
           docker compose -f infra/compose.production.yml config --quiet
+          docker compose -f infra/compose.production.yml config --format json | python3 -B infra/scripts/check_database_isolation.py
+          docker compose -f infra/compose.production.yml -f infra/compose.vps.yml config --format json | python3 -B infra/scripts/check_database_isolation.py
           docker compose -f infra/compose.production.yml -f infra/compose.vps.yml config > /tmp/merged.yml
           grep -q 'rt05-ci-https.rule' /tmp/merged.yml && grep -q 'example.test' /tmp/merged.yml
           grep -q 'worker-default' /tmp/merged.yml
@@ -57,6 +65,7 @@ jobs:
           bash -n infra/scripts/deploy-staging-immutable.sh
           bash -n infra/scripts/staging-runtime-smoke.sh
           bash -n infra/scripts/staging-metadata.sh
+          bash -n infra/scripts/check-build-context.sh
           python3 -B infra/scripts/test_staging_redis_auth.py
           bash -n infra/scripts/ci-redis.sh
           bash -n infra/scripts/m03-recovery-ci.sh
