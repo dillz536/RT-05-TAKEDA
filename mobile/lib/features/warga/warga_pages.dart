@@ -1386,7 +1386,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
             key: const ValueKey('field-new-password'),
             controller: _new,
             obscureText: true,
-            decoration: InputDecoration(labelText: 'Kata sandi baru (min. 8, huruf dan angka)', errorText: _err('password')),
+            decoration: passwordRuleDecoration(label: 'Kata sandi baru', errorText: _err('password')),
             validator: validateNewPassword,
           ),
           const SizedBox(height: 14),

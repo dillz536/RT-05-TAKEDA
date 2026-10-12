@@ -200,8 +200,10 @@ Bootstrap noninteraktif tanpa password gagal sebelum membuat akun/audit jika
 transport diketahui tidak dapat mengirim (log/nested log, array di luar tes,
 transport tidak dikenal, atau URL non-HTTPS di luar local/testing). Operator
 dapat memakai prompt password tersembunyi atau env proses untuk akun sintetis.
-Jika pengiriman gagal sesudah commit, akun tetap ada dan command mengembalikan
-exit1 dengan petunjuk pemulihan; jangan mengulang pembuatan akun secara buta.
+Jika enqueue atau pengiriman sinkron gagal sesudah commit, akun tetap ada dan
+command mengembalikan exit1 dengan petunjuk pemulihan; jangan mengulang
+pembuatan akun secara buta. Kegagalan SMTP di worker asinkron terjadi setelah
+command selesai; exit0 enqueue bukan bukti delivery. Pantau job dan inbox.
 
 ## Pipeline rilis
 

@@ -123,6 +123,33 @@ Checkpoint review12Oktober:
   sama; isi/parents dan58paragraf readback verified. Final CI/live/screenshots
   akan diperbarui pada fileID yang sama.
 
+Checkpoint source koreksi `15885cbf2d08b3e0f2b66b32899e9e6857ff63d1`:
+- API CI38228867337 SUCCESS184tes/1679assertions, OpenAPI/Pint, Redis recovery
+  dan role runtime/direct smoke; infra38228867353 dan hygiene38228867368 SUCCESS.
+  Mobile38228867355 SUCCESS114tes/analyze/format dan kedua APK.
+- Review delta Claude mobile/Grok backend selesai pada byte source yang sama;
+  temuan sebelumnya tertutup. [CLAUDE_MOBILE_DELTA_REVIEW.md](evidence/m06/CLAUDE_MOBILE_DELTA_REVIEW.md),
+  [GROK_BACKEND_DELTA_REVIEW.md](evidence/m06/GROK_BACKEND_DELTA_REVIEW.md).
+- APK staging checksum cocok dan terpasang di emulator guest sintetis;
+  fingerprint ada di CI_RESULTS. Layar masuk/validasi, daftar utama/tambahan,
+  forgot generik untuk example.invalid dan form reset diperiksa. Form kosong
+  tidak submit. Skala1,3/2,0 dapat scroll, tetapi error aturan password pada2,0
+  terpotong; koreksi UI dibuka ke Grok `task_b2f9f3619c32`/`ctx_f84669a0ef50`.
+  Tidak menganggap uji tampilan final passed sebelum APK koreksi diperiksa.
+- Sesi konsol Hostinger sebelumnya kedaluwarsa; Chrome kini login Hostinger.
+  Pemilik diminta membuka ulang Konsol VPS. Deploy script belum dieksekusi;
+  health existing200/ready09:21UTC bukan bukti M06 terpasang. Bootstrap dan
+  skrip browser/API sintetis siap privat, belum dijalankan ke staging.
+
+Koreksi visual lanjutan: helper aturan password bersama dipakai daftar/reset/
+ganti sandi; label pendek dan error16baris mengatasi ellipsis. Grok115tes awal
+lalu116tes sesudah ganti sandi, analyze clean; tes320px/skala2,0 memeriksa
+RenderParagraph utuh untuk aturan minimum dan pesan72byte. [GROK_EMULATOR_UI_FIX.md](evidence/m06/GROK_EMULATOR_UI_FIX.md).
+CI/APK baru dan pemeriksaan emulator koreksi tetap menunggu. Guest offline/retry
+source15885cb passed dengan PID sama; jaringan/font dikembalikan.
+[LIVE_RESULTS.md](evidence/m06/LIVE_RESULTS.md) memisahkan bukti yang tersedia
+dari gate registrasi/login/approval/keluarga dan sesi yang masih blocked.
+
 ### Checkpoint sebelumnya
 
 **Penutupan patch keamanan fondasi M04**, PR18 merged8e2d8a5,

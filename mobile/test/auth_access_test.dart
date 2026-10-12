@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -428,6 +429,51 @@ void main() {
     expect(find.byType(LoginPage), findsOneWidget);
   });
 
+  testWidgets('reset skala 2.0 menampilkan aturan dan pesan sandi utuh', (tester) async {
+    useCompactScreen(tester, width: 320, textScale: 2.0, height: 700);
+    final base = apiHandler(me: akunJson);
+    await pumpApp(
+      tester,
+      storage: MemoryTokenStorage(),
+      handler: (options) => options.uri.path == '/api/v1/auth/forgot-password'
+          ? jsonBody(202, {
+              'data': {'message': forgotQueuedMessage},
+            })
+          : base(options),
+    );
+    await scrollAuth(tester, find.text('Lupa kata sandi?'));
+    await tester.tap(find.text('Lupa kata sandi?'));
+    await tester.pumpAndSettle();
+    await enter(tester, 'field-forgot-email', 'warga.uji@example.test');
+    await scrollAuth(tester, find.text('Kirim kode reset'));
+    await tester.tap(find.text('Kirim kode reset'));
+    await tester.pumpAndSettle();
+
+    await scrollAuth(tester, find.byKey(const ValueKey('field-forgot-password')));
+    expectTextFullyVisible(tester, 'Kata sandi baru');
+    expectTextFullyVisible(tester, passwordRuleHelper);
+    expect(tester.takeException(), isNull);
+
+    await enter(tester, 'field-forgot-password', 'rahasia');
+    await enter(tester, 'field-forgot-password2', 'rahasia');
+    await scrollAuth(tester, find.text('Simpan kata sandi baru'));
+    await tester.tap(find.text('Simpan kata sandi baru'));
+    await tester.pumpAndSettle();
+    await scrollAuth(tester, find.text(passwordRuleHelper));
+    expectTextFullyVisible(tester, passwordRuleHelper);
+    expect(tester.takeException(), isNull);
+
+    final tooLong = 'A1${'b' * 80}';
+    await enter(tester, 'field-forgot-password', tooLong);
+    await enter(tester, 'field-forgot-password2', tooLong);
+    await scrollAuth(tester, find.text('Simpan kata sandi baru'));
+    await tester.tap(find.text('Simpan kata sandi baru'));
+    await tester.pumpAndSettle();
+    await scrollAuth(tester, find.text(passwordTooLongMessage));
+    expectTextFullyVisible(tester, passwordTooLongMessage);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('pending ditolak tetap di layar terbatas; 403 tidak menghapus token', (tester) async {
     final storage = MemoryTokenStorage('t');
     var meCount = 0;
@@ -671,6 +717,44 @@ void main() {
     expect(find.byType(LoginPage), findsNothing);
   });
 
+  testWidgets('ganti sandi skala 2.0 menampilkan aturan dan pesan utuh', (tester) async {
+    useCompactScreen(tester, width: 320, textScale: 2.0, height: 700);
+    await pumpApp(
+      tester,
+      storage: MemoryTokenStorage('t'),
+      handler: apiHandler(me: akunJson),
+    );
+    await openAccount(tester);
+    await scrollAuth(tester, find.text('Ganti kata sandi'));
+    await tester.tap(find.text('Ganti kata sandi'));
+    await tester.pumpAndSettle();
+
+    await scrollAuth(tester, find.byKey(const ValueKey('field-new-password')));
+    expectTextFullyVisible(tester, 'Kata sandi baru');
+    expectTextFullyVisible(tester, passwordRuleHelper);
+    expect(tester.takeException(), isNull);
+
+    await enter(tester, 'field-current-password', 'Lama1234');
+    await enter(tester, 'field-new-password', 'rahasia');
+    await enter(tester, 'field-new-password2', 'rahasia');
+    await scrollAuth(tester, find.text('Simpan'));
+    await tester.tap(find.text('Simpan'));
+    await tester.pumpAndSettle();
+    await scrollAuth(tester, find.text(passwordRuleHelper));
+    expectTextFullyVisible(tester, passwordRuleHelper);
+    expect(tester.takeException(), isNull);
+
+    final tooLong = 'A1${'b' * 80}';
+    await enter(tester, 'field-new-password', tooLong);
+    await enter(tester, 'field-new-password2', tooLong);
+    await scrollAuth(tester, find.text('Simpan'));
+    await tester.tap(find.text('Simpan'));
+    await tester.pumpAndSettle();
+    await scrollAuth(tester, find.text(passwordTooLongMessage));
+    expectTextFullyVisible(tester, passwordTooLongMessage);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('ganti kata sandi tetap di perangkat ini dan menolak konfirmasi yang salah', (tester) async {
     final storage = MemoryTokenStorage('t');
     Object? body;
@@ -856,6 +940,15 @@ Future<void> enter(WidgetTester tester, String key, String value) async {
 }
 
 String visibleTexts(WidgetTester tester) => find.byType(Text).evaluate().map((element) => (element.widget as Text).data).whereType<String>().join(' | ');
+
+/// Pesan terlukis utuh: data sama dengan teks, dan batas baris tidak memotongnya.
+void expectTextFullyVisible(WidgetTester tester, String message) {
+  final finder = find.text(message);
+  expect(finder, findsOneWidget);
+  final paragraph = tester.renderObject<RenderParagraph>(finder);
+  expect(paragraph.text.toPlainText(), message);
+  expect(paragraph.didExceedMaxLines, isFalse, reason: message);
+}
 
 Future<void> scrollAuth(WidgetTester tester, Finder finder) async {
   final vertical = find.byWidgetPredicate((widget) => widget is Scrollable && axisDirectionToAxis(widget.axisDirection) == Axis.vertical);

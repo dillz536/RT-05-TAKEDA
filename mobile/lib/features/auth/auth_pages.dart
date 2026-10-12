@@ -331,6 +331,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     int? maxLength,
     List<TextInputFormatter>? fmt,
     String? Function(String?)? validate,
+    bool passwordRule = false,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: 14),
     child: TextFormField(
@@ -340,7 +341,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       obscureText: obscure,
       maxLength: maxLength,
       inputFormatters: fmt,
-      decoration: InputDecoration(labelText: optional ? '$label (opsional)' : label, hintText: hint, errorText: _err(apiKey ?? key), counterText: ''),
+      decoration: passwordRule
+          ? passwordRuleDecoration(label: label, errorText: _err(apiKey ?? key))
+          : InputDecoration(labelText: optional ? '$label (opsional)' : label, hintText: hint, errorText: _err(apiKey ?? key), counterText: ''),
       validator: (value) {
         final text = value?.trim() ?? '';
         if (optional && text.isEmpty) return null;
@@ -374,7 +377,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             validate: validateRegistrationToken,
           ),
           _field('email', 'Email', type: TextInputType.emailAddress, validate: validateEmailAddress),
-          _field('password', 'Kata sandi aplikasi (min. 8, huruf dan angka)', apiKey: 'password', obscure: true, validate: validateNewPassword),
+          _field('password', 'Kata sandi', apiKey: 'password', obscure: true, passwordRule: true, validate: validateNewPassword),
           _field(
             'password2',
             'Ulangi kata sandi',
@@ -696,7 +699,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               key: const ValueKey('field-forgot-password'),
               controller: _password,
               obscureText: true,
-              decoration: InputDecoration(labelText: 'Kata sandi baru (min. 8, huruf dan angka)', errorText: _err('password')),
+              decoration: passwordRuleDecoration(label: 'Kata sandi baru', errorText: _err('password')),
               validator: validateNewPassword,
             ),
             const SizedBox(height: 14),

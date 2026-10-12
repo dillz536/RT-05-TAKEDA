@@ -11,6 +11,14 @@ const passwordMaxUtf8Bytes = 72;
 const passwordTooLongMessage = 'Kata sandi maksimal 72 byte. Huruf dan angka biasa dihitung 1 byte; huruf beraksen atau emoji dihitung lebih.';
 const passwordNulMessage = 'Kata sandi berisi karakter yang tidak didukung.';
 
+/// Aturan kata sandi baru. Sama dengan pesan lemah di [validateNewPassword], ditampilkan sebagai helper
+/// yang membungkus supaya aturan tetap terbaca saat label dipendekkan.
+const passwordRuleHelper = 'Minimal 8 karakter, berisi huruf dan angka.';
+
+/// Label pendek plus helper yang membungkus. Pesan error (termasuk batas 72 byte) tidak dipotong.
+InputDecoration passwordRuleDecoration({required String label, String? errorText}) =>
+    InputDecoration(label: Text(label, maxLines: 3), helperText: passwordRuleHelper, helperMaxLines: 8, errorText: errorText, errorMaxLines: 16);
+
 /// Respons lupa sandi yang tidak mengklaim email sudah terkirim.
 const forgotQueuedMessage = 'Jika email terdaftar, permintaan reset kata sandi telah diterima dan diantrekan.';
 

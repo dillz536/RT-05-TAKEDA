@@ -41,3 +41,34 @@ Flutter114tes/analyze clean. Reservasi kuota token memakai lock bersama,
 bukan increment vendor yang dapat menimpa penghitung fresh/zero.
 Angka lokal ini belum bukti CI pada commit koreksi. Kedua APK initial8d
 tetap artefak historis; APK penerimaan harus dibangun dari koreksi final.
+
+## Source koreksi 15885cb
+
+Source `15885cbf2d08b3e0f2b66b32899e9e6857ff63d1`:
+
+| Workflow | Hasil aktual | Bukti |
+| --- | --- | --- |
+| API verification | SUCCESS184tes/1679assertions pada PostgreSQL17 Linux;Pint/OpenAPI,Redis recovery,role runtime DDLdenied/direct smoke lulus | [38228867337](https://github.com/morrispes5/RT-05-TAKEDA/actions/runs/38228867337) |
+| Mobile verification | SUCCESS114tes/analyze/format;dua APK debug dev/staging lulus | [38228867355](https://github.com/morrispes5/RT-05-TAKEDA/actions/runs/38228867355) |
+| Infra images | SUCCESS | [38228867353](https://github.com/morrispes5/RT-05-TAKEDA/actions/runs/38228867353) |
+| Repository checks | SUCCESS | [38228867368](https://github.com/morrispes5/RT-05-TAKEDA/actions/runs/38228867368) |
+
+APK staging diunduh, SHA256 cocok dengan checksum artefak:
+`ff5f766a9da2cc3c31e814edcbcfc1c11830c61f437fbcf6fa1a6eee14d1a9af`;
+173425932byte;AndroidDebugcertSHA256
+`4330026fb322f123f0d9ab0ee2dfe723232009cb0a8fca2d043898c9b2dd9c92`.
+APK dipasang setelah package guest emulator diganti karena sertifikat debug
+CI berbeda dari M05. Tidak ada signing key release atau APK masuk Git.
+
+Review delta Claude mobile dan Grok backend pada source15885cb selesai tanpa
+blocker kode pada lingkup reviewed; fingerprint/perbedaan lingkungan tersedia
+di CLAUDE_MOBILE_DELTA_REVIEW.md dan GROK_BACKEND_DELTA_REVIEW.md.
+Pemeriksaan emulator berikutnya menemukan pesan aturan password terpotong
+pada skala2,0. Koreksi UI terbatas diserahkan ke Grok; APK15885cb belum menjadi
+bukti tampilan final sesudah koreksi itu.
+
+Sesi Hostinger sebelumnya kedaluwarsa. Chrome yang diperiksa menampilkan
+login Hostinger; pemilik diminta membuka kembali Konsol VPS. Script deploy
+belum dieksekusi. Health existing200/ready terverifikasi09:21UTC, bukan
+bukti rollout M06. SMTP pengirim belum pernah disiapkan menurut pemilik;
+production/data warga nyata dan implementasi M07 tetap tertahan.
