@@ -9,10 +9,11 @@ otomasi yang dijamin terus hidup saat komputer atau Orca mati.
 
 ## Tahap aktif
 
-**Remediasi keamanan fondasi M04, instruksi12 Oktober.** Branch
-`codex/m04-runtime-credential-isolation`: Codex memperbaiki aliran migrator
+**Penutupan keamanan fondasi M04, instruksi12 Oktober.** PR18 merged8e2d8a5;
+staging6a8d4f8 lulus bukti runtime. Branch dokumentasi
+`codex/m04-security-evidence`: Codex memperbaiki aliran migrator
 dan build context; investigator/reviewer independen baca-saja. Source/runtime
-patch menunggu CI/rollout; rotasi DB/APP_KEY historis tetap open, tindakan
+patch lulus full CI100 tes/BuildKit dan rollout; rotasi DB/APP_KEY historis tetap open, tindakan
 secret-store sebelumnya ditolak dan tidak diakali. Tidak membuka M06+.
 
 M05 PASS, PR17 merged ba3528d. Source13de24e:
@@ -21,7 +22,8 @@ scaling lulus; review final Kimi PASS. Bukti [LIVE_RESULTS.md](evidence/m05/LIVE
 dan [CI_RESULTS.md](evidence/m05/CI_RESULTS.md). Tidak membuka fitur M06+.
 PR #16 merged
 `3a8be79` setelah lima cek sukses pada `9cad5de`. Staging menjalankan SHA
-`12b4642` yang telah diuji; merge dokumentasi tidak memicu redeploy.
+`6a8d4f8` setelah rollout keamanan12 Oktober; merge dokumentasi berikutnya
+tidak memicu redeploy.
 M03 lulus kode/CI pada `0d678bb` dan review final Kimi.
 
 PR #14 telah digabung pada commit `c644b84`: perbaikan routing staging dan aset

@@ -14,7 +14,7 @@ ditentukan hanya oleh tersedianya kode.
 | M01 | passed | PR #10 merged (02d92a1); production alias rt05takeda.vercel.app 19/19 HTML + 26 aset cocok setelah merge |
 | M02 | passed | PR #11 merged (321db0d) |
 | M03 | passed | PR #15, kode 0d678bb: API CI 88 tes/727 assertion, recovery worker/Redis nyata dan build infra SUCCESS; review final Kimi PASS; docs/evidence/m03/CI_RESULTS.md |
-| M04 | passed | Gate fungsional staging SHA12b4642: HTTPS, Neon pooled/direct rollback0, AOF pending job, empat heartbeat, volume/unrelated unchanged; Grok menerima bukti. Credential incident tetap open; production belum siap. docs/evidence/m04/LIVE_RESULTS.md |
+| M04 | passed | Gate fungsional sebelumnya12b4642; patch isolasi credential6a8d4f8 diterapkan12 Oktober: runtime tanpa migrator, DML/DDLdenied, direct job rollback0, heartbeat dan volume/unrelated preserved. Insiden rotasi tetap open; production belum siap. Checkpoint keamanan di bawah. |
 | M05 | passed | PR17, source13de24e: 77 tes/analyzer/dua APK CI SUCCESS, checksum cocok; emulator health HTTPS, offline/retry proses sama, ikon dan skala teks1,3/2,0; review final Kimi PASS. docs/evidence/m05/LIVE_RESULTS.md |
 | M06 | in_progress | Registrasi/login/token/approval + tes CI lulus; SMTP reset belum (log) |
 | M07 | in_progress | Rumah/keluarga/akun/permohonan API + layar mobile; tes CI lulus |
@@ -32,12 +32,14 @@ M00 memakai label accepted_baseline khusus, bukan status passed hasil tes baru. 
 
 ## Milestone aktif
 
-**Remediasi keamanan fondasi M04**, branch `codex/m04-runtime-credential-isolation`.
+**Penutupan patch keamanan fondasi M04**, PR18 merged8e2d8a5,
+staging6a8d4f8 terverifikasi12 Oktober. Dokumen bukti pada branch
+`codex/m04-security-evidence`; tidak membuka M06+.
 Instruksi12 Oktober: prioritaskan insiden DB/APP_KEY dan isolasi migrator sebelum
 data warga nyata. Gate M05 lulus source13de24e dan review final Kimi; PR17
 sudah merged `ba3528d` pada11 Oktober12:02:22UTC. Seluruh delapan checks pada
 head da42063 sukses, termasuk Mobile38137327953 (77 tes).
-M04 sebelumnya merged `3a8be79`, staging live tetap SHA `12b4642`.
+M04 sebelumnya merged `3a8be79`; rollout keamanan berikutnya menjalankan6a8d4f8.
 Pemilik meminta pengerjaan bertahap dengan empat agent (P16), bukan membuka
 seluruh roadmap serentak. [COORDINATION.md](COORDINATION.md) mencatat ownership,
 gate, pemulihan setelah limit/listrik mati, dan urutan berikutnya.
@@ -369,7 +371,7 @@ Tiga butir rencana implisit dibuat eksplisit. CI/APK dan emulator tetap pending;
 scope fitur/business/API/ERD tidak berubah, sehingga kontrak API/schema tidak
 perlu diubah untuk fondasi ini.
 
-### Remediasi credential12 Oktober — source CI PASS, live pending
+### Remediasi credential12 Oktober — source dan staging isolasi PASS, rotasi OPEN
 
 - Insiden historis DB/APP_KEY tetap open dan menghalangi data warga nyata/
   production. Pemisahan role DDL semestinya ditutup pada fondasi staging,
@@ -423,6 +425,41 @@ perlu diubah untuk fondasi ini.
   tetap berfungsi; caller direct smoke pindah ke job, bukan container API.
   Ini bukti kode/build, belum bukti patch diterapkan atau credential dirotasi
   di VPS. Dokumen commit berikutnya tidak mengubah source yang diuji.
+- Head penutupan6a8d4f8 identik source2b8 untuk kode/workflow. Semua lima
+  checks terbaru SUCCESS: API38191265964 (100 tes), Infra38191265941,
+  Hygiene38191265944, Vercel dan Preview Comments. PR18 merged
+  `8e2d8a5393273d90ce0c2446c23e8ff9b97cb71e` pada01:19:33UTC.
+- **Rollout staging aktual PASS**: hostname srv2030339 via konsol Hostinger
+  yang diotorisasi. Helper blob6a8 SHA256
+  e39ec37008ad630bfc46be5b3dbac94393ca94eb9e7857c04db026b3fd655f28 cocok
+  dengan Git; umask077, job556073 mulai01:24:34UTC dan selesai exit0.
+  Log privat `/root/rt05-security-6a8d4f8-deploy.log`. Footer menyatakan
+  Selesai staging SHA6a8d4f8; graph isolasi PASS sebelum build/rollout.
+  Lima runtime memakai image API yang sama; ID image
+  b93025ee869d0d2eea010c597ffe57b93c2752caafcf38c5db34f1ea452deb76.
+- Bukti runtime sesudah recreate: `docker exec ... printenv
+  DATABASE_URL_UNPOOLED >/dev/null` pada api, worker-default, worker-media,
+  worker-exports dan scheduler semuanya exit1 (key absent); tidak mencetak
+  nilai. API direct smoke ditolak dengan pesan koneksi migrasi tidak tersedia,
+  exit2, sebelum akses DB. DML smoke API: PG17.11/rt05_app, pooled,
+  verify-full, tulis+baca ok, rollback0 dan DDLdenied.
+- Kontrol operator: `compose run --rm --no-deps --pull never migrate php
+  artisan rt05:db-smoke --connection=pgsql_migrations` pada tag6a8:
+  rt05_owner/direct, verify-full, tulis+baca ok dan rollback0. DDL tidak
+  diprobe pada job owner. Docker ps -aq filter project/service migrate kosong
+  sesudah job --rm, tidak meninggalkan container DDL. Tidak menjalankan
+  migration/factory/seed destruktif.
+- Heartbeat aktual default1s/media2s/exports1s/scheduler59s. Pipeline
+  assert_staging_images/volumes/unrelated lulus sebelum footer selesai.
+  Redis-data CreatedAt2026-10-11T00:26:59Z, api-storage00:27:01Z,
+  apk-downloads00:27:19Z dipertahankan. Pohon legacy empat patch tetap ada;
+  service lain, DNS, port80/443 dan firewall tidak diubah.
+- Probe HTTPS luar VPS: live/ready/APIv1/profil200; ready databaseok.
+  Tidak merotasi DB/APP_KEY, tidak mengubah env privat existing, tidak deploy
+  production atau memasukkan data warga. R08 selesai untuk source/staging;
+  R07 tetap OPEN sampai bukti rotasi/revokasi nonsecret dari operator tersedia.
+  Rollback ke12b yang masih membagikan migrator ditolak oleh guard; riwayat/
+  image lama tidak dihapus dan tidak disebut target rollback aman.
 
 ### M05 — bukti source final dan emulator, gate PASS
 
@@ -479,7 +516,7 @@ Selesaikan perubahan pengguna dengan hati-hati; tidak reset/force-push.
 | R05 | high | database | pdo_pgsql named prepares + pooler Neon → transaksi gugur 25P02 pada tulis pertama | M02 | fixed (ADR14), terverifikasi di Neon pooled |
 | R06 | medium | dev env | Docker Desktop tidak jalan: WSL2 belum terpasang (Windows Home) | M02/M03 | accepted limitation ADR19: build Docker/Postgres/Redis di CI, runtime staging di VPS; tidak perlu instalasi Docker/WSL lokal untuk gate ini |
 | R07 | high | security | Credential DB dan APP_KEY historis terpapar; role/password diwariskan antar branch | M02/M04 | open: rotasi/revokasi semua lingkungan terdampak dan audit belum terbukti; data nyata/production blocked |
-| R08 | high | security | DATABASE_URL_UNPOOLED diwariskan ke lima runtime; COPY dapat memasukkan env/cache sebelum penghapusan layer | M04 | source2b8dbce/PR18 dan full CI PASS12 Oktober; rollout nyata pending, R07 tetap open |
+| R08 | high | security | DATABASE_URL_UNPOOLED diwariskan ke lima runtime; COPY dapat memasukkan env/cache sebelum penghapusan layer | M04 | fixed: PR18 merged, full CI100 tests/BuildKit PASS, staging6a8d4f8 runtime key absent/direct denied/DML preserved terverifikasi12 Oktober; R07 tetap open |
 
 ## Bukti historis frontend
 
