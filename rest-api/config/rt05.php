@@ -18,6 +18,14 @@ return [
         'stale_seconds' => (int) env('RT05_OUTBOX_STALE_SECONDS', 900),
     ],
 
+    // M06 identitas (docs/API.md §Autentikasi, SECURITY.md §Identitas).
+    'auth' => [
+        // Nama cookie CSRF API; berbeda dari XSRF-TOKEN milik website pada origin yang sama.
+        'csrf_cookie' => env('RT05_XSRF_COOKIE', 'rt05_api_xsrf'),
+        // Kegagalan token registrasi per IP per jam (selain throttle registrasi 5/10 menit).
+        'token_failures_per_hour' => (int) env('RT05_TOKEN_FAILURES_PER_HOUR', 10),
+    ],
+
     'heartbeat' => [
         // Store cache untuk heartbeat; redis → instance queue (noeviction), selain itu store default.
         'store' => env('RT05_HEARTBEAT_STORE', env('CACHE_STORE', 'file') === 'redis' ? 'coordination' : null),

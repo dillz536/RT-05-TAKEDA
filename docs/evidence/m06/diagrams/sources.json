@@ -1,0 +1,592 @@
+[
+  [
+    "mindmap",
+    "Ruang lingkup RT05 TAKEDA M06 dan M07",
+    "M06 aktif | M07 rancangan setelah penerimaan M06",
+    [
+      [
+        "root",
+        520,
+        350,
+        350,
+        120,
+        [
+          "RT05 TAKEDA",
+          "M06 lalu M07"
+        ],
+        true
+      ],
+      [
+        "access",
+        60,
+        160,
+        370,
+        140,
+        [
+          "Akses M06",
+          "Daftar utama dan tambahan",
+          "Login logout dan pemulihan"
+        ],
+        false
+      ],
+      [
+        "security",
+        950,
+        160,
+        380,
+        140,
+        [
+          "Perlindungan M06",
+          "Token RT dan CSRF",
+          "Role status serta audit"
+        ],
+        false
+      ],
+      [
+        "family",
+        60,
+        590,
+        370,
+        150,
+        [
+          "Pendataan M07",
+          "Rumah keluarga dan warga",
+          "Verifikasi dan arsip"
+        ],
+        false
+      ],
+      [
+        "history",
+        950,
+        590,
+        380,
+        150,
+        [
+          "Histori M07",
+          "Hunian membership link akun",
+          "Perpindahan atomik"
+        ],
+        false
+      ]
+    ],
+    [
+      [
+        "root",
+        "access"
+      ],
+      [
+        "root",
+        "security"
+      ],
+      [
+        "root",
+        "family"
+      ],
+      [
+        "root",
+        "history"
+      ]
+    ]
+  ],
+  [
+    "use-case",
+    "Aktor dan layanan akses serta pendataan",
+    "Pengunjung publik tidak memerlukan akun | seluruh pengurus setara",
+    [
+      [
+        "public",
+        45,
+        150,
+        330,
+        130,
+        [
+          "Pengunjung",
+          "Baca website publik",
+          "Artikel dan dokumentasi"
+        ],
+        false
+      ],
+      [
+        "primary",
+        45,
+        360,
+        330,
+        160,
+        [
+          "Warga akun utama",
+          "Daftar login dan reset",
+          "Baca dan edit keluarga sendiri"
+        ],
+        false
+      ],
+      [
+        "extra",
+        45,
+        620,
+        330,
+        150,
+        [
+          "Warga akun tambahan",
+          "Status permohonan dan logout",
+          "Keluarga read only setelah aktif"
+        ],
+        false
+      ],
+      [
+        "api",
+        535,
+        330,
+        330,
+        170,
+        [
+          "REST API",
+          "Validasi dan otorisasi",
+          "Transaksi serta audit"
+        ],
+        true
+      ],
+      [
+        "admin",
+        1025,
+        160,
+        330,
+        170,
+        [
+          "Pengurus",
+          "Review tambahan dan token",
+          "Pendataan verifikasi arsip"
+        ],
+        false
+      ],
+      [
+        "operator",
+        1025,
+        550,
+        330,
+        150,
+        [
+          "Operator",
+          "Bootstrap grant revoke",
+          "Command yang diaudit"
+        ],
+        false
+      ]
+    ],
+    [
+      [
+        "public",
+        "api"
+      ],
+      [
+        "primary",
+        "api"
+      ],
+      [
+        "extra",
+        "api"
+      ],
+      [
+        "admin",
+        "api"
+      ],
+      [
+        "operator",
+        "api"
+      ]
+    ]
+  ],
+  [
+    "architecture",
+    "Arsitektur akses akun RT05 TAKEDA",
+    "Database dan aturan bisnis dimiliki rest api | satu origin HTTPS",
+    [
+      [
+        "browser",
+        40,
+        170,
+        330,
+        130,
+        [
+          "Browser",
+          "Website publik dan CMS",
+          "CMS cookie serta CSRF"
+        ],
+        false
+      ],
+      [
+        "mobile",
+        40,
+        480,
+        330,
+        130,
+        [
+          "Android Flutter",
+          "Bearer per perangkat",
+          "OS secure storage"
+        ],
+        false
+      ],
+      [
+        "gateway",
+        535,
+        170,
+        330,
+        130,
+        [
+          "Gateway HTTPS",
+          "API health csrf dan reset",
+          "Rute lain ke website"
+        ],
+        true
+      ],
+      [
+        "api",
+        535,
+        480,
+        330,
+        140,
+        [
+          "Laravel REST API",
+          "Role status policy",
+          "Transaksi audit outbox"
+        ],
+        true
+      ],
+      [
+        "db",
+        1010,
+        160,
+        330,
+        120,
+        [
+          "PostgreSQL Neon",
+          "Sumber data utama",
+          "Runtime DML terpisah DDL"
+        ],
+        false
+      ],
+      [
+        "queue",
+        1010,
+        390,
+        330,
+        120,
+        [
+          "Redis",
+          "Queue dan cache terpisah",
+          "Session serta rate limit"
+        ],
+        false
+      ],
+      [
+        "worker",
+        1010,
+        650,
+        330,
+        120,
+        [
+          "Worker dan SMTP",
+          "Reset antrean after commit",
+          "Inbox harus dibuktikan"
+        ],
+        false
+      ]
+    ],
+    [
+      [
+        "browser",
+        "gateway"
+      ],
+      [
+        "mobile",
+        "gateway"
+      ],
+      [
+        "gateway",
+        "api"
+      ],
+      [
+        "api",
+        "db"
+      ],
+      [
+        "api",
+        "queue"
+      ],
+      [
+        "queue",
+        "worker"
+      ]
+    ]
+  ],
+  [
+    "registration",
+    "Alur registrasi akun utama",
+    "Keputusan pemilik | akun langsung aktif dan keluarga belum diverifikasi",
+    [
+      [
+        "input",
+        50,
+        170,
+        350,
+        150,
+        [
+          "Email password aplikasi",
+          "Token RT string 6 digit",
+          "Data rumah dan keluarga"
+        ],
+        false
+      ],
+      [
+        "validate",
+        525,
+        170,
+        350,
+        150,
+        [
+          "Validasi server",
+          "Token alamat email",
+          "Benturan tidak auto merge"
+        ],
+        true
+      ],
+      [
+        "transaction",
+        995,
+        170,
+        350,
+        150,
+        [
+          "Transaksi atomik",
+          "Akun rumah keluarga anggota",
+          "Hunian audit dan bearer"
+        ],
+        false
+      ],
+      [
+        "fix",
+        525,
+        550,
+        350,
+        140,
+        [
+          "Token salah atau bentrok",
+          "Perbaiki isian",
+          "Atau hubungi pengurus"
+        ],
+        false
+      ],
+      [
+        "active",
+        995,
+        550,
+        350,
+        140,
+        [
+          "Akun utama aktif",
+          "Peran warga",
+          "Keluarga belum verifikasi"
+        ],
+        true
+      ]
+    ],
+    [
+      [
+        "input",
+        "validate"
+      ],
+      [
+        "validate",
+        "transaction"
+      ],
+      [
+        "validate",
+        "fix"
+      ],
+      [
+        "transaction",
+        "active"
+      ]
+    ]
+  ],
+  [
+    "approval",
+    "Alur akun tambahan dan persetujuan",
+    "Pendataan dan review lengkap pada M07 | pending tidak membaca layanan warga",
+    [
+      [
+        "request",
+        45,
+        170,
+        360,
+        150,
+        [
+          "Daftar akun tambahan",
+          "Email password token",
+          "Referensi alamat keluarga"
+        ],
+        false
+      ],
+      [
+        "pending",
+        520,
+        170,
+        360,
+        150,
+        [
+          "Akun menunggu",
+          "Hanya profil status sendiri",
+          "Dan logout"
+        ],
+        true
+      ],
+      [
+        "review",
+        995,
+        170,
+        360,
+        150,
+        [
+          "Pengurus review M07",
+          "Cocokkan keluarga yang benar",
+          "Keputusan serta audit"
+        ],
+        false
+      ],
+      [
+        "reject",
+        520,
+        550,
+        360,
+        150,
+        [
+          "Permohonan ditolak",
+          "Status dan alasan terlihat",
+          "Akses warga tetap ditolak"
+        ],
+        false
+      ],
+      [
+        "approve",
+        995,
+        550,
+        360,
+        150,
+        [
+          "Tambahan aktif sebagai warga",
+          "Link keluarga benar",
+          "Keluarga hanya dapat dibaca"
+        ],
+        true
+      ]
+    ],
+    [
+      [
+        "request",
+        "pending"
+      ],
+      [
+        "pending",
+        "review"
+      ],
+      [
+        "review",
+        "reject"
+      ],
+      [
+        "review",
+        "approve"
+      ]
+    ]
+  ],
+  [
+    "family-move",
+    "Alur keluarga dan perpindahan hunian",
+    "Rancangan M07 | implementasi baru menunggu M06 passed",
+    [
+      [
+        "read",
+        40,
+        160,
+        365,
+        150,
+        [
+          "Keluarga sendiri",
+          "Utama dapat edit",
+          "Tambahan hanya membaca"
+        ],
+        false
+      ],
+      [
+        "admin",
+        515,
+        160,
+        365,
+        150,
+        [
+          "Pengurus mulai perpindahan",
+          "Rumah tujuan dan tanggal",
+          "Validasi hunian primary"
+        ],
+        true
+      ],
+      [
+        "atomic",
+        990,
+        160,
+        365,
+        150,
+        [
+          "Satu transaksi",
+          "Tutup hunian dan link lama",
+          "Buka hunian dan link baru"
+        ],
+        false
+      ],
+      [
+        "history",
+        515,
+        560,
+        365,
+        150,
+        [
+          "Histori dipertahankan",
+          "Membership dan tautan akun",
+          "Backfill tanpa tebak tanggal"
+        ],
+        false
+      ],
+      [
+        "dues",
+        990,
+        560,
+        365,
+        150,
+        [
+          "Tagihan rumah asal tetap",
+          "Tunggakan tidak dipindahkan",
+          "Arsip tidak menghapus kas"
+        ],
+        true
+      ]
+    ],
+    [
+      [
+        "read",
+        "admin"
+      ],
+      [
+        "admin",
+        "atomic"
+      ],
+      [
+        "atomic",
+        "history"
+      ],
+      [
+        "atomic",
+        "dues"
+      ]
+    ]
+  ]
+]

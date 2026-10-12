@@ -65,10 +65,15 @@ Artisan::command('rt05:pengingat-iuran', function () {
     $this->info("Pengingat iuran: $count");
 })->purpose('Pengingat iuran bulan berjalan ke akun utama rumah');
 
-Artisan::command('rt05:token-rotate', function () {
-    RegistrationToken::rotate(null, 'terjadwal mingguan');
+Artisan::command('rt05:token-rotate {--if-due : Rotasi hanya bila tidak ada token aktif atau token berumur 7 hari}', function () {
+    if ($this->option('if-due')) {
+        $this->info(RegistrationToken::rotateIfDue() ? 'Token registrasi dirotasi (jatuh tempo).' : 'Token registrasi belum jatuh tempo.');
+
+        return;
+    }
+    RegistrationToken::rotate(null, 'operator');
     $this->info('Token registrasi dirotasi.');
-})->purpose('Rotasi token registrasi RT');
+})->purpose('Rotasi token registrasi RT (nilai token tidak pernah dicetak)');
 
 // Heartbeat scheduler M03: dibaca rt05:heartbeat-check, tidak lewat endpoint publik.
 Schedule::call(fn () => Heartbeat::beat('scheduler'))->everyMinute()->name('rt05:heartbeat-scheduler');
@@ -77,4 +82,5 @@ Schedule::command('rt05:tagihan-generate')->dailyAt('00:10')->timezone('Asia/Jak
 Schedule::command('rt05:pengingat-agenda')->hourly()->withoutOverlapping()->onOneServer();
 Schedule::command('rt05:pengingat-iuran')->monthlyOn(5, '08:00')->timezone('Asia/Jakarta')->onOneServer();
 Schedule::command('rt05:pengingat-iuran')->monthlyOn(20, '08:00')->timezone('Asia/Jakarta')->onOneServer();
-Schedule::command('rt05:token-rotate')->weeklyOn(1, '00:05')->timezone('Asia/Jakarta')->onOneServer();
+// Rotasi mingguan tahan scheduler terlewat: dicek tiap jam, rotasi saat token berumur 7 hari.
+Schedule::command('rt05:token-rotate --if-due')->hourlyAt(5)->withoutOverlapping()->onOneServer();

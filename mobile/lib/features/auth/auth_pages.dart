@@ -10,6 +10,7 @@ import '../../core/api.dart';
 import '../../core/models.dart';
 import '../../core/session.dart';
 import '../../core/widgets.dart';
+import 'account_access.dart';
 
 Future<void> _finishAuth(WidgetRef ref, dynamic data) async {
   final map = data as Map;
@@ -29,6 +30,7 @@ class _AuthScaffold extends StatelessWidget {
     appBar: back ? AppBar(backgroundColor: Brand.sky, foregroundColor: Brand.navy) : null,
     body: SafeArea(
       child: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
         children: [
           Row(
@@ -69,18 +71,38 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _password = TextEditingController();
   final _form = GlobalKey<FormState>();
   bool _hide = true;
+  bool _busy = false;
   String? _error;
 
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
   Future<void> _submit() async {
-    if (!_form.currentState!.validate()) return;
-    setState(() => _error = null);
+    if (_busy) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    if (!_form.currentState!.validate()) {
+      if (mounted) setState(() => _busy = false);
+      return;
+    }
     try {
       final data = await ref
           .read(apiProvider)
           .post('/auth/mobile-login', data: {'email': _email.text.trim(), 'password': _password.text, 'device_name': 'Android RT05'});
+      if (!mounted) return;
       await _finishAuth(ref, data);
-    } on ApiException catch (e) {
-      setState(() => _error = e.display);
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error.display);
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -89,7 +111,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final expired = ref.watch(sessionProvider).expired;
     return _AuthScaffold(
       title: 'Masuk',
-      subtitle: 'Layanan warga dan pengurus RT 05: pengaduan, aspirasi, agenda, iuran, dan kas.',
+      subtitle: 'Email dan kata sandi aplikasi RT05 TAKEDA. Tidak memakai akun Google.',
       child: Form(
         key: _form,
         child: Column(
@@ -97,19 +119,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           children: [
             if (expired) const _Banner('Sesi berakhir. Silakan masuk kembali.'),
             TextFormField(
+              key: const ValueKey('field-login-email'),
               controller: _email,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
               decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.mail_outline)),
-              validator: (v) => (v == null || !v.contains('@')) ? 'Masukkan email yang valid' : null,
+              validator: validateEmailAddress,
             ),
             const SizedBox(height: 14),
             TextFormField(
+              key: const ValueKey('field-login-password'),
               controller: _password,
               obscureText: _hide,
               autofillHints: const [AutofillHints.password],
               decoration: InputDecoration(
-                labelText: 'Kata sandi',
+                labelText: 'Kata sandi aplikasi',
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
                   tooltip: _hide ? 'Tampilkan' : 'Sembunyikan',
@@ -117,7 +141,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   onPressed: () => setState(() => _hide = !_hide),
                 ),
               ),
-              validator: (v) => (v == null || v.isEmpty) ? 'Masukkan kata sandi' : null,
+              validator: (value) => (value == null || value.isEmpty) ? 'Masukkan kata sandi' : null,
+              textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => _submit(),
             ),
             if (_error != null)
@@ -126,8 +151,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 child: Text(_error!, style: const TextStyle(color: Brand.danger)),
               ),
             const SizedBox(height: 20),
-            BusyButton(label: 'Masuk', icon: Icons.login, onPressed: _submit),
-            TextButton(onPressed: () => context.push('/forgot'), child: const Text('Lupa kata sandi?')),
+            BusyButton(label: 'Masuk', icon: Icons.login, onPressed: _busy ? null : _submit),
+            TextButton(onPressed: _busy ? null : () => context.push('/forgot'), child: const Text('Lupa kata sandi?')),
             const Divider(height: 32),
             const Text(
               'Belum punya akun? Minta token RT 6 digit kepada pengurus.',
@@ -135,16 +160,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               style: TextStyle(color: Brand.muted),
             ),
             const SizedBox(height: 12),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.home_work_outlined),
-              onPressed: () => context.push('/register'),
-              label: const Text('Daftar akun utama rumah'),
-            ),
+            _AuthLink(icon: Icons.home_work_outlined, label: 'Daftar akun utama rumah', onPressed: _busy ? null : () => context.push('/register')),
             const SizedBox(height: 10),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.group_add_outlined),
-              onPressed: () => context.push('/register?jenis=tambahan'),
-              label: const Text('Daftar akun tambahan keluarga'),
+            _AuthLink(
+              icon: Icons.group_add_outlined,
+              label: 'Daftar akun tambahan keluarga',
+              onPressed: _busy ? null : () => context.push('/register?jenis=tambahan'),
             ),
             const SizedBox(height: 24),
             const ServerInfo(),
@@ -153,6 +174,28 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       ),
     );
   }
+}
+
+/// Tombol sekunder auth: label panjang membungkus pada skala teks 1,3 dan 2,0.
+class _AuthLink extends StatelessWidget {
+  const _AuthLink({required this.icon, required this.label, required this.onPressed});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton(
+    onPressed: onPressed,
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon),
+        const SizedBox(width: 8),
+        Flexible(child: Text(label, textAlign: TextAlign.center)),
+      ],
+    ),
+  );
 }
 
 class _Banner extends StatelessWidget {
@@ -184,21 +227,49 @@ class RegisterPage extends ConsumerStatefulWidget {
 class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _form = GlobalKey<FormState>();
   final c = {
-    for (final k in ['email', 'password', 'password2', 'token', 'nama', 'hubungan', 'whatsapp', 'blok', 'jalan', 'nomor']) k: TextEditingController(),
+    for (final key in ['email', 'password', 'password2', 'token', 'nama', 'hubungan', 'whatsapp', 'blok', 'jalan', 'nomor']) key: TextEditingController(),
   };
   final List<(TextEditingController, TextEditingController)> _anggota = [];
   String _hunian = 'pemilik';
   Map<String, List<String>> _fieldErrors = {};
   String? _error;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    for (final controller in c.values) {
+      controller.dispose();
+    }
+    for (final (nama, hubungan) in _anggota) {
+      nama.dispose();
+      hubungan.dispose();
+    }
+    super.dispose();
+  }
 
   String? _err(String key) => _fieldErrors[key]?.first;
 
+  void _removeMember(int index) {
+    final (nama, hubungan) = _anggota.removeAt(index);
+    setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      nama.dispose();
+      hubungan.dispose();
+    });
+  }
+
   Future<void> _submit() async {
+    if (_busy) return;
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
+      _busy = true;
       _error = null;
       _fieldErrors = {};
     });
-    if (!_form.currentState!.validate()) return;
+    if (!_form.currentState!.validate()) {
+      if (mounted) setState(() => _busy = false);
+      return;
+    }
     final body = <String, dynamic>{
       'email': c['email']!.text.trim(),
       'password': c['password']!.text,
@@ -217,19 +288,22 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       body['whatsapp'] = c['whatsapp']!.text.trim().isEmpty ? null : c['whatsapp']!.text.trim();
       body['jenis_hunian'] = _hunian;
       body['anggota'] = [
-        for (final (n, h) in _anggota)
-          if (n.text.trim().isNotEmpty) {'nama': n.text.trim(), 'hubungan_keluarga': h.text.trim().isEmpty ? 'Anggota keluarga' : h.text.trim()},
+        for (final (nama, hubungan) in _anggota)
+          if (nama.text.trim().isNotEmpty || hubungan.text.trim().isNotEmpty) {'nama': nama.text.trim(), 'hubungan_keluarga': hubungan.text.trim()},
       ];
     }
     try {
       final data = await ref.read(apiProvider).post(widget.additional ? '/auth/additional-register' : '/auth/register', data: body);
-      // Router (redirect sesi) membawa akun baru ke beranda atau halaman menunggu persetujuan.
+      if (!mounted) return;
       await _finishAuth(ref, data);
-    } on ApiException catch (e) {
+    } on ApiException catch (error) {
+      if (!mounted) return;
       setState(() {
-        _fieldErrors = e.fields;
-        _error = e.fields.isEmpty ? e.display : 'Periksa kembali isian yang ditandai.';
+        _fieldErrors = error.fields;
+        _error = error.fields.isEmpty ? error.display : 'Periksa kembali isian yang ditandai.';
       });
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -243,16 +317,23 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     String? hint,
     int? maxLength,
     List<TextInputFormatter>? fmt,
+    String? Function(String?)? validate,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: 14),
     child: TextFormField(
+      key: ValueKey('field-$key'),
       controller: c[key],
       keyboardType: type,
       obscureText: obscure,
       maxLength: maxLength,
       inputFormatters: fmt,
       decoration: InputDecoration(labelText: optional ? '$label (opsional)' : label, hintText: hint, errorText: _err(apiKey ?? key), counterText: ''),
-      validator: optional ? null : (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+      validator: (value) {
+        final text = value?.trim() ?? '';
+        if (optional && text.isEmpty) return null;
+        if (!optional && text.isEmpty) return 'Wajib diisi';
+        return validate?.call(value);
+      },
     ),
   );
 
@@ -261,8 +342,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     back: true,
     title: widget.additional ? 'Daftar akun tambahan' : 'Daftar akun utama',
     subtitle: widget.additional
-        ? 'Untuk anggota keluarga lain di rumah yang sudah terdaftar. Akun aktif setelah disetujui pengurus.'
-        : 'Untuk kepala keluarga atau penanggung jawab rumah. Data keluarga akan diverifikasi pengurus.',
+        ? 'Untuk anggota keluarga lain di rumah yang sudah terdaftar. Akun menunggu persetujuan pengurus dan belum mendapat akses layanan.'
+        : 'Akun utama langsung aktif dengan kata sandi aplikasi. Keluarga berstatus belum diverifikasi sampai pengurus meninjau.',
     child: Form(
       key: _form,
       child: Column(
@@ -276,68 +357,107 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             maxLength: 6,
             fmt: [FilteringTextInputFormatter.digitsOnly],
             hint: 'Diberikan oleh pengurus',
+            validate: validateRegistrationToken,
           ),
-          _field('email', 'Email', type: TextInputType.emailAddress),
-          _field('password', 'Kata sandi (min. 8, huruf & angka)', apiKey: 'password', obscure: true),
-          _field('password2', 'Ulangi kata sandi', apiKey: 'password_confirmation', obscure: true),
+          _field('email', 'Email', type: TextInputType.emailAddress, validate: validateEmailAddress),
+          _field('password', 'Kata sandi aplikasi (min. 8, huruf dan angka)', apiKey: 'password', obscure: true, validate: validateNewPassword),
+          _field(
+            'password2',
+            'Ulangi kata sandi',
+            apiKey: 'password_confirmation',
+            obscure: true,
+            validate: (value) => validatePasswordConfirmation(value, c['password']!.text),
+          ),
           const SizedBox(height: 6),
           Text(widget.additional ? 'Data diri' : 'Kepala keluarga', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 10),
-          _field('nama', widget.additional ? 'Nama lengkap' : 'Nama kepala keluarga', apiKey: widget.additional ? 'nama' : 'nama_kepala'),
-          if (widget.additional) _field('hubungan', 'Hubungan dengan kepala keluarga', apiKey: 'hubungan_keluarga', hint: 'mis. Anak, Istri'),
-          if (!widget.additional) _field('whatsapp', 'Nomor WhatsApp', type: TextInputType.phone, optional: true),
+          _field('nama', widget.additional ? 'Nama lengkap' : 'Nama kepala keluarga', apiKey: widget.additional ? 'nama' : 'nama_kepala', maxLength: 120),
+          if (widget.additional) _field('hubungan', 'Hubungan dengan kepala keluarga', apiKey: 'hubungan_keluarga', hint: 'mis. Anak, Istri', maxLength: 40),
+          if (!widget.additional) _field('whatsapp', 'Nomor WhatsApp', type: TextInputType.phone, optional: true, maxLength: 25, validate: validateWhatsapp),
           Text('Alamat rumah', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(child: _field('blok', 'Blok', optional: true)),
-              const SizedBox(width: 12),
-              Expanded(child: _field('nomor', 'Nomor')),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stacked = constraints.maxWidth < 280;
+              final blok = _field('blok', 'Blok', optional: true, maxLength: 30);
+              final nomor = _field('nomor', 'Nomor', maxLength: 20);
+              if (stacked) {
+                return Column(children: [blok, nomor]);
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: blok),
+                  const SizedBox(width: 12),
+                  Expanded(child: nomor),
+                ],
+              );
+            },
           ),
-          _field('jalan', 'Jalan'),
+          _field('jalan', 'Jalan', maxLength: 150),
           if (!widget.additional) ...[
             DropdownButtonFormField<String>(
+              key: const ValueKey('field-hunian'),
               initialValue: _hunian,
+              isExpanded: true,
               decoration: const InputDecoration(labelText: 'Status hunian'),
               items: const [
                 DropdownMenuItem(value: 'pemilik', child: Text('Pemilik / keluarga pemilik')),
                 DropdownMenuItem(value: 'kontrak', child: Text('Kontrak / sewa')),
               ],
-              onChanged: (v) => setState(() => _hunian = v ?? 'pemilik'),
+              onChanged: _busy ? null : (value) => setState(() => _hunian = value ?? 'pemilik'),
             ),
             const SizedBox(height: 18),
-            Row(
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
               children: [
-                Expanded(child: Text('Anggota keluarga', style: Theme.of(context).textTheme.titleMedium)),
+                Text('Anggota keluarga', style: Theme.of(context).textTheme.titleMedium),
                 TextButton.icon(
-                  onPressed: () => setState(() => _anggota.add((TextEditingController(), TextEditingController()))),
+                  onPressed: _busy || _anggota.length >= 15 ? null : () => setState(() => _anggota.add((TextEditingController(), TextEditingController()))),
                   icon: const Icon(Icons.add),
                   label: const Text('Tambah'),
                 ),
               ],
             ),
-            for (final (i, (n, h)) in _anggota.indexed)
+            for (final (index, (nama, hubungan)) in _anggota.indexed)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       flex: 3,
-                      child: TextField(
-                        controller: n,
-                        decoration: InputDecoration(labelText: 'Nama anggota ${i + 1}'),
+                      child: TextFormField(
+                        key: ValueKey('anggota-$index-nama'),
+                        controller: nama,
+                        decoration: InputDecoration(labelText: 'Nama anggota ${index + 1}', errorText: _err('anggota.$index.nama')),
+                        validator: (value) {
+                          final other = hubungan.text.trim();
+                          final mine = value?.trim() ?? '';
+                          if (mine.isEmpty && other.isEmpty) return null;
+                          if (mine.isEmpty) return 'Wajib diisi';
+                          return null;
+                        },
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       flex: 2,
-                      child: TextField(
-                        controller: h,
-                        decoration: const InputDecoration(labelText: 'Hubungan'),
+                      child: TextFormField(
+                        key: ValueKey('anggota-$index-hubungan'),
+                        controller: hubungan,
+                        decoration: InputDecoration(labelText: 'Hubungan', errorText: _err('anggota.$index.hubungan_keluarga')),
+                        validator: (value) {
+                          final other = nama.text.trim();
+                          final mine = value?.trim() ?? '';
+                          if (mine.isEmpty && other.isEmpty) return null;
+                          if (mine.isEmpty) return 'Wajib diisi';
+                          return null;
+                        },
                       ),
                     ),
-                    IconButton(tooltip: 'Hapus', onPressed: () => setState(() => _anggota.removeAt(i)), icon: const Icon(Icons.close)),
+                    IconButton(tooltip: 'Hapus', onPressed: _busy ? null : () => _removeMember(index), icon: const Icon(Icons.close)),
                   ],
                 ),
               ),
@@ -349,51 +469,89 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               child: Text(_error!, style: const TextStyle(color: Brand.danger)),
             ),
           const SizedBox(height: 20),
-          BusyButton(label: widget.additional ? 'Kirim permohonan' : 'Daftar', icon: Icons.check, onPressed: _submit),
+          BusyButton(label: widget.additional ? 'Kirim permohonan' : 'Daftar', icon: Icons.check, onPressed: _busy ? null : _submit),
         ],
       ),
     ),
   );
 }
 
-/// Akun tambahan yang menunggu persetujuan pengurus: hanya status permohonan + keluar.
-class PendingPage extends ConsumerWidget {
+/// Akun tambahan yang menunggu atau ditolak: hanya status permohonan dan keluar.
+class PendingPage extends ConsumerStatefulWidget {
   const PendingPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PendingPage> createState() => _PendingPageState();
+}
+
+class _PendingPageState extends ConsumerState<PendingPage> {
+  bool _busy = false;
+
+  Future<void> _refresh() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final epoch = ref.read(sessionProvider.notifier).epoch;
+    try {
+      final me = await ref.read(apiProvider).get('/auth/me');
+      if (!mounted) return;
+      final akun = Akun(Map<String, dynamic>.from(me as Map));
+      if (akun.status == 'nonaktif' || akun.status == 'diarsipkan') {
+        showMessage(context, 'Akun tidak aktif.', error: true);
+        return;
+      }
+      ref.read(sessionProvider.notifier).updateAkun(akun, epoch: epoch);
+      ref.invalidate(_pendingStatus);
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      showMessage(context, error.display, error: true);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _logout() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await revokeServerSession(ref, path: '/auth/logout');
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      showMessage(context, keptSessionMessage(error), error: true);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final status = ref.watch(_pendingStatus);
     return _AuthScaffold(
       title: 'Menunggu persetujuan',
-      subtitle: 'Permohonan akun tambahan Anda sedang ditinjau pengurus RT. Anda akan mendapat akses setelah disetujui.',
+      subtitle: 'Permohonan akun tambahan sedang ditinjau pengurus RT. Akses layanan terbuka setelah disetujui.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AsyncView(
             value: status,
             onRetry: () => ref.invalidate(_pendingStatus),
-            builder: (d) {
-              final p = (d as Map)['permohonan'] as Map?;
+            builder: (data) {
+              final permohonan = (data as Map)['permohonan'] as Map?;
+              final rejected = permohonan?['status'] == 'ditolak';
               return SectionCard(
                 title: 'Status permohonan',
-                trailing: StatusChip(p?['status'] == 'ditolak' ? 'ditolak' : 'menunggu', label: p?['status'] == 'ditolak' ? 'Ditolak' : 'Ditinjau'),
-                child: Text(p?['status'] == 'ditolak' ? 'Alasan: ${p?['catatan'] ?? '-'}' : 'Hubungi pengurus bila permohonan belum diproses.'),
+                trailing: StatusChip(rejected ? 'ditolak' : 'menunggu', label: rejected ? 'Ditolak' : 'Ditinjau'),
+                child: Text(
+                  rejected
+                      ? 'Alasan: ${permohonan?['catatan'] ?? '-'}\nAkun yang ditolak tidak mendapat akses layanan. Hubungi pengurus bila perlu mengajukan kembali.'
+                      : 'Hubungi pengurus bila permohonan belum diproses.',
+                ),
               );
             },
           ),
           const SizedBox(height: 16),
-          BusyButton(
-            label: 'Periksa lagi',
-            icon: Icons.refresh,
-            outlined: true,
-            onPressed: () async {
-              final me = await ref.read(apiProvider).get('/auth/me');
-              ref.read(sessionProvider.notifier).updateAkun(Akun(Map<String, dynamic>.from(me as Map)));
-              ref.invalidate(_pendingStatus);
-            },
-          ),
+          BusyButton(label: 'Periksa lagi', icon: Icons.refresh, outlined: true, onPressed: _busy ? null : _refresh),
           const SizedBox(height: 10),
-          TextButton(onPressed: () => ref.read(sessionProvider.notifier).signOut(), child: const Text('Keluar')),
+          BusyButton(label: 'Keluar', outlined: true, onPressed: _busy ? null : _logout),
         ],
       ),
     );
@@ -409,63 +567,140 @@ class ForgotPasswordPage extends ConsumerStatefulWidget {
 }
 
 class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
+  final _form = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _token = TextEditingController();
-  final _pw = TextEditingController();
+  final _password = TextEditingController();
+  final _password2 = TextEditingController();
   bool _sent = false;
+  bool _busy = false;
+  String? _notice;
+  Map<String, List<String>> _fieldErrors = {};
+  String? _error;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _token.dispose();
+    _password.dispose();
+    _password2.dispose();
+    super.dispose();
+  }
+
+  String? _err(String key) => _fieldErrors[key]?.first;
+
+  Future<void> _copyCode() async {
+    final code = _token.text.trim();
+    if (code.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: code));
+    if (!mounted) return;
+    showMessage(context, 'Kode disalin.');
+  }
+
+  Future<void> _submit() async {
+    if (_busy) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _busy = true;
+      _error = null;
+      _fieldErrors = {};
+    });
+    if (!_form.currentState!.validate()) {
+      if (mounted) setState(() => _busy = false);
+      return;
+    }
+    try {
+      if (!_sent) {
+        final data = await ref.read(apiProvider).post('/auth/forgot-password', data: {'email': _email.text.trim()});
+        if (!mounted) return;
+        setState(() {
+          _sent = true;
+          _notice = forgotSuccessText(data);
+        });
+      } else {
+        await ref
+            .read(apiProvider)
+            .post(
+              '/auth/reset-password',
+              data: {'email': _email.text.trim(), 'token': _token.text.trim(), 'password': _password.text, 'password_confirmation': _password2.text},
+            );
+        if (!mounted) return;
+        showMessage(context, 'Kata sandi berhasil direset. Silakan masuk kembali.');
+        context.pop();
+      }
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _fieldErrors = error.fields;
+        _error = error.fields.isEmpty ? error.display : 'Periksa kembali isian yang ditandai.';
+      });
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) => _AuthScaffold(
     back: true,
     title: 'Lupa kata sandi',
-    subtitle: _sent ? 'Masukkan kode reset dari email beserta kata sandi baru.' : 'Kami akan mengirim kode reset ke email jika terdaftar.',
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          controller: _email,
-          keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(labelText: 'Email'),
-        ),
-        if (_sent) ...[
-          const SizedBox(height: 14),
-          TextField(
-            controller: _token,
-            decoration: const InputDecoration(labelText: 'Kode reset dari email'),
+    subtitle: _sent
+        ? '${_notice ?? forgotQueuedMessage} Salin kode dari email ke kolom di bawah. Pesan ini tidak menyatakan bahwa email tersebut ada.'
+        : 'Server mengantrekan email reset bila alamat terdaftar. Aplikasi tidak diberi tahu apakah email itu ada.',
+    child: Form(
+      key: _form,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            key: const ValueKey('field-forgot-email'),
+            controller: _email,
+            keyboardType: TextInputType.emailAddress,
+            readOnly: _sent,
+            decoration: InputDecoration(labelText: 'Email', errorText: _err('email')),
+            validator: validateEmailAddress,
           ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: _pw,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: 'Kata sandi baru'),
-          ),
+          if (_sent) ...[
+            const SizedBox(height: 14),
+            TextFormField(
+              key: const ValueKey('field-forgot-token'),
+              controller: _token,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(labelText: 'Kode reset dari email', errorText: _err('token')),
+              validator: (value) => (value == null || value.trim().isEmpty) ? 'Masukkan kode reset.' : null,
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _token.text.trim().isEmpty || _busy ? null : _copyCode,
+                icon: const Icon(Icons.copy),
+                label: const Text('Salin kode'),
+              ),
+            ),
+            TextFormField(
+              key: const ValueKey('field-forgot-password'),
+              controller: _password,
+              obscureText: true,
+              decoration: InputDecoration(labelText: 'Kata sandi baru (min. 8, huruf dan angka)', errorText: _err('password')),
+              validator: validateNewPassword,
+            ),
+            const SizedBox(height: 14),
+            TextFormField(
+              key: const ValueKey('field-forgot-password2'),
+              controller: _password2,
+              obscureText: true,
+              decoration: InputDecoration(labelText: 'Ulangi kata sandi baru', errorText: _err('password_confirmation')),
+              validator: (value) => validatePasswordConfirmation(value, _password.text),
+            ),
+          ],
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(_error!, style: const TextStyle(color: Brand.danger)),
+            ),
+          const SizedBox(height: 20),
+          BusyButton(label: _sent ? 'Simpan kata sandi baru' : 'Kirim kode reset', onPressed: _busy ? null : _submit),
         ],
-        const SizedBox(height: 20),
-        BusyButton(
-          label: _sent ? 'Simpan kata sandi baru' : 'Kirim kode reset',
-          onPressed: () async {
-            try {
-              if (!_sent) {
-                await ref.read(apiProvider).post('/auth/forgot-password', data: {'email': _email.text.trim()});
-                setState(() => _sent = true);
-              } else {
-                await ref
-                    .read(apiProvider)
-                    .post(
-                      '/auth/reset-password',
-                      data: {'email': _email.text.trim(), 'token': _token.text.trim(), 'password': _pw.text, 'password_confirmation': _pw.text},
-                    );
-                if (context.mounted) {
-                  showMessage(context, 'Kata sandi diperbarui. Silakan masuk.');
-                  Navigator.pop(context);
-                }
-              }
-            } on ApiException catch (e) {
-              if (context.mounted) showMessage(context, e.display, error: true);
-            }
-          },
-        ),
-      ],
+      ),
     ),
   );
 }

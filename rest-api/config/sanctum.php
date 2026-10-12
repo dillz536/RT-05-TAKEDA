@@ -1,17 +1,19 @@
 <?php
 
+use App\Http\Middleware\RequireCsrfToken;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Laravel\Sanctum\Http\Middleware\AuthenticateSession;
 
 return [
 
-    // Domain CMS stateful (cookie) diisi saat M14; mobile memakai bearer token.
-    'stateful' => array_filter(explode(',', (string) env('SANCTUM_STATEFUL_DOMAINS', ''))),
+    // Origin CMS yang memakai sesi cookie API (host[:port], dipisah koma). Kosong = host APP_URL
+    // (CMS satu origin dengan API lewat gateway). Mobile tanpa Origin/Referer memakai bearer token.
+    'stateful' => array_values(array_filter(explode(',', (string) (env('SANCTUM_STATEFUL_DOMAINS')
+        ?: preg_replace('#^https?://([^/]+).*$#', '$1', (string) env('APP_URL', '')))))),
 
     'guard' => ['web'],
 
-    // Rute /sanctum/csrf-cookie diaktifkan bersama CMS web (M14).
+    // /sanctum/csrf-cookie didaftarkan sendiri di routes/browser.php (cookie CSRF rt05_api_xsrf).
     'routes' => false,
 
     // Token mobile berlaku 30 hari (docs/SECURITY.md).
@@ -22,7 +24,7 @@ return [
     'middleware' => [
         'authenticate_session' => AuthenticateSession::class,
         'encrypt_cookies' => EncryptCookies::class,
-        'validate_csrf_token' => ValidateCsrfToken::class,
+        'validate_csrf_token' => RequireCsrfToken::class,
     ],
 
 ];

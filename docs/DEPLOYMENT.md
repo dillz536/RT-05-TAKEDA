@@ -111,7 +111,11 @@ Stack RT05 berjalan sebagai project Docker Compose tersendiri (`rt05-staging` / 
 
 3. Saat diminta, tempel isi `infra/env/.env.staging` dari PC pengembang (file rahasia, di-gitignore), lalu Ctrl-D. File disimpan di `/root/.rt05/.env.staging` (mode 600).
 4. Verifikasi dari luar: `https://takeda-staging.morriz.tech/health/ready` → `{"status":"ready"...}`, `/profil` tampil, aplikasi mobile build dengan `API_BASE_URL=https://takeda-staging.morriz.tech`.
-5. Production: ulangi dengan `production` dan `.env.production`. Bootstrap pengurus pertama: `docker compose -p rt05-production ... exec api php artisan rt05:pengurus buat <email>` (password sementara tampil sekali).
+5. Production tetap mengikuti gate M16. Bootstrap pengurus pertama memakai
+   `docker compose -p rt05-production ... exec api php artisan rt05:pengurus buat <email>`.
+   M06 tidak mencetak password: operator memberi password melalui prompt
+   tersembunyi atau env `RT05_ADMIN_PASSWORD` yang dikelola privat. Mode
+   noninteraktif tanpa password memakai email reset dan memerlukan SMTP nyata.
 6. Update: jalankan ulang perintah langkah 2 (pull kode, build, migrasi additive, restart).
 
 Rollback cepat: `docker compose -p rt05-<env> ... down` menghentikan stack RT05 saja (volume tetap). Jangan `docker system prune` atau menghapus volume.
@@ -150,6 +154,40 @@ tetap open. Bukti penutupan hanya tanggal/environment/nama role atau key,
 hasil penolakan credential lama, readiness/role baru, revokasi sesi dan audit;
 **tanpa nilai password/APP_KEY/DSN atau data warga**. Build/migrasi sukses
 bukan bukti rotasi.
+
+## Staging M06: akses akun dan reset
+
+Gunakan `infra/scripts/deploy-staging-immutable.sh <sha40>` pada konsol Hostinger
+setelah SHA dipush pada branch `codex/m06-account-access`, review dan CI lulus.
+Script hanya menerima ancestry main atau branch staging yang disebut persis;
+gunakan SHA penuh, bukan branch bergerak. Script tidak mengubah env privat,
+worktree lama, volume, DNS, proxy, port host, atau service aplikasi lain.
+Migration `akun.versi_sesi` additive dijalankan oleh job migrator sekali pakai;
+credential direct tetap tidak diberikan kepada API/worker/scheduler.
+
+Setelah rollout, catat SHA image, readiness, heartbeat worker/scheduler, smoke
+DML dengan DDL ditolak, serta volume dan container unrelated tetap tersedia.
+Browser pada origin staging memanggil `GET /sanctum/csrf-cookie`, lalu
+`POST /api/v1/auth/web-login` dengan header `X-XSRF-TOKEN` dari cookie
+`rt05_api_xsrf`. Cookie sesi `rt05_api_session` HttpOnly/Secure/Lax. Tanpa
+CSRF, mutasi cookie wajib419; bearer mobile tidak memerlukan CSRF. Uji
+logout/logout-all/ganti password dan penolakan sesi lama sesudahnya.
+
+Form reset tersedia di `/reset-password`, aset brand di `/auth-assets/*`.
+Link email menyimpan email/token pada fragment HTTPS yang dibaca JS dan
+dihapus dari address bar; jangan menaruh token pada query atau log. Android
+dapat memakai kode reset dari email pada form aplikasi. Reset sekali pakai
+berlaku60menit dan mencabut semua sesi. Respons forgot202 hanya menyatakan
+permintaan diterima, bukan bukti email terkirim.
+
+SMTP diisi oleh operator pada env staging privat, dengan inbox uji sintetis.
+Gunakan `MAIL_MAILER=smtp` dan konfigurasi host/port/scheme/login/from yang
+benar-benar tersedia. Jangan menampilkan env atau mengirim secret lewat chat.
+Mailer log dilarang membawa token reset; adapter array hanya untuk tes.
+Worker-default harus benar-benar mengirim antrean, lalu email diterima di
+inbox uji dan link/kode dapat dipakai sekali. Catat timestamp dan screenshot
+aman tanpa token/password, bukan isi secret. Tanpa bukti inbox penerimaan
+reset tetap blocked, M06 belum passed, dan M07 belum dibuka.
 
 ## Pipeline rilis
 

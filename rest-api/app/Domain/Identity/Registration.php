@@ -13,54 +13,60 @@ use App\Models\Rumah;
 use App\Models\Warga;
 use App\Support\Audit;
 use App\Support\Outbox;
+use Closure;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Registrasi (FR03/FR05, BR03/BR05/BR06). Satu transaksi: akun + rumah + keluarga + warga + penghunian.
- * Rumah yang sudah punya keluarga aktif tidak di-merge otomatis; pemohon diarahkan ke akun tambahan.
+ * Registrasi (FR03/FR05, BR03/BR05/BR06). Satu transaksi: akun + rumah + keluarga + warga + penghunian
+ * + preferensi + audit/outbox; token perangkat dibuat pemanggil di transaksi luar yang sama.
+ * Rumah dengan alamat ternormalisasi yang sudah ada (termasuk rumah kosong/arsip yang dibuat
+ * pengurus) selalu ditolak tanpa auto-merge; pemohon diarahkan ke akun tambahan/pengurus.
+ *
+ * Concurrency: registrasi diserialkan advisory lock transaksi dan token aktif dikunci FOR SHARE.
+ * Constraint unik PostgreSQL (email, alamat_key, kode_rumah, satu penghunian aktif) tetap menjadi
+ * pertahanan terakhir terhadap penulis lain dan dipetakan ke konflik generik, bukan 500.
  */
 final class Registration
 {
+    public const HOUSE_EXISTS = 'Rumah ini sudah terdaftar. Daftar sebagai akun tambahan dan tunggu persetujuan pengurus.';
+
+    public const REJECTED = 'Pendaftaran tidak dapat diproses. Hubungi pengurus bila sudah pernah mendaftar.';
+
     /**
      * @param  array{email:string,password:string,nama_kepala:string,whatsapp:?string,blok:?string,jalan:string,nomor:string,jenis_hunian:string,anggota:array<int,array{nama:string,hubungan_keluarga:string}>}  $data
      */
     public static function primary(array $data, string $tokenCode): Akun
     {
-        return DB::transaction(function () use ($data, $tokenCode) {
-            $token = RegistrationToken::verify($tokenCode);
-            if (! $token) {
-                throw new DomainConflict('REGISTRATION_TOKEN_INVALID', 'Data pendaftaran tidak dapat diproses. Periksa kembali token RT.', 422);
-            }
+        return self::guarded(function () use ($data, $tokenCode) {
+            $token = self::lockAndVerify($tokenCode);
 
-            $email = strtolower(trim($data['email']));
+            $email = self::email($data['email']);
             if (Akun::where('email', $email)->exists()) {
                 // Pesan generik agar tidak membuka daftar email warga.
-                throw new DomainConflict('REGISTRATION_REJECTED', 'Pendaftaran tidak dapat diproses. Hubungi pengurus bila sudah pernah mendaftar.', 422);
+                throw new DomainConflict('REGISTRATION_REJECTED', self::REJECTED, 422);
             }
 
             $key = Address::key($data['blok'] ?? null, $data['jalan'], $data['nomor']);
-            $rumah = Rumah::where('alamat_key', $key)->lockForUpdate()->first();
-            if ($rumah && $rumah->penghunianAktif()->exists()) {
-                throw new DomainConflict('HOUSE_ALREADY_REGISTERED', 'Rumah ini sudah terdaftar. Daftar sebagai akun tambahan dan tunggu persetujuan pengurus.');
+            if (Rumah::where('alamat_key', $key)->exists()) {
+                throw new DomainConflict('HOUSE_ALREADY_REGISTERED', self::HOUSE_EXISTS);
             }
 
-            if (! $rumah) {
-                $code = Address::code($data['blok'] ?? null, $data['nomor']);
-                $suffix = 1;
-                $base = $code;
-                while (Rumah::where('kode_rumah', $code)->exists()) {
-                    $code = $base.'-'.(++$suffix);
-                }
-                $rumah = Rumah::create([
-                    'kode_rumah' => $code,
-                    'blok' => $data['blok'] ?? null,
-                    'jalan' => trim($data['jalan']),
-                    'nomor' => trim($data['nomor']),
-                    'alamat_key' => $key,
-                    'tagihan_aktif' => true,
-                    'mulai_tagih' => now('Asia/Jakarta')->startOfMonth()->toDateString(),
-                ]);
+            $code = Address::code($data['blok'] ?? null, $data['nomor']);
+            $suffix = 1;
+            $base = $code;
+            while (Rumah::where('kode_rumah', $code)->exists()) {
+                $code = $base.'-'.(++$suffix);
             }
+            $rumah = Rumah::create([
+                'kode_rumah' => $code,
+                'blok' => $data['blok'] ?? null,
+                'jalan' => trim($data['jalan']),
+                'nomor' => trim($data['nomor']),
+                'alamat_key' => $key,
+                'tagihan_aktif' => true,
+                'mulai_tagih' => now('Asia/Jakarta')->startOfMonth()->toDateString(),
+            ]);
 
             $keluarga = Keluarga::create(['status' => 'belum_verifikasi']);
             $kepala = Warga::create([
@@ -114,14 +120,11 @@ final class Registration
     /** Akun tambahan: status menunggu sampai pengurus menyetujui; rumah dicocokkan diam-diam. */
     public static function additional(array $data, string $tokenCode): Akun
     {
-        return DB::transaction(function () use ($data, $tokenCode) {
-            $token = RegistrationToken::verify($tokenCode);
-            if (! $token) {
-                throw new DomainConflict('REGISTRATION_TOKEN_INVALID', 'Data pendaftaran tidak dapat diproses. Periksa kembali token RT.', 422);
-            }
-            $email = strtolower(trim($data['email']));
+        return self::guarded(function () use ($data, $tokenCode) {
+            $token = self::lockAndVerify($tokenCode);
+            $email = self::email($data['email']);
             if (Akun::where('email', $email)->exists()) {
-                throw new DomainConflict('REGISTRATION_REJECTED', 'Pendaftaran tidak dapat diproses. Hubungi pengurus bila sudah pernah mendaftar.', 422);
+                throw new DomainConflict('REGISTRATION_REJECTED', self::REJECTED, 422);
             }
 
             $rumah = Rumah::where('alamat_key', Address::key($data['blok'] ?? null, $data['jalan'], $data['nomor']))->first();
@@ -173,6 +176,7 @@ final class Registration
             ]);
             $akun = Akun::whereKey($permohonan->akun_id)->lockForUpdate()->firstOrFail();
             $akun->forceFill(['warga_id' => $warga->id, 'status' => 'aktif'])->save();
+            $akun->endBrowserSessions();
             $permohonan->forceFill([
                 'status' => 'disetujui',
                 'rumah_id' => $rumah->id,
@@ -186,6 +190,12 @@ final class Registration
         });
     }
 
+    /**
+     * Penolakan akun tambahan: permohonan ditolak dengan alasan, akun tetap jenis tambahan berstatus
+     * menunggu (bukan nonaktif) sehingga pemohon masih dapat masuk dengan akses terbatas
+     * (me/status/logout) untuk membaca alasan. Tanpa warga/rumah, jadi tanpa layanan warga.
+     * Bearer dan sesi lama dicabut; login ulang menerbitkan bearer terbatas yang sama.
+     */
     public static function reject(PermohonanAkun $permohonan, Akun $pengurus, string $alasan): void
     {
         DB::transaction(function () use ($permohonan, $pengurus, $alasan) {
@@ -194,10 +204,42 @@ final class Registration
                 throw new DomainConflict('REQUEST_ALREADY_PROCESSED', 'Permohonan sudah diproses.');
             }
             $permohonan->forceFill(['status' => 'ditolak', 'diproses_oleh_id' => $pengurus->id, 'diproses_at' => now(), 'catatan' => $alasan])->save();
-            Akun::whereKey($permohonan->akun_id)->update(['status' => 'nonaktif']);
-            Akun::find($permohonan->akun_id)?->tokens()->delete();
+            $akun = Akun::whereKey($permohonan->akun_id)->lockForUpdate()->firstOrFail();
+            $akun->revokeAllAccess();
 
             Audit::record($pengurus, 'permohonan_akun.ditolak', 'permohonan_akun', $permohonan->id, ['alasan' => $alasan]);
         });
+    }
+
+    /** Email dinormalisasi sama seperti constraint akun_email_lowercase dan login. */
+    public static function email(string $email): string
+    {
+        return strtolower(trim($email));
+    }
+
+    private static function lockAndVerify(string $tokenCode)
+    {
+        DB::select("SELECT pg_advisory_xact_lock(hashtext('rt05:registrasi'))");
+        $token = RegistrationToken::verify($tokenCode);
+        if (! $token) {
+            throw new DomainConflict('REGISTRATION_TOKEN_INVALID', 'Data pendaftaran tidak dapat diproses. Periksa kembali token RT.', 422);
+        }
+
+        return $token;
+    }
+
+    /** Transaksi registrasi; pelanggaran constraint unik dari penulis concurrent menjadi konflik generik. */
+    private static function guarded(Closure $work): Akun
+    {
+        try {
+            return DB::transaction($work);
+        } catch (UniqueConstraintViolationException $e) {
+            $constraint = $e->getMessage();
+            throw match (true) {
+                str_contains($constraint, 'akun_email') => new DomainConflict('REGISTRATION_REJECTED', self::REJECTED, 422),
+                str_contains($constraint, 'rumah_alamat_key'), str_contains($constraint, 'penghunian_satu_aktif') => new DomainConflict('HOUSE_ALREADY_REGISTERED', self::HOUSE_EXISTS),
+                default => new DomainConflict('CONFLICT', 'Pendaftaran bersamaan terdeteksi. Coba lagi.'),
+            };
+        }
     }
 }

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="880" viewBox="0 0 1400 880">
+<rect width="1400" height="880" fill="white"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10" fill="#0b1f3a"/></marker></defs>
+<text x="40" y="65" font-family="sans-serif" font-size="38" font-weight="bold" fill="#0b1f3a">Aktor dan layanan akses serta pendataan</text>
+<text x="40" y="113" font-family="sans-serif" font-size="23" fill="#35465b">Pengunjung publik tidak memerlukan akun | seluruh pengurus setara</text>
+<path d="M 369.25 280.0 L 535.0 347.6530612244898" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M 375.0 431.5816326530612 L 535.0 423.4183673469388" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M 341.25 620.0 L 551.25 500.0" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M 1025.0 302.2448979591837 L 865.0 357.7551020408163" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M 1025.0 554.2857142857143 L 865.0 485.7142857142857" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="45" y="150" width="330" height="130" rx="16" fill="#eaf6ff" stroke="#0b1f3a" stroke-width="2"/>
+<text x="210.0" y="189.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Pengunjung</text>
+<text x="210.0" y="221.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Baca website publik</text>
+<text x="210.0" y="253.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Artikel dan dokumentasi</text>
+<rect x="45" y="360" width="330" height="160" rx="16" fill="#eaf6ff" stroke="#0b1f3a" stroke-width="2"/>
+<text x="210.0" y="414.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Warga akun utama</text>
+<text x="210.0" y="446.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Daftar login dan reset</text>
+<text x="210.0" y="478.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Baca dan edit keluarga sendiri</text>
+<rect x="45" y="620" width="330" height="150" rx="16" fill="#eaf6ff" stroke="#0b1f3a" stroke-width="2"/>
+<text x="210.0" y="669.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Warga akun tambahan</text>
+<text x="210.0" y="701.0" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#0b1f3a">Status permohonan dan logout</text>
+<text x="210.0" y="733.0" text-anchor="middle" font-family="sans-serif" font-size="19" fill="#0b1f3a">Keluarga read only setelah aktif</text>
+<rect x="535" y="330" width="330" height="170" rx="16" fill="#f9c846" stroke="#0b1f3a" stroke-width="2"/>
+<text x="700.0" y="389.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">REST API</text>
+<text x="700.0" y="421.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Validasi dan otorisasi</text>
+<text x="700.0" y="453.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Transaksi serta audit</text>
+<rect x="1025" y="160" width="330" height="170" rx="16" fill="#eaf6ff" stroke="#0b1f3a" stroke-width="2"/>
+<text x="1190.0" y="219.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Pengurus</text>
+<text x="1190.0" y="251.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Review tambahan dan token</text>
+<text x="1190.0" y="283.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Pendataan verifikasi arsip</text>
+<rect x="1025" y="550" width="330" height="150" rx="16" fill="#eaf6ff" stroke="#0b1f3a" stroke-width="2"/>
+<text x="1190.0" y="599.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Operator</text>
+<text x="1190.0" y="631.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Bootstrap grant revoke</text>
+<text x="1190.0" y="663.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Command yang diaudit</text>
+<text x="40" y="850" font-family="sans-serif" font-size="19" fill="#35465b">Sumber PRD BUSINESS_RULES API ERD dan keputusan pemilik 12 Oktober 2026 | bukti penerimaan terpisah</text></svg>

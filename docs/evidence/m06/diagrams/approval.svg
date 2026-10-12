@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="880" viewBox="0 0 1400 880">
+<rect width="1400" height="880" fill="white"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10" fill="#0b1f3a"/></marker></defs>
+<text x="40" y="65" font-family="sans-serif" font-size="38" font-weight="bold" fill="#0b1f3a">Alur akun tambahan dan persetujuan</text>
+<text x="40" y="113" font-family="sans-serif" font-size="23" fill="#35465b">Pendataan dan review lengkap pada M07 | pending tidak membaca layanan warga</text>
+<path d="M 405.0 245.0 L 520.0 245.0" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M 880.0 245.0 L 995.0 245.0" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M 1081.25 320.0 L 793.75 550.0" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M 1175.0 320.0 L 1175.0 550.0" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="45" y="170" width="360" height="150" rx="16" fill="#eaf6ff" stroke="#0b1f3a" stroke-width="2"/>
+<text x="225.0" y="219.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Daftar akun tambahan</text>
+<text x="225.0" y="251.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Email password token</text>
+<text x="225.0" y="283.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Referensi alamat keluarga</text>
+<rect x="520" y="170" width="360" height="150" rx="16" fill="#f9c846" stroke="#0b1f3a" stroke-width="2"/>
+<text x="700.0" y="219.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Akun menunggu</text>
+<text x="700.0" y="251.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Hanya profil status sendiri</text>
+<text x="700.0" y="283.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Dan logout</text>
+<rect x="995" y="170" width="360" height="150" rx="16" fill="#eaf6ff" stroke="#0b1f3a" stroke-width="2"/>
+<text x="1175.0" y="219.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Pengurus review M07</text>
+<text x="1175.0" y="251.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Cocokkan keluarga yang benar</text>
+<text x="1175.0" y="283.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Keputusan serta audit</text>
+<rect x="520" y="550" width="360" height="150" rx="16" fill="#eaf6ff" stroke="#0b1f3a" stroke-width="2"/>
+<text x="700.0" y="599.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Permohonan ditolak</text>
+<text x="700.0" y="631.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Status dan alasan terlihat</text>
+<text x="700.0" y="663.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Akses warga tetap ditolak</text>
+<rect x="995" y="550" width="360" height="150" rx="16" fill="#f9c846" stroke="#0b1f3a" stroke-width="2"/>
+<text x="1175.0" y="599.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Tambahan aktif sebagai warga</text>
+<text x="1175.0" y="631.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Link keluarga benar</text>
+<text x="1175.0" y="663.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Keluarga hanya dapat dibaca</text>
+<text x="40" y="850" font-family="sans-serif" font-size="19" fill="#35465b">Sumber PRD BUSINESS_RULES API ERD dan keputusan pemilik 12 Oktober 2026 | bukti penerimaan terpisah</text></svg>

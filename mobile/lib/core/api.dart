@@ -68,12 +68,14 @@ class Api {
         onRequest: (options, handler) {
           final token = _ref.read(sessionProvider).token;
           if (token != null) options.headers['Authorization'] = 'Bearer $token';
+          options.extra['sessionEpoch'] = _ref.read(sessionProvider.notifier).epoch;
           handler.next(options);
         },
         onError: (e, handler) {
           final auth = e.requestOptions.headers['Authorization'];
+          final epoch = e.requestOptions.extra['sessionEpoch'];
           if (e.response?.statusCode == 401 && auth is String && auth.startsWith('Bearer ')) {
-            _ref.read(sessionProvider.notifier).expire(token: auth.substring(7));
+            _ref.read(sessionProvider.notifier).expire(token: auth.substring(7), epoch: epoch is int ? epoch : null);
           }
           handler.next(e);
         },

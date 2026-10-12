@@ -101,6 +101,18 @@ Dibuat di `rest-api/database/migrations`: `failed_jobs` (driver database-uuids),
 
 ## State media dan ekspor
 
+### Perubahan identitas M06
+
+Kolom additive `akun.versi_sesi` integer default1 menyimpan generasi pencabutan
+cookie CMS. Session menyimpan generasi saat login dan waktu aktivitas; API
+memeriksa role/status/generasi/idle120menit pada tiap request cookie. Reset,
+logout-all, perubahan password/status dan grant/revoke operator menaikkan
+generasi sehingga cookie lama ditolak. Tidak mengubah tabel rumah/keuangan;
+membership/link histori lengkap tetap migration additive M07 setelah M06 passed.
+
+Nilai token reset tidak disimpan pada audit/log/URL query. Token DB Laravel
+tetap hash dan expiry60menit. Nama cookie API terpisah dari website.
+
 Media: uploaded → processing → ready atau failed → archived.
 Ekspor: pending → processing → ready atau failed → expired.
 Outbox: pending/leased → dispatched → completed; expired lease atau stale dispatched dapat direplay dengan consumer idempotent.

@@ -16,8 +16,8 @@ ditentukan hanya oleh tersedianya kode.
 | M03 | passed | PR #15, kode 0d678bb: API CI 88 tes/727 assertion, recovery worker/Redis nyata dan build infra SUCCESS; review final Kimi PASS; docs/evidence/m03/CI_RESULTS.md |
 | M04 | passed | Gate fungsional sebelumnya12b4642; patch isolasi credential6a8d4f8 diterapkan12 Oktober: runtime tanpa migrator, DML/DDLdenied, direct job rollback0, heartbeat dan volume/unrelated preserved. Insiden rotasi tetap open; production belum siap. Checkpoint keamanan di bawah. |
 | M05 | passed | PR17, source13de24e: 77 tes/analyzer/dua APK CI SUCCESS, checksum cocok; emulator health HTTPS, offline/retry proses sama, ikon dan skala teks1,3/2,0; review final Kimi PASS. docs/evidence/m05/LIVE_RESULTS.md |
-| M06 | in_progress | Registrasi/login/token/approval + tes CI lulus; SMTP reset belum (log) |
-| M07 | in_progress | Rumah/keluarga/akun/permohonan API + layar mobile; tes CI lulus |
+| M06 | in_progress | Paket akses akun12Oktober sedang diverifikasi; bukti lokal dan online album terpisah di evidence/m06; SMTP inbox belum terbukti |
+| M07 | planned | Kode rumah/keluarga/akun existing dipertahankan; implementasi baru dan penerimaan M07 terkunci sampai M06 passed |
 | M08 | in_progress | Pengaduan + foto privat + anonim + status; tes CI lulus |
 | M09 | in_progress | Aspirasi terpisah; tes CI lulus |
 | M10 | in_progress | Agenda/ICS/Google Calendar, pengumuman, inbox; push FCM blocked (tanpa project Firebase) |
@@ -31,6 +31,76 @@ ditentukan hanya oleh tersedianya kode.
 M00 memakai label accepted_baseline khusus, bukan status passed hasil tes baru. M01–M16 menggunakan planned/in_progress/passed/blocked.
 
 ## Milestone aktif
+
+**M06 — registrasi dan akses akun**, dibuka oleh instruksi pemilik12 Oktober
+melalui rencana M06–M07. Baseline `fb6e59f`; branch `codex/m06-account-access`.
+M03/M04/M05 passed berdasarkan bukti existing. M07 belum dibuka untuk
+implementasi baru sampai gate M06 lengkap. Rencana/kontrak dan matriks di
+[CONTRACT.md](evidence/m06/CONTRACT.md) dan
+[REQUIREMENTS.md](evidence/m06/REQUIREMENTS.md). Run Orca `run_f3422d73e850`:
+Claude backend `task_3cdd792156f2`/`ctx_684922fbe969`, Grok Flutter
+`task_3873a1c7e6bc`/`ctx_0b094886b9fe`; Codex integrasi/website/dokumen/CI.
+Keputusan utama langsung aktif dengan keluarga belum_verifikasi dikonfirmasi
+oleh rencana pemilik; capstone asli dipertahankan, selisih dilaporkan.
+
+Checkpoint awal:
+- PRD repo dan `PRD (2).md` induk identik SHA256
+  `63c5888fa6005d3fbe893ddef66f7172a16800621dc21045bd3652a97d17fbac`.
+- Folder laporan Drive dibuat pada Capstone/Tugas dan Project:
+  https://drive.google.com/drive/folders/1_WweESw5u0iHaDlw6LUfFAuUgOzAstpj.
+  Empat contact sheet diunggah; readback final dan laporan menyusul.
+-40 foto ditinjau visual; satu duplikat persis; enam foto menjadi turunan
+  WebP tanpa metadata. Dua album tambahan, album17Agustus bertambah dua foto;
+  semua tanggal/tahun kosong. [ALBUM_REVIEW.md](evidence/m06/ALBUM_REVIEW.md).
+- Website `npm.cmd run build:preview`:21 rute; `npm.cmd run test:preview`:
+  105 kasus responsif,45 Axe +3 editor,37 link, nol error browser; interaksi,
+  IndexedDB isolation/recovery dan slideshow3detik PASS. `php artisan test
+  --compact`:9 tes/173 assertions passed. Ini QA lokal, bukan deploy online.
+- OpenAPI M06 payload/auth envelopes diperinci; `npx.cmd --yes @redocly/cli@2
+  lint docs/openapi.yaml` exit0. Gateway cookie/CSRF/reset dan session/mail
+  env disiapkan; belum dibuktikan di server.
+- SMTP host belum terlihat pada env lokal/staging yang diperiksa (hanya key
+  dan status konfigurasi, tanpa mencetak nilai). Lokasi konfigurasi dan inbox
+  uji ditanyakan; reset external belum passed. Insiden DB/APP_KEY tetap open;
+  production dan data warga nyata tidak dibuka.
+
+Checkpoint lanjutan12 Oktober:
+- Album PR20 merged `9dd047f` setelah checks konten sukses. Deploy Git Vercel
+  gagal mengambil informasi Git; snapshot statis committed `e472f7a` diterbitkan
+  ke project existing. Alias publik terverifikasi **21/21HTML,32aset, mobile
+  PASS,404rute asing,nol error** pada07:42UTC. [ALBUM_LIVE.json](evidence/m06/ALBUM_LIVE.json).
+- Backend handoff pertama:162tes/1275assertions PostgreSQL17.10 lokal terisolasi,
+  HTTP terpisah dan concurrency proses nyata; Pint passed. Flutter handoff
+  pertama:analyze clean,98tes passed. Build lokal terhenti mengunduh NDK;
+  APK/emulator dan CI tahap ini belum terbukti. [CLAUDE_RESULT.md](evidence/m06/CLAUDE_RESULT.md),
+  [GROK_RESULT.md](evidence/m06/GROK_RESULT.md).
+- Root meminta tindak lanjut sebelum review silang: guard mailer log di semua
+  env, batas72byte UTF8 dan NUL sebelum bcrypt, status tambahan ditolak tetap
+  terbatas, barrier rotasi deterministik, brand form reset, dan respons logout
+  lama tidak menghapus sesi mobile baru. Task Claude `task_fb43b380b205`, Grok
+  `task_f2c4204621e6`; hasil akhir/CI dicatat sesudah worker_done.
+- Gateway `/auth-assets/*`, cookie API terpisah, mail scheme/from dan deploy
+  immutable branch M06 disiapkan; Redocly valid, check-repo pass, kontrak infra
+  pass, isolasi database self-test2positif+19negatif pass. Konsol Hostinger
+  dapat dibuka; inspeksi read-only masih menunjukkan stack sehat SHA `6a8d4f8`.
+  Belum ada rollout M06 atau klaim integration live baru.
+- Folder Drive berisi15artefak yang di-readback: laporan/matriks/review/UI,
+  enamPNGdiagram/sumberZIP,empatcontactsheet. Laporan final akan diperbarui
+  pada fileID sama. Stitch listing masih40layar existing sesudah timeout;
+  tidak ada layar baru terbukti.
+
+Handoff final kode sebelum CI: Claude follow-up **171tes/1461assertions**
+passed, Pint passed; race deterministik5run berurutan dan uji mutasi menemukan
+regresi yang disengaja. Form reset Playwright lokal320–1280px tanpa overflow,
+kedua font termuat, Axe0violation. Grok follow-up **107tes** passed/analyze
+clean; epoch logout/401/storage/password response dan Unicode/NUL diuji.
+[CLAUDE_FIXES.md](evidence/m06/CLAUDE_FIXES.md),
+[GROK_FIXES.md](evidence/m06/GROK_FIXES.md). Ini belum membuktikan CI/Linux,
+APK, staging baru atau inbox. SMTP staging dicek langsung dengan output hanya
+nama key/status: mailer bukan smtp; HOST/PORT/USERNAME/PASSWORD tidak ada.
+Konfigurasi pengirim belum tersedia; acceptance reset tetap blocked.
+
+### Checkpoint sebelumnya
 
 **Penutupan patch keamanan fondasi M04**, PR18 merged8e2d8a5,
 staging6a8d4f8 terverifikasi12 Oktober. Dokumen bukti pada branch

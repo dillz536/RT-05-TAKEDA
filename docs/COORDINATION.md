@@ -1,13 +1,29 @@
 # Koordinasi RT05 TAKEDA
 
-Instruksi pemilik 11 Oktober 2026: Codex mengelola Claude Code, Grok, dan Kimi;
+Instruksi awal pemilik 11 Oktober 2026: Codex mengelola Claude Code, Grok, dan Kimi;
 pekerjaan dilanjutkan dari checkpoint Claude, satu tahap dengan bukti penerimaan
-sebelum tahap berikutnya. Target instruksi terbaru adalah sampai M05 secara
+sebelum tahap berikutnya. Target saat itu adalah sampai M05 secara
 bertahap; setiap perbedaan terhadap planning/Drive capstone dilaporkan kepada
 pemilik. Dokumen ini adalah checkpoint proyek, bukan layanan
 otomasi yang dijamin terus hidup saat komputer atau Orca mati.
 
+Instruksi terbaru12 Oktober membuka M06, lalu M07 hanya sesudah M06 passed,
+dengan Claude dan Grok yang masih terhubung. Kimi tidak diberi tugas M06 baru.
+
 ## Tahap aktif
+
+**M06, instruksi rencana pemilik12 Oktober2026.** Baseline `fb6e59f` pada
+`codex/m06-account-access`. Kontrak [CONTRACT.md](evidence/m06/CONTRACT.md),
+matriks [REQUIREMENTS.md](evidence/m06/REQUIREMENTS.md). Run baru
+`run_f3422d73e850`; sesi Claude dan Grok existing digunakan lewat worker-start.
+Claude memiliki `rest-api/` dan CLAUDE_RESULT; Grok `mobile/` dan GROK_RESULT;
+Codex dokumen/OpenAPI/ERD, website, infra integrasi, Stitch/Drive, Git/CI.
+Kontrak berubah melalui mailbox. Hanya Codex switch/commit/push/merge.
+Sesudah paket implementasi, review silang baca-saja sebelum acceptance.
+M07 baru tetap terkunci sampai M06 passed; provider/inbox tanpa bukti membuat
+gate reset blocked. Data sintetis saja; production/credential incident M16.
+
+### Riwayat fondasi dan ownership sebelum M06
 
 **Penutupan keamanan fondasi M04, instruksi12 Oktober.** PR18 merged8e2d8a5;
 staging6a8d4f8 lulus bukti runtime. Branch dokumentasi

@@ -31,6 +31,7 @@ Konflik tidak diselesaikan dengan menyalin keputusan lama yang tampak paling tek
 | P15 | Kerjakan semampunya lintas milestone dengan izin VPS/Docker/PC; hemat SSD; desain mobile boleh kolaborasi Google Stitch | Instruksi pemilik sesi 3, 10 Oktober 2026 |
 | P16 | Codex mengoordinasikan Claude Code, Grok, dan Kimi dengan ownership terpisah; selesaikan satu tahap dan gate sebelum maju, checkpoint bila limit atau listrik mati | Instruksi pemilik 11 Oktober 2026; mempersempit eksekusi serentak P15. Rencana di COORDINATION.md |
 | P17 | Target lanjutan sampai M05 secara bertahap; cocokkan dengan planning dan Drive capstone, laporkan setiap perbedaan; tidak membuka seluruh roadmap dalam satu hari | Instruksi pemilik terbaru 11 Oktober 2026 |
+| P18 | Buka M06 lalu M07 setelah M06 passed; akun utama langsung aktif dengan keluarga belum_verifikasi, tambahan menunggu persetujuan; rumah existing tidak auto-merge; email menggunakan password aplikasi tanpa Google OAuth; album tambahan sekarang; laporan pada satu folder Drive; SMTP harus terbukti sampai inbox; production/data nyata tertahan insiden credential | Rencana pemilik yang diminta diimplementasikan12 Oktober2026; memperluas batas P17 secara bertahap |
 
 ## ADR rekayasa v1
 
