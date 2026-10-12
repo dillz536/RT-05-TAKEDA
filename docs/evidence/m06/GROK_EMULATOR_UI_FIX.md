@@ -36,3 +36,18 @@ Layar ganti kata sandi ditutup pada follow-up di bawah. Gambar `reset-scale20-fi
 - `node infra/scripts/check-repo.mjs` → `OK: 648 berkas dilacak; tanpa file terlarang, pola secret, .git bersarang, atau tautan relatif rusak; vercel.json setara.`
 
 UI kata sandi daftar, reset, dan ganti sandi siap dibekukan. CI dan emulator ulang ada pada root.
+
+## Koreksi baris error
+
+Tes `reset skala 2.0 menampilkan mismatch pengulangan utuh` di [auth_access_test.dart](../../../mobile/test/auth_access_test.dart) dijalankan lebih dulu, saat pengulangan masih memakai batas satu baris. Lebar 320 dan skala teks 2.0. Pesan `Pengulangan kata sandi tidak sama.` terlukis dengan `RenderParagraph.didExceedMaxLines` true (`Expected: false`, `Actual: <true>`). Tidak ada pengecualian RenderFlex. Setelah dekorasi diubah, tes terisolasi yang sama lulus: `00:01 +1: All tests passed!`
+
+Setiap `InputDecoration` yang menampilkan error pada layar masuk, daftar, dan lupa sandi di [auth_pages.dart](../../../mobile/lib/features/auth/auth_pages.dart) memakai `errorMaxLines: 16`. Itu meliputi email dan sandi masuk, cabang `_field` selain aturan sandi, status hunian, nama serta hubungan anggota, email lupa sandi, kode reset, dan pengulangan. Di [warga_pages.dart](../../../mobile/lib/features/warga/warga_pages.dart), kolom sandi saat ini dan pengulangan pada ganti sandi juga `errorMaxLines: 16`. Kolom kata sandi baru tetap `passwordRuleDecoration`. Validator, Theme, dan API tidak diubah. Formulir laporan serta aspirasi tidak ikut.
+
+Tes yang sama memeriksa teks terlukis utuh: `didExceedMaxLines` false, panggilan API hanya `forgot`, dan `takeException()` kosong.
+
+- `dart format` pada tiga berkas Dart: 0 berubah.
+- `flutter analyze` → `No issues found! (ran in 7.8s)`
+- `flutter test` → `00:12 +117: All tests passed!`
+- `node infra/scripts/check-repo.mjs` → `OK: 649 berkas dilacak; tanpa file terlarang, pola secret, .git bersarang, atau tautan relatif rusak; vercel.json setara.`
+
+APK dan Git tidak dijalankan. CI serta APK final ada pada root.

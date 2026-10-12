@@ -136,7 +136,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               controller: _email,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
-              decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.mail_outline)),
+              decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.mail_outline), errorMaxLines: 16),
               validator: validateEmailAddress,
             ),
             const SizedBox(height: 14),
@@ -147,6 +147,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               autofillHints: const [AutofillHints.password],
               decoration: InputDecoration(
                 labelText: 'Kata sandi aplikasi',
+                errorMaxLines: 16,
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
                   tooltip: _hide ? 'Tampilkan' : 'Sembunyikan',
@@ -343,7 +344,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       inputFormatters: fmt,
       decoration: passwordRule
           ? passwordRuleDecoration(label: label, errorText: _err(apiKey ?? key))
-          : InputDecoration(labelText: optional ? '$label (opsional)' : label, hintText: hint, errorText: _err(apiKey ?? key), counterText: ''),
+          : InputDecoration(
+              labelText: optional ? '$label (opsional)' : label,
+              hintText: hint,
+              errorText: _err(apiKey ?? key),
+              errorMaxLines: 16,
+              counterText: '',
+            ),
       validator: (value) {
         final text = value?.trim() ?? '';
         if (optional && text.isEmpty) return null;
@@ -417,7 +424,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               key: const ValueKey('field-hunian'),
               initialValue: _hunian,
               isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Status hunian'),
+              decoration: const InputDecoration(labelText: 'Status hunian', errorMaxLines: 16),
               items: const [
                 DropdownMenuItem(value: 'pemilik', child: Text('Pemilik / keluarga pemilik')),
                 DropdownMenuItem(value: 'kontrak', child: Text('Kontrak / sewa')),
@@ -448,7 +455,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       child: TextFormField(
                         key: ValueKey('anggota-$index-nama'),
                         controller: nama,
-                        decoration: InputDecoration(labelText: 'Nama anggota ${index + 1}', errorText: _err('anggota.$index.nama')),
+                        decoration: InputDecoration(labelText: 'Nama anggota ${index + 1}', errorText: _err('anggota.$index.nama'), errorMaxLines: 16),
                         validator: (value) {
                           final other = hubungan.text.trim();
                           final mine = value?.trim() ?? '';
@@ -464,7 +471,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       child: TextFormField(
                         key: ValueKey('anggota-$index-hubungan'),
                         controller: hubungan,
-                        decoration: InputDecoration(labelText: 'Hubungan', errorText: _err('anggota.$index.hubungan_keluarga')),
+                        decoration: InputDecoration(labelText: 'Hubungan', errorText: _err('anggota.$index.hubungan_keluarga'), errorMaxLines: 16),
                         validator: (value) {
                           final other = nama.text.trim();
                           final mine = value?.trim() ?? '';
@@ -675,7 +682,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             controller: _email,
             keyboardType: TextInputType.emailAddress,
             readOnly: _sent,
-            decoration: InputDecoration(labelText: 'Email', errorText: _err('email')),
+            decoration: InputDecoration(labelText: 'Email', errorText: _err('email'), errorMaxLines: 16),
             validator: validateEmailAddress,
           ),
           if (_sent) ...[
@@ -684,7 +691,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               key: const ValueKey('field-forgot-token'),
               controller: _token,
               onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(labelText: 'Kode reset dari email', errorText: _err('token')),
+              decoration: InputDecoration(labelText: 'Kode reset dari email', errorText: _err('token'), errorMaxLines: 16),
               validator: (value) => (value == null || value.trim().isEmpty) ? 'Masukkan kode reset.' : null,
             ),
             Align(
@@ -707,7 +714,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               key: const ValueKey('field-forgot-password2'),
               controller: _password2,
               obscureText: true,
-              decoration: InputDecoration(labelText: 'Ulangi kata sandi baru', errorText: _err('password_confirmation')),
+              decoration: InputDecoration(labelText: 'Ulangi kata sandi baru', errorText: _err('password_confirmation'), errorMaxLines: 16),
               validator: (value) => validatePasswordConfirmation(value, _password.text),
             ),
           ],

@@ -474,6 +474,43 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('reset skala 2.0 menampilkan mismatch pengulangan utuh', (tester) async {
+    useCompactScreen(tester, width: 320, textScale: 2.0, height: 700);
+    final calls = <String>[];
+    final base = apiHandler(me: akunJson);
+    await pumpApp(
+      tester,
+      storage: MemoryTokenStorage(),
+      handler: (options) {
+        if (options.uri.path == '/api/v1/auth/forgot-password') {
+          calls.add('forgot');
+          return jsonBody(202, {
+            'data': {'message': forgotQueuedMessage},
+          });
+        }
+        if (options.uri.path == '/api/v1/auth/reset-password') calls.add('reset');
+        return base(options);
+      },
+    );
+    await scrollAuth(tester, find.text('Lupa kata sandi?'));
+    await tester.tap(find.text('Lupa kata sandi?'));
+    await tester.pumpAndSettle();
+    await enter(tester, 'field-forgot-email', 'warga.uji@example.test');
+    await scrollAuth(tester, find.text('Kirim kode reset'));
+    await tester.tap(find.text('Kirim kode reset'));
+    await tester.pumpAndSettle();
+    await enter(tester, 'field-forgot-token', '012345');
+    await enter(tester, 'field-forgot-password', 'Rahasia1');
+    await enter(tester, 'field-forgot-password2', 'Rahasia2');
+    await scrollAuth(tester, find.text('Simpan kata sandi baru'));
+    await tester.tap(find.text('Simpan kata sandi baru'));
+    await tester.pumpAndSettle();
+    await scrollAuth(tester, find.text('Pengulangan kata sandi tidak sama.'));
+    expectTextFullyVisible(tester, 'Pengulangan kata sandi tidak sama.');
+    expect(calls, ['forgot']);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('pending ditolak tetap di layar terbatas; 403 tidak menghapus token', (tester) async {
     final storage = MemoryTokenStorage('t');
     var meCount = 0;

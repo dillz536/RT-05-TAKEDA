@@ -1378,7 +1378,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
             key: const ValueKey('field-current-password'),
             controller: _old,
             obscureText: true,
-            decoration: InputDecoration(labelText: 'Kata sandi saat ini', errorText: _err('current_password')),
+            decoration: InputDecoration(labelText: 'Kata sandi saat ini', errorText: _err('current_password'), errorMaxLines: 16),
             validator: (value) => (value == null || value.isEmpty) ? 'Wajib diisi' : null,
           ),
           const SizedBox(height: 14),
@@ -1394,7 +1394,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
             key: const ValueKey('field-new-password2'),
             controller: _again,
             obscureText: true,
-            decoration: InputDecoration(labelText: 'Ulangi kata sandi baru', errorText: _err('password_confirmation')),
+            decoration: InputDecoration(labelText: 'Ulangi kata sandi baru', errorText: _err('password_confirmation'), errorMaxLines: 16),
             validator: (value) {
               final match = validatePasswordConfirmation(value, _new.text);
               if (match != null) return match;

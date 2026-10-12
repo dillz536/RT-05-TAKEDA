@@ -147,6 +147,12 @@ lalu116tes sesudah ganti sandi, analyze clean; tes320px/skala2,0 memeriksa
 RenderParagraph utuh untuk aturan minimum dan pesan72byte. [GROK_EMULATOR_UI_FIX.md](evidence/m06/GROK_EMULATOR_UI_FIX.md).
 CI/APK baru dan pemeriksaan emulator koreksi tetap menunggu. Guest offline/retry
 source15885cb passed dengan PID sama; jaringan/font dikembalikan.
+Koreksi terakhir: pengulangan reset terbukti terpotong pada 320px dan skala 2,0,
+lalu `errorMaxLines: 16` dipasang pada error layar masuk, daftar, lupa sandi,
+dan ganti sandi. Analyze bersih dan 117 tes lulus. Laporan
+[GROK_EMULATOR_UI_FIX.md](evidence/m06/GROK_EMULATOR_UI_FIX.md) dan
+[CLAUDE_PASSWORD_UI_REVIEW.md](evidence/m06/CLAUDE_PASSWORD_UI_REVIEW.md).
+APK commit ini belum diperiksa. M06 belum passed. M07 tetap terkunci.
 [LIVE_RESULTS.md](evidence/m06/LIVE_RESULTS.md) memisahkan bukti yang tersedia
 dari gate registrasi/login/approval/keluarga dan sesi yang masih blocked.
 
