@@ -15,8 +15,91 @@
         "height": 720,
         "alt": "Warga berfoto bersama di panggung Takeda dengan hiasan dan bendera merah putih.",
         "caption": "Kebersamaan warga di panggung perayaan kemerdekaan."
+      },
+      {
+        "id": "panggung-merah-putih",
+        "src": "/images/kegiatan/panggung-merah-putih-1280.webp",
+        "srcset": "/images/kegiatan/panggung-merah-putih-480.webp 480w, /images/kegiatan/panggung-merah-putih-960.webp 960w, /images/kegiatan/panggung-merah-putih-1280.webp 1280w",
+        "width": 1280,
+        "height": 720,
+        "alt": "Warga berfoto bersama di depan panggung dengan hiasan merah putih pada malam hari.",
+        "caption": "Foto bersama di depan panggung berhias merah putih."
+      },
+      {
+        "id": "kebersamaan-di-panggung",
+        "src": "/images/kegiatan/kebersamaan-di-panggung-1280.webp",
+        "srcset": "/images/kegiatan/kebersamaan-di-panggung-480.webp 480w, /images/kegiatan/kebersamaan-di-panggung-960.webp 960w, /images/kegiatan/kebersamaan-di-panggung-1280.webp 1280w",
+        "width": 1280,
+        "height": 720,
+        "alt": "Warga berfoto bersama di depan panggung perayaan dengan bendera merah putih.",
+        "caption": "Suasana kebersamaan di panggung perayaan."
       }
     ],
-    "source": {"label": "Dokumentasi warga", "driveFileId": "17le7M4kbhPQOZqReW_ay9LnewF-dsiRl"}
+    "source": {
+      "label": "Dokumentasi warga",
+      "driveFileId": "17le7M4kbhPQOZqReW_ay9LnewF-dsiRl"
+    }
+  },
+  {
+    "id": "album-kebersamaan-di-lapangan",
+    "slug": "kebersamaan-di-lapangan",
+    "title": "Kebersamaan di Lapangan",
+    "description": "Foto bersama di lapangan, dengan suasana kebersamaan yang terekam dalam dokumentasi warga.",
+    "date": null,
+    "coverId": "barisan-di-lapangan",
+    "photos": [
+      {
+        "id": "barisan-di-lapangan",
+        "src": "/images/kegiatan/barisan-di-lapangan-1280.webp",
+        "srcset": "/images/kegiatan/barisan-di-lapangan-480.webp 480w, /images/kegiatan/barisan-di-lapangan-960.webp 960w, /images/kegiatan/barisan-di-lapangan-1280.webp 1280w",
+        "width": 1280,
+        "height": 720,
+        "alt": "Sekelompok warga berseragam hijau berfoto berbaris di lapangan.",
+        "caption": "Foto bersama dalam barisan di lapangan."
+      },
+      {
+        "id": "foto-bersama-di-lapangan",
+        "src": "/images/kegiatan/foto-bersama-di-lapangan-1280.webp",
+        "srcset": "/images/kegiatan/foto-bersama-di-lapangan-480.webp 480w, /images/kegiatan/foto-bersama-di-lapangan-960.webp 960w, /images/kegiatan/foto-bersama-di-lapangan-1280.webp 1280w",
+        "width": 1280,
+        "height": 960,
+        "alt": "Warga berfoto bersama di lapangan dengan gawang dan ring basket di belakang.",
+        "caption": "Kebersamaan di area lapangan."
+      }
+    ],
+    "source": {
+      "label": "Dokumentasi warga"
+    }
+  },
+  {
+    "id": "album-kebersamaan-di-ruang-terbuka",
+    "slug": "kebersamaan-di-ruang-terbuka",
+    "title": "Kebersamaan di Ruang Terbuka",
+    "description": "Dokumentasi foto bersama di area hijau. Nama lokasi dan tanggal kegiatan belum dikonfirmasi.",
+    "date": null,
+    "coverId": "foto-bersama-di-area-hijau",
+    "photos": [
+      {
+        "id": "foto-bersama-di-area-hijau",
+        "src": "/images/kegiatan/foto-bersama-di-area-hijau-1280.webp",
+        "srcset": "/images/kegiatan/foto-bersama-di-area-hijau-480.webp 480w, /images/kegiatan/foto-bersama-di-area-hijau-960.webp 960w, /images/kegiatan/foto-bersama-di-area-hijau-1280.webp 1280w",
+        "width": 1280,
+        "height": 853,
+        "alt": "Sekelompok warga berfoto di bawah lengkungan tanaman di area hijau.",
+        "caption": "Foto bersama di bawah lengkungan tanaman."
+      },
+      {
+        "id": "foto-bersama-di-sisi-bus",
+        "src": "/images/kegiatan/foto-bersama-di-sisi-bus-1280.webp",
+        "srcset": "/images/kegiatan/foto-bersama-di-sisi-bus-480.webp 480w, /images/kegiatan/foto-bersama-di-sisi-bus-960.webp 960w, /images/kegiatan/foto-bersama-di-sisi-bus-1280.webp 1280w",
+        "width": 1280,
+        "height": 720,
+        "alt": "Sekelompok warga berfoto di sisi bus dengan pepohonan di sekelilingnya.",
+        "caption": "Momen bersama di ruang terbuka."
+      }
+    ],
+    "source": {
+      "label": "Dokumentasi warga"
+    }
   }
 ]
