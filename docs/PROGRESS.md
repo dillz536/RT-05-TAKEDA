@@ -369,7 +369,7 @@ Tiga butir rencana implisit dibuat eksplisit. CI/APK dan emulator tetap pending;
 scope fitur/business/API/ERD tidak berubah, sehingga kontrak API/schema tidak
 perlu diubah untuk fondasi ini.
 
-### Remediasi credential12 Oktober — kandidat patch, CI/live pending
+### Remediasi credential12 Oktober — source CI PASS, live pending
 
 - Insiden historis DB/APP_KEY tetap open dan menghalangi data warga nyata/
   production. Pemisahan role DDL semestinya ditutup pada fondasi staging,
@@ -412,6 +412,17 @@ perlu diubah untuk fondasi ini.
   source patch belum di-deploy. Status kode dan operasi live harus dipisahkan.
   Runbook rotasi kini menjaga env atomik, inventaris data terenkripsi/revokasi
   sesi, dan bukti penolakan credential lama; tidak menghapus env terlebih dulu.
+- [PR18](https://github.com/morrispes5/RT-05-TAKEDA/pull/18), source2b8dbce:
+  seluruh lima checks SUCCESS. [API38190853171](https://github.com/morrispes5/RT-05-TAKEDA/actions/runs/38190853171)
+  PASS100 tes785 assertion, Pint, worker/Redis recovery, runtime DML/DDLdenied,
+  direct migration smoke dan OpenAPI. [Infra38190853238](https://github.com/morrispes5/RT-05-TAKEDA/actions/runs/38190853238)
+  PASS2m31s: BuildKit lima canary env/cache tidak ikut COPY, source/logo/examples
+  tetap tersedia; kedua graph Compose resolved dan guard19 kasus PASS;
+  kedua image terbangun dan HTTP image smoke PASS. Hygiene38190853200 dan
+  Vercel/Preview Comments PASS. Runtime migration/grant/bootstrap sintetis
+  tetap berfungsi; caller direct smoke pindah ke job, bukan container API.
+  Ini bukti kode/build, belum bukti patch diterapkan atau credential dirotasi
+  di VPS. Dokumen commit berikutnya tidak mengubah source yang diuji.
 
 ### M05 — bukti source final dan emulator, gate PASS
 
@@ -468,7 +479,7 @@ Selesaikan perubahan pengguna dengan hati-hati; tidak reset/force-push.
 | R05 | high | database | pdo_pgsql named prepares + pooler Neon → transaksi gugur 25P02 pada tulis pertama | M02 | fixed (ADR14), terverifikasi di Neon pooled |
 | R06 | medium | dev env | Docker Desktop tidak jalan: WSL2 belum terpasang (Windows Home) | M02/M03 | accepted limitation ADR19: build Docker/Postgres/Redis di CI, runtime staging di VPS; tidak perlu instalasi Docker/WSL lokal untuk gate ini |
 | R07 | high | security | Credential DB dan APP_KEY historis terpapar; role/password diwariskan antar branch | M02/M04 | open: rotasi/revokasi semua lingkungan terdampak dan audit belum terbukti; data nyata/production blocked |
-| R08 | high | security | DATABASE_URL_UNPOOLED diwariskan ke lima runtime; COPY dapat memasukkan env/cache sebelum penghapusan layer | M04 | candidate patch12 Oktober; graph/focused tests lokal PASS, CI dan rollout nyata pending |
+| R08 | high | security | DATABASE_URL_UNPOOLED diwariskan ke lima runtime; COPY dapat memasukkan env/cache sebelum penghapusan layer | M04 | source2b8dbce/PR18 dan full CI PASS12 Oktober; rollout nyata pending, R07 tetap open |
 
 ## Bukti historis frontend
 
