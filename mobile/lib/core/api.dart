@@ -67,8 +67,9 @@ class Api {
       InterceptorsWrapper(
         onRequest: (options, handler) {
           final token = _ref.read(sessionProvider).token;
-          if (token != null) options.headers['Authorization'] = 'Bearer $token';
-          options.extra['sessionEpoch'] = _ref.read(sessionProvider.notifier).epoch;
+          // Nilai yang dipasang pemanggil saat request dibuat tidak ditimpa sesi yang lebih baru.
+          if (token != null) options.headers.putIfAbsent('Authorization', () => 'Bearer $token');
+          options.extra.putIfAbsent('sessionEpoch', () => _ref.read(sessionProvider.notifier).epoch);
           handler.next(options);
         },
         onError: (e, handler) {
@@ -106,11 +107,15 @@ class Api {
   Future<Map<String, dynamic>> page(String path, {Map<String, dynamic>? query}) =>
       _wrap(() => _dio.get(path, queryParameters: query), (b) => Map<String, dynamic>.from(b as Map));
 
-  Future<dynamic> post(String path, {Object? data, String? idempotencyKey}) => _wrap(
+  /// [bearer] dan [sessionEpoch] dipasang sekarang, sebelum interceptor Dio berjalan.
+  Future<dynamic> post(String path, {Object? data, String? idempotencyKey, String? bearer, int? sessionEpoch}) => _wrap(
     () => _dio.post(
       path,
       data: data,
-      options: Options(headers: {'Idempotency-Key': ?idempotencyKey}),
+      options: Options(
+        headers: {'Idempotency-Key': ?idempotencyKey, if (bearer != null) 'Authorization': 'Bearer $bearer'},
+        extra: {'sessionEpoch': ?sessionEpoch},
+      ),
     ),
     (b) => b is Map ? b['data'] : null,
   );

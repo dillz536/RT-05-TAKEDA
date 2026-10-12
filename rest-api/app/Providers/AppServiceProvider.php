@@ -24,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login', fn (Request $r) => Limit::perMinute(5)->by($r->ip().'|'.$email($r)));
         RateLimiter::for('registrasi', fn (Request $r) => Limit::perMinutes(10, 5)->by($r->ip()));
         RateLimiter::for('lupa-password', fn (Request $r) => Limit::perMinutes(15, 3)->by($r->ip().'|'.$email($r)));
+        // Submit reset memakai bucket sendiri: permintaan lupa password tidak menghabiskan kuota
+        // reset dengan token yang masih berlaku. Token reset 64 hex, jadi batas ini untuk biaya bcrypt.
+        RateLimiter::for('reset-password', fn (Request $r) => Limit::perMinutes(15, 10)->by($r->ip().'|'.$email($r)));
         RateLimiter::for('laporan', fn (Request $r) => Limit::perHour(20)->by((string) $r->user()?->id));
 
         // Heartbeat worker tiap putaran loop queue:work (dibatasi write_interval). Listener tidak

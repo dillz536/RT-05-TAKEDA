@@ -9,12 +9,16 @@
 */
 
 use App\Domain\Identity\RegistrationToken;
+use App\Domain\Identity\TokenAttempts;
 use App\Models\Akun;
+use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Support\ConfigurationUrlParser;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 
 require __DIR__.'/../../vendor/autoload.php';
 
@@ -41,6 +45,19 @@ if (isset($spec['barrier'])) {
 
 // Gerbang deterministik: penulisan akun pertama (di dalam transaksi, setelah token/baris reset
 // dikunci) berhenti pada lock yang dipegang PHPUnit sampai tes melepasnya. Tanpa jeda waktu.
+// Gerbang pada tulis penghitung limiter token (event WritingKey sebelum put): menahan proses tepat
+// di antara pembacaan/INCR penghitung dan penulisannya.
+if ($limiterGate = (int) ($spec['gate_on_limiter_write'] ?? 0)) {
+    $held = false;
+    Event::listen(WritingKey::class, function (WritingKey $e) use ($limiterGate, &$held) {
+        if (! $held && str_contains($e->key, 'token-registrasi-gagal:') && ! str_ends_with($e->key, ':timer')) {
+            $held = true;
+            DB::select('SELECT pg_advisory_lock_shared(?)', [$limiterGate]);
+            DB::select('SELECT pg_advisory_unlock_shared(?)', [$limiterGate]);
+        }
+    });
+}
+
 if ($gate = (int) ($spec['gate'] ?? 0)) {
     $passed = false;
     Akun::saving(function () use ($gate, &$passed) {
@@ -66,6 +83,20 @@ $result = match ($spec['kind']) {
     })(),
     'ensure-token' => ['status' => 200, 'code' => RegistrationToken::reveal(RegistrationToken::ensureActive(null))],
     'rotate' => ['status' => 200, 'code' => RegistrationToken::rotate(null, 'tes concurrency')],
+    // Satu reservasi slot kegagalan token (tanpa HTTP/throttle registrasi); opsional langsung release.
+    'reserve' => (function () use ($spec) {
+        $request = Request::create('/', 'POST', server: ['REMOTE_ADDR' => $spec['ip'] ?? '127.0.0.1']);
+        try {
+            TokenAttempts::reserve($request);
+            if (! empty($spec['release'])) {
+                TokenAttempts::release($request);
+            }
+
+            return ['status' => 200, 'code' => null, 'data' => null];
+        } catch (ThrottleRequestsException $e) {
+            return ['status' => 429, 'code' => 'TOO_MANY_REQUESTS', 'data' => $e->getHeaders()['Retry-After'] ?? null];
+        }
+    })(),
 };
 
 echo json_encode($result, JSON_THROW_ON_ERROR), "\n";

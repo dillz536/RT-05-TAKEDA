@@ -14,7 +14,8 @@
 	encode gzip
 	header {
 		X-Content-Type-Options nosniff
-		Referrer-Policy strict-origin-when-cross-origin
+		# Default saja: halaman reset API mempertahankan no-referrer upstream.
+		?Referrer-Policy strict-origin-when-cross-origin
 		-Server
 	}
 

@@ -18,43 +18,56 @@ Future<void> _finishAuth(WidgetRef ref, dynamic data) async {
 }
 
 class _AuthScaffold extends StatelessWidget {
-  const _AuthScaffold({required this.title, required this.subtitle, required this.child, this.back = false});
+  const _AuthScaffold({required this.title, required this.subtitle, required this.child, this.back = false, this.allowBack = true});
   final String title;
   final String subtitle;
   final Widget child;
   final bool back;
+  final bool allowBack;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: Brand.sky,
-    appBar: back ? AppBar(backgroundColor: Brand.sky, foregroundColor: Brand.navy) : null,
-    body: SafeArea(
-      child: ListView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-        children: [
-          Row(
-            children: [
-              const GapuraMark(size: 48),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(AppConfig.appName, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Brand.navy)),
-                    const Text('RT 05 Taman Kedaung', style: TextStyle(color: Brand.muted)),
-                  ],
+  Widget build(BuildContext context) => PopScope(
+    canPop: !back || allowBack,
+    child: Scaffold(
+      backgroundColor: Brand.sky,
+      appBar: back
+          ? AppBar(
+              backgroundColor: Brand.sky,
+              foregroundColor: Brand.navy,
+              automaticallyImplyLeading: false,
+              leading: allowBack
+                  ? const BackButton(key: ValueKey('auth-back'))
+                  : const IconButton(key: ValueKey('auth-back'), tooltip: 'Kembali', onPressed: null, icon: BackButtonIcon()),
+            )
+          : null,
+      body: SafeArea(
+        child: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+          children: [
+            Row(
+              children: [
+                const GapuraMark(size: 48),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(AppConfig.appName, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Brand.navy)),
+                      const Text('RT 05 Taman Kedaung', style: TextStyle(color: Brand.muted)),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 28),
-          Text(title, style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 6),
-          Text(subtitle, style: const TextStyle(color: Brand.muted, height: 1.4)),
-          const SizedBox(height: 24),
-          child,
-        ],
+              ],
+            ),
+            const SizedBox(height: 28),
+            Text(title, style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 6),
+            Text(subtitle, style: const TextStyle(color: Brand.muted, height: 1.4)),
+            const SizedBox(height: 24),
+            child,
+          ],
+        ),
       ),
     ),
   );
@@ -340,6 +353,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   @override
   Widget build(BuildContext context) => _AuthScaffold(
     back: true,
+    allowBack: !_busy,
     title: widget.additional ? 'Daftar akun tambahan' : 'Daftar akun utama',
     subtitle: widget.additional
         ? 'Untuk anggota keluarga lain di rumah yang sudah terdaftar. Akun menunggu persetujuan pengurus dan belum mendapat akses layanan.'
@@ -525,28 +539,30 @@ class _PendingPageState extends ConsumerState<PendingPage> {
   @override
   Widget build(BuildContext context) {
     final status = ref.watch(_pendingStatus);
+    final payload = status.asData?.value;
+    final permohonan = payload is Map ? payload['permohonan'] as Map? : null;
+    final rejected = permohonan?['status'] == 'ditolak';
+    final alasan = '${permohonan?['catatan'] ?? '-'}';
     return _AuthScaffold(
-      title: 'Menunggu persetujuan',
-      subtitle: 'Permohonan akun tambahan sedang ditinjau pengurus RT. Akses layanan terbuka setelah disetujui.',
+      title: rejected ? 'Permohonan ditolak' : 'Menunggu persetujuan',
+      subtitle: rejected
+          ? 'Permohonan akun tambahan ditolak. Alasan: $alasan'
+          : 'Permohonan akun tambahan sedang ditinjau pengurus RT. Akses layanan terbuka setelah disetujui.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AsyncView(
             value: status,
             onRetry: () => ref.invalidate(_pendingStatus),
-            builder: (data) {
-              final permohonan = (data as Map)['permohonan'] as Map?;
-              final rejected = permohonan?['status'] == 'ditolak';
-              return SectionCard(
-                title: 'Status permohonan',
-                trailing: StatusChip(rejected ? 'ditolak' : 'menunggu', label: rejected ? 'Ditolak' : 'Ditinjau'),
-                child: Text(
-                  rejected
-                      ? 'Alasan: ${permohonan?['catatan'] ?? '-'}\nAkun yang ditolak tidak mendapat akses layanan. Hubungi pengurus bila perlu mengajukan kembali.'
-                      : 'Hubungi pengurus bila permohonan belum diproses.',
-                ),
-              );
-            },
+            builder: (_) => SectionCard(
+              title: 'Status permohonan',
+              trailing: StatusChip(rejected ? 'ditolak' : 'menunggu', label: rejected ? 'Ditolak' : 'Ditinjau'),
+              child: Text(
+                rejected
+                    ? 'Alasan: $alasan\nAkun yang ditolak tidak mendapat akses layanan. Hubungi pengurus bila perlu mengajukan kembali.'
+                    : 'Hubungi pengurus bila permohonan belum diproses.',
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           BusyButton(label: 'Periksa lagi', icon: Icons.refresh, outlined: true, onPressed: _busy ? null : _refresh),

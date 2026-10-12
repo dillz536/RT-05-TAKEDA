@@ -144,6 +144,16 @@ credential pada checkpoint sebelumnya.
 
 ## Laporan per tahap
 
+Checkpoint M06 review12Oktober: initial source8d0b3df CI all SUCCESS;
+review-only Claude `task_36ad989936b2` dan Grok `task_fe6347e00d6e` selesai.
+Koreksi pemilik Claude `task_1c5604b7434d`/`ctx_ee3d9ac0a662`179tes lokal dan
+Grok `task_3b14402de68e`/`ctx_f070274d6534`114tes lokal selesai, released dengan
+external_terminal retained. Root mengirim koreksi spesifik race fresh-counter
+ke Claude `task_f684bcfbae8b`/`ctx_660bb74c1bce`; hanya backend/tes/laporannya.
+Kontrak/OpenAPI root mengikuti reset limiter10/15 terpisah dan password lama
+exact<=72byte/noNUL. Sender belum pernah disiapkan menurut pemilik; inbox privat
+tersedia. M07 tidak dibuka. Run tetap `run_f3422d73e850`.
+
 Catat perubahan/file/commit, task tiap agent, perintah dan hasil nyata, link CI,
 review independen, gate passed/blocked, batas lingkungan, serta tahap berikutnya.
 Sesi berakhir pada checkpoint yang bisa dilanjutkan tanpa mengulang pekerjaan.

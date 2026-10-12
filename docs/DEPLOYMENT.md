@@ -174,6 +174,10 @@ CSRF, mutasi cookie wajib419; bearer mobile tidak memerlukan CSRF. Uji
 logout/logout-all/ganti password dan penolakan sesi lama sesudahnya.
 
 Form reset tersedia di `/reset-password`, aset brand di `/auth-assets/*`.
+Gateway memakai default `?Referrer-Policy`, sehingga kebijakan `no-referrer`
+upstream halaman reset tidak ditimpa. Periksa header melalui gateway sebenarnya,
+bukan hanya server PHP langsung.
+Semantik default mengikuti [dokumentasi Caddy header](https://caddyserver.com/docs/caddyfile/directives/header).
 Link email menyimpan email/token pada fragment HTTPS yang dibaca JS dan
 dihapus dari address bar; jangan menaruh token pada query atau log. Android
 dapat memakai kode reset dari email pada form aplikasi. Reset sekali pakai
@@ -188,6 +192,16 @@ Worker-default harus benar-benar mengirim antrean, lalu email diterima di
 inbox uji dan link/kode dapat dipakai sekali. Catat timestamp dan screenshot
 aman tanpa token/password, bukan isi secret. Tanpa bukti inbox penerimaan
 reset tetap blocked, M06 belum passed, dan M07 belum dibuka.
+
+Pemilik mengonfirmasi12Oktober bahwa akun pengirim belum pernah disiapkan.
+Asumsi rencana bahwa SMTP existing tersedia dicabut. Inbox penerima uji sudah
+ditentukan dan disimpan privat; alamat penerima bukan konfigurasi pengirim.
+Bootstrap noninteraktif tanpa password gagal sebelum membuat akun/audit jika
+transport diketahui tidak dapat mengirim (log/nested log, array di luar tes,
+transport tidak dikenal, atau URL non-HTTPS di luar local/testing). Operator
+dapat memakai prompt password tersembunyi atau env proses untuk akun sintetis.
+Jika pengiriman gagal sesudah commit, akun tetap ada dan command mengembalikan
+exit1 dengan petunjuk pemulihan; jangan mengulang pembuatan akun secara buta.
 
 ## Pipeline rilis
 

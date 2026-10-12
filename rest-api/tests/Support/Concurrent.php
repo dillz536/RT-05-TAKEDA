@@ -14,7 +14,7 @@ use Symfony\Component\Process\Process;
 trait Concurrent
 {
     /**
-     * @param  list<array<string, mixed>>  $specs  satu spec per proses (kind http|ensure-token|rotate)
+     * @param  list<array<string, mixed>>  $specs  satu spec per proses (kind http|ensure-token|rotate|reserve)
      * @return list<array{status:int, code:?string, data:mixed}>
      */
     protected function runConcurrently(array $specs): array
@@ -53,13 +53,14 @@ trait Concurrent
         return array_map(fn (Process $process) => $this->workerResult($process), $processes);
     }
 
-    /** Menjalankan satu worker (tanpa barrier bila spec tidak memuat 'barrier'). */
+    /** Menjalankan satu worker (tanpa barrier bila spec tidak memuat 'barrier'; env tambahan di spec['env']). */
     protected function spawnWorker(array $spec): Process
     {
         $process = new Process(
             [PHP_BINARY, base_path('tests/Support/race-worker.php'), base64_encode(json_encode($spec, JSON_THROW_ON_ERROR))],
             base_path(),
-            $this->workerEnvironment(),
+            // spec['env'] menimpa env bawaan (mis. CACHE_STORE=database untuk limiter bersama antar proses).
+            array_merge($this->workerEnvironment(), $spec['env'] ?? []),
             null,
             120,
         );

@@ -2,7 +2,9 @@
 
 namespace App\Domain\Identity;
 
+use App\Models\Akun;
 use Closure;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 
 /**
@@ -27,6 +29,31 @@ final class PasswordPolicy
     public static function rules(): array
     {
         return ['string', self::byteLimit(), PasswordRule::min(8)->letters()->numbers()];
+    }
+
+    /**
+     * Cocok persis dengan kata sandi tersimpan. Kata sandi tersimpan selalu <= 72 byte tanpa NUL,
+     * jadi input lebih panjang atau berisi NUL tidak pernah cocok; tanpa cek ini bcrypt
+     * mengabaikan byte setelah ke-72 sehingga kata sandi benar + sufiks apa pun diterima.
+     * Tidak menerapkan aturan kekuatan: kata sandi lama yang lemah tetap dapat dikonfirmasi.
+     */
+    public static function matches(?Akun $akun, mixed $password): bool
+    {
+        return $akun !== null
+            && is_string($password)
+            && strlen($password) <= self::MAX_BYTES
+            && ! str_contains($password, "\0")
+            && Hash::check($password, $akun->password_hash);
+    }
+
+    /** Pengganti `current_password:sanctum` (logout-all, ganti kata sandi) dengan batas byte yang sama. */
+    public static function current(?Akun $akun): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) use ($akun): void {
+            if (! self::matches($akun, $value)) {
+                $fail(__('validation.current_password'));
+            }
+        };
     }
 
     public static function byteLimit(): Closure

@@ -27,6 +27,12 @@ setelah seluruh gate M06 terbukti. Kode M07–M12 existing bukan bukti penerimaa
   Login tetap memvalidasi maksimal200karakter; input lebih72byte dianggap
   kredensial salah agar sufiks yang diabaikan bcrypt tidak diterima. Akun
   sintetis lama dengan password lebih72byte perlu reset.
+- Konfirmasi logout-all/ganti sandi memakai kecocokan persis <=72byte tanpa
+  NUL, tetapi menerima sandi lama yang lemah jika memang cocok. Reset limiter
+  terpisah10/15menit per IP+email; forgot tetap3/15menit. Kegagalan antrean
+  tidak membatalkan akun yang sudah committed. Bootstrap tanpa password
+  noninteraktif menolak transport yang diketahui tidak dapat mengirim
+  sebelum perubahan akun/audit.
 - `GET /sanctum/csrf-cookie`, `POST /auth/web-login`: cookie API pengurus aktif,
   CSRF wajib, tanpa bearer pada localStorage. Logout menangani bearer dan cookie.
   Cookie session dipisahkan dari website. Reset/logout-all/status/role revoke

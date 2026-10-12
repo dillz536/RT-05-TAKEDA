@@ -42,6 +42,21 @@ Pint passed, concurrency5run berurutan dan uji mutasi; form reset browser lokal
 CLAUDE_FIXES.md dan GROK_FIXES.md memuat perintah dan batas bukti. Kode siap
 review silang dan CI; SMTP inbox belum terbukti, sehingga M06 belum passed.
 
+Source final `8d0b3df8f73860b66277fed1494f196d47525d4a` sudah dipush;
+[draft PR21](https://github.com/morrispes5/RT-05-TAKEDA/pull/21). API CI Linux
+SUCCESS171tes/1461assertions,worker Redis recovery/smoke dan OpenAPI lulus;
+Infra image dan repo checks SUCCESS. Flutter CI107tes/analyze/format serta APK
+dev/staging SUCCESS. CI_RESULTS.md memuat tautan; hasil live belum disamakan dengan
+hasil kode. Claude meninjau mobile dan Grok backend pada SHA yang sama.
+
+Koreksi review sudah diuji lokal: backend184tes/1679assertions, Pint pass;
+Flutter114tes/analyze clean. Request logout menyimpan bearer/epoch saat dibuat,
+registrasi menahan kembali selama submit, dan penolakan menampilkan alasan.
+Backend menolak bootstrap tanpa jalur akses yang tersedia, memastikan
+kecocokan password lama persis, memisahkan limiter reset, dan mengunci
+reservasi token agar fresh/zero counter tidak tertimpa request paralel.
+CI/Linux, APK dan deployment kode koreksi tetap menunggu bukti berikutnya.
+
 Claude memiliki backend `rest-api/`; Grok Flutter `mobile/`; Codex integrasi,
 kontrak, website, laporan Drive dan Git. Run Orca `run_f3422d73e850` menyimpan
 task/dispatch, status, keputusan dan checkpoint. Hanya Codex mengelola branch
@@ -80,7 +95,8 @@ Sumber utama repo: PRD, BUSINESS_RULES, DECISIONS, ROADMAP, TESTING dan OpenAPI.
 
 Pengiriman email lupa password perlu layanan pengirim yang tersambung, lalu
 bukti email tiba pada inbox uji. Pengaturan yang diperiksa hanya menunjukkan
-adapter log/from, belum host autentikasi SMTP. Lokasi layanan belum diketahui;
+adapter log/from, belum host autentikasi SMTP. Pemilik mengonfirmasi pengirim
+belum pernah disiapkan; asumsi SMTP existing pada rencana dicabut.
 password tidak diminta melalui chat. Kode antrean/form/expiry/reuse/revocation
 tetap diselesaikan; mock bukan bukti pengiriman email nyata.
 
@@ -88,14 +104,15 @@ Pemeriksaan langsung konsol staging12Oktober hanya membaca nama key dan status
 set/kosong: MAIL_MAILER ada tetapi bukan smtp, MAIL_FROM_ADDRESS ada;
 MAIL_HOST/PORT/USERNAME/PASSWORD tidak ditemukan. Tidak ada nilai secret
 ditampilkan. Karena belum ada konfigurasi pengirim yang dapat dipakai,
-bukti inbox masih blocked; tidak meminta pemilik memahami istilah SMTP.
+bukti inbox masih blocked; penerima uji sudah disimpan privat.
+SMTP_OPERATOR.md memuat langkah setup dan bukti yang masih dibutuhkan.
 
 Stitch generation layar baru timeout300detik. Listing masih40layar existing;
 hasil baru belum terbukti. Brand existing dan UI_STATES.md menjadi acuan Flutter
 sambil recovery read-only; screenshot aplikasi nyata tetap wajib.
 
 Tes lokal PostgreSQL/concurrency/HTTP dan Flutter awal tersedia pada laporan
-agent; hasil akhir setelah follow-up, CI GitHub Linux, APK/emulator, browser
+agent; hasil akhir kode koreksi pada CI GitHub Linux, APK/emulator, browser
 staging dan SMTP inbox masih harus ditutup dengan bukti aktual. Insiden DB/APP_KEY historis tetap open;
 production dan data warga nyata tidak termasuk rilis ini. M07 baru dibuka
 setelah M06 passed. Tidak ada batas target semua selesai dalam satu hari.
@@ -105,3 +122,8 @@ setelah M06 passed. Tidak ada batas target semua selesai dalam satu hari.
 Capstone → Tugas dan Project → Perkembangan RT05 TAKEDA M06–M07:
 https://drive.google.com/drive/folders/1_WweESw5u0iHaDlw6LUfFAuUgOzAstpj.
 Isi/lokasi final diperiksa ulang melalui connector sebelum penutupan milestone.
+
+Laporan juga tersedia sebagai Google Doc native pada folder yang sama, dengan
+heading dan hyperlink yang di-readback melalui connector:
+https://docs.google.com/document/d/1Dxax50Kckfuc2cCO4_PlanRIlNNQVLpsIN0S42s5VMU/edit.
+Doc ini merangkum checkpoint; sourceMarkdown dan bukti rinci tetap disertakan.

@@ -1039,7 +1039,7 @@ paths:
       x-status: implemented
       x-milestone: M06
       security: []
-      description: Respons generik tidak membuktikan email sudah tiba. Notification diantrekan after_commit; token berlaku 60 menit dan hanya sekali pakai.
+      description: Respons generik tidak membuktikan email sudah tiba. Notification diantrekan after_commit; token berlaku 60 menit dan hanya sekali pakai. Batas 3 permintaan per 15 menit per IP dan email, terpisah dari reset.
       requestBody:
         required: true
         content:
@@ -1185,7 +1185,7 @@ paths:
       x-status: implemented
       x-milestone: M06
       security: []
-      description: Password baru mencabut semua bearer dan sesi cookie; token invalid, kedaluwarsa atau digunakan ulang ditolak 422.
+      description: Password baru mencabut semua bearer dan sesi cookie; token invalid, kedaluwarsa atau digunakan ulang ditolak 422. Batas reset 10 percobaan per 15 menit per IP dan email, terpisah dari forgot.
       requestBody:
         required: true
         content:
@@ -1889,14 +1889,14 @@ components:
       type: object
       required: [current_password, password, password_confirmation]
       properties:
-        current_password: {type: string, writeOnly: true}
+        current_password: {type: string, maxLength: 72, writeOnly: true, description: 'Kecocokan persis password lama; maksimal 72 byte UTF-8 tanpa NUL. Tidak menerapkan kekuatan password baru.'}
         password: {$ref: '#/components/schemas/NewPassword'}
         password_confirmation: {type: string, writeOnly: true}
     PasswordConfirmationInput:
       type: object
       required: [password]
       properties:
-        password: {type: string, writeOnly: true}
+        password: {type: string, maxLength: 72, writeOnly: true, description: 'Kecocokan persis password lama; maksimal 72 byte UTF-8 tanpa NUL. Tidak menerapkan kekuatan password baru.'}
     AuthAccount:
       type: object
       additionalProperties: false

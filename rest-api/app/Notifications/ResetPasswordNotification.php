@@ -44,13 +44,8 @@ class ResetPasswordNotification extends Notification implements ShouldBeEncrypte
      */
     public function shouldSend(object $notifiable, string $channel): bool
     {
-        if (self::mailerWritesLog((string) config('mail.default'))) {
-            Log::warning('Email reset tidak dikirim: mailer bertransport log atau tidak dikenal; token tidak boleh masuk log. Konfigurasikan SMTP.');
-
-            return false;
-        }
-        if (! app()->environment('local', 'testing') && ! str_starts_with((string) config('app.url'), 'https://')) {
-            Log::warning('Email reset tidak dikirim: APP_URL harus HTTPS.');
+        if ($reason = self::blockedReason()) {
+            Log::warning('Email reset tidak dikirim: '.$reason);
 
             return false;
         }
@@ -58,21 +53,41 @@ class ResetPasswordNotification extends Notification implements ShouldBeEncrypte
         return true;
     }
 
-    /** True bila mailer (atau salah satu mailer failover/roundrobin di dalamnya) bertransport log. */
-    public static function mailerWritesLog(string $mailer, int $depth = 0): bool
+    /**
+     * Alasan email reset pasti tidak terkirim dengan konfigurasi saat ini, atau null. Tanpa token
+     * atau email, aman untuk log dan output CLI. Dipakai shouldSend dan bootstrap operator.
+     */
+    public static function blockedReason(): ?string
+    {
+        if (self::mailerUses((string) config('mail.default'), ['log'])) {
+            return 'mailer bertransport log atau tidak dikenal; token tidak boleh masuk log. Konfigurasikan SMTP.';
+        }
+        if (! app()->environment('local', 'testing') && ! str_starts_with((string) config('app.url'), 'https://')) {
+            return 'APP_URL harus HTTPS.';
+        }
+
+        return null;
+    }
+
+    /**
+     * True bila mailer, atau salah satu mailer failover/roundrobin di dalamnya, memakai salah satu
+     * [transports]. Mailer tidak dikenal atau terlalu bersarang juga true (fail closed).
+     *
+     * @param  list<string>  $transports
+     */
+    public static function mailerUses(string $mailer, array $transports, int $depth = 0): bool
     {
         $config = config("mail.mailers.$mailer");
         if (! is_array($config) || $depth > 5) {
-            // Mailer tidak dikenal/terlalu bersarang: fail closed.
             return true;
         }
         $transport = $config['transport'] ?? null;
-        if ($transport === 'log') {
+        if (in_array($transport, $transports, true)) {
             return true;
         }
         if (in_array($transport, ['failover', 'roundrobin'], true)) {
             foreach ((array) ($config['mailers'] ?? []) as $inner) {
-                if (self::mailerWritesLog((string) $inner, $depth + 1)) {
+                if (self::mailerUses((string) $inner, $transports, $depth + 1)) {
                     return true;
                 }
             }

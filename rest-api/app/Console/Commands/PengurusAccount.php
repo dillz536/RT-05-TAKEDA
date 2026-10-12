@@ -3,12 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Domain\Identity\PasswordPolicy;
+use App\Domain\Identity\PasswordReset;
 use App\Models\Akun;
 use App\Models\PreferensiNotifikasi;
+use App\Notifications\ResetPasswordNotification;
 use App\Support\Audit;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -19,6 +20,9 @@ use Illuminate\Support\Str;
  *  - env RT05_ADMIN_PASSWORD saat dijalankan (divalidasi), atau
  *  - prompt tersembunyi bila terminal interaktif, atau
  *  - password acak yang tidak ditampilkan + email reset diantrekan (pengurus mengatur sendiri).
+ *    Jalur ketiga ditolak sebelum akun dibuat bila email pasti tidak terkirim (transport log,
+ *    mailer tidak dikenal, APP_URL bukan HTTPS di luar local/testing, mailer array di luar tes).
+ *    Kegagalan SMTP/antrean sesudah commit tidak membatalkan akun (exit 1 + petunjuk).
  * Grant/revoke mengunci akun, mencabut semua bearer dan sesi browser, dan menolak mencabut
  * pengurus aktif terakhir. Setiap perubahan diaudit (actor null = operator CLI).
  */
@@ -64,6 +68,14 @@ class PengurusAccount extends Command
         if ($password === null) {
             return self::INVALID;
         }
+        // Tanpa password eksplisit, satu-satunya jalan masuk adalah email reset. Bila konfigurasi
+        // pasti tidak mengirimnya, jangan buat pengurus yang tidak dapat masuk.
+        if ($source === 'email_reset' && ($reason = $this->resetUndeliverable())) {
+            $this->error('Akun tidak dibuat: email reset tidak dapat dikirim ('.$reason.')');
+            $this->line('Pakai RT05_ADMIN_PASSWORD=... atau jalankan interaktif (prompt tersembunyi), atau konfigurasikan SMTP lalu ulangi.');
+
+            return self::FAILURE;
+        }
 
         $created = DB::transaction(function () use ($email, $nama, $password, $source) {
             DB::select("SELECT pg_advisory_xact_lock(hashtext('rt05:peran-pengurus'))");
@@ -75,11 +87,8 @@ class PengurusAccount extends Command
             $akun->save();
             PreferensiNotifikasi::create(['akun_id' => $akun->id]);
             Audit::record(null, 'akun.pengurus_dibuat_operator', 'akun', $akun->id, ['kanal' => 'cli', 'password' => $source]);
-            if ($source === 'email_reset') {
-                Password::broker('akun')->sendResetLink(['email' => $email]);
-            }
 
-            return true;
+            return [$akun, $source === 'email_reset' ? PasswordReset::createToken($akun) : null];
         });
         if (! $created) {
             $this->error('Akun sudah ada; gunakan grant.');
@@ -88,11 +97,29 @@ class PengurusAccount extends Command
         }
 
         $this->info("Akun pengurus dibuat: $email");
-        if ($source === 'email_reset') {
+        [$akun, $token] = $created;
+        if ($token !== null) {
+            // Sesudah commit: kegagalan SMTP/antrean tidak membatalkan akun yang sudah tersimpan.
+            if (! PasswordReset::notify($akun, $token)) {
+                $this->error('Email reset gagal diantrekan/dikirim. Akun tetap tersimpan; setelah SMTP/antrean pulih, minta reset lewat "Lupa kata sandi".');
+
+                return self::FAILURE;
+            }
             $this->warn('Password acak tidak ditampilkan. Email reset diantrekan; pengurus mengatur kata sandi lewat tautan/kode email.');
         }
 
         return self::SUCCESS;
+    }
+
+    /** Alasan email reset pasti tidak sampai (tanpa nilai rahasia), atau null. Mailer array hanya untuk tes. */
+    private function resetUndeliverable(): ?string
+    {
+        $reason = ResetPasswordNotification::blockedReason();
+        if ($reason === null && ! app()->environment('testing') && config('mail.mailers.'.config('mail.default').'.transport') === 'array') {
+            $reason = 'mailer array tidak mengirim email.';
+        }
+
+        return $reason;
     }
 
     /** @return array{0: ?string, 1: string} */

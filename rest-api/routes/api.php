@@ -27,7 +27,7 @@ Route::prefix('auth')->group(function () {
     Route::post('additional-register', [AuthController::class, 'additionalRegister'])->middleware('throttle:registrasi');
     Route::post('mobile-login', [AuthController::class, 'mobileLogin'])->middleware('throttle:login');
     Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:lupa-password');
-    Route::post('reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:lupa-password');
+    Route::post('reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:reset-password');
 });
 
 // Akun aktif atau menunggu persetujuan: hanya profil, status permohonan, logout.

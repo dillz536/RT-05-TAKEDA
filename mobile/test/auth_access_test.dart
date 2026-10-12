@@ -89,7 +89,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('daftar utama: token awalan nol, alamat wajib, anggota, dan batal saat widget lepas', (tester) async {
+  testWidgets('daftar utama: token awalan nol, alamat wajib, anggota, dan kembali tertahan saat menunggu', (tester) async {
     final storage = MemoryTokenStorage();
     final release = Completer<void>();
     var calls = 0;
@@ -180,12 +180,19 @@ void main() {
     await tester.tap(find.byType(FilledButton).last);
     await tester.pump();
     expect(calls, 2);
-    await popPage(tester);
+    expect(registerCanPop(tester), isFalse);
+    expect(find.byType(BackButton), findsNothing);
+    expect(tester.widget<IconButton>(find.byKey(const ValueKey('auth-back'))).onPressed, isNull);
+    await vetoRegisterBack(tester);
+    await tester.pump();
+    expect(find.byType(RegisterPage), findsOneWidget);
+    expect(storage.token, isNull);
     release.complete();
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(storage.token, isNull);
-    expect(find.byType(LoginPage), findsOneWidget);
+    expect(storage.token, 'tok-daftar');
+    expect(find.byType(RegisterPage), findsNothing);
+    expect(find.text('Iuran bulan ini'), findsOneWidget);
   });
 
   testWidgets('daftar tambahan mengirim hubungan dan menunggu di halaman terbatas', (tester) async {
@@ -236,6 +243,115 @@ void main() {
     expect(find.byType(PendingPage), findsOneWidget);
     expect(find.text('Iuran bulan ini'), findsNothing);
   });
+
+  for (final additional in [false, true]) {
+    final kind = additional ? 'tambahan' : 'utama';
+    final button = additional ? 'Kirim permohonan' : 'Daftar';
+    final path = additional ? '/api/v1/auth/additional-register' : '/api/v1/auth/register';
+
+    testWidgets('kembali tidak menggagalkan daftar $kind yang sukses saat respons tertunda', (tester) async {
+      final storage = MemoryTokenStorage();
+      final release = Completer<void>();
+      var calls = 0;
+      final token = additional ? 'tok-tambahan' : 'tok-daftar';
+      Map<String, dynamic> akun() => additional ? akunJson(status: 'menunggu', jenis: 'tambahan') : akunJson();
+      final base = apiHandler(
+        me: akun,
+        fixtures: additional
+            ? {
+                '/api/v1/auth/additional-account-status': {
+                  'data': {
+                    'permohonan': {'status': 'menunggu'},
+                  },
+                },
+              }
+            : null,
+      );
+      await pumpApp(
+        tester,
+        storage: storage,
+        handler: (options) async {
+          if (options.uri.path == path) {
+            calls++;
+            await release.future;
+            return jsonBody(additional ? 202 : 201, {
+              'data': {'token': token, 'akun': akun()},
+            });
+          }
+          return base(options);
+        },
+      );
+      await openRegisterKind(tester, additional: additional);
+      await fillRegister(tester, additional: additional);
+      await scrollAuth(tester, find.text(button));
+      await tester.tap(find.text(button));
+      for (var i = 0; i < 8 && calls == 0; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(calls, 1);
+      expect(registerCanPop(tester), isFalse);
+      expect(find.byType(BackButton), findsNothing);
+      expect(tester.widget<IconButton>(find.byKey(const ValueKey('auth-back'))).onPressed, isNull);
+      await vetoRegisterBack(tester);
+      await tester.pump();
+      expect(storage.token, isNull);
+      expect(find.byType(RegisterPage), findsOneWidget);
+
+      release.complete();
+      await tester.pumpAndSettle();
+      expect(storage.token, token);
+      expect(find.byType(RegisterPage), findsNothing);
+      if (additional) {
+        expect(find.byType(PendingPage), findsOneWidget);
+        expect(find.text('Menunggu persetujuan'), findsOneWidget);
+      } else {
+        expect(find.text('Iuran bulan ini'), findsOneWidget);
+      }
+    });
+
+    testWidgets('kembali daftar $kind normal setelah respons selesai', (tester) async {
+      final storage = MemoryTokenStorage();
+      final release = Completer<void>();
+      var calls = 0;
+      final base = apiHandler(me: akunJson);
+      await pumpApp(
+        tester,
+        storage: storage,
+        handler: (options) async {
+          if (options.uri.path == path) {
+            calls++;
+            await release.future;
+            return jsonBody(422, {
+              'error': {'code': 'VALIDATION_FAILED', 'message': 'Data tidak valid.', 'request_id': '00000000-0000-4000-8000-000000000099'},
+            });
+          }
+          return base(options);
+        },
+      );
+      await openRegisterKind(tester, additional: additional);
+      await fillRegister(tester, additional: additional);
+      await scrollAuth(tester, find.text(button));
+      await tester.tap(find.text(button));
+      for (var i = 0; i < 8 && calls == 0; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(calls, 1);
+      expect(registerCanPop(tester), isFalse);
+      await vetoRegisterBack(tester);
+      expect(find.byType(RegisterPage), findsOneWidget);
+
+      release.complete();
+      await tester.pumpAndSettle();
+      expect(storage.token, isNull);
+      expect(find.byType(RegisterPage), findsOneWidget);
+      expect(find.text('Data tidak valid.'), findsOneWidget);
+      expect(registerCanPop(tester), isTrue);
+      expect(find.byType(BackButton), findsOneWidget);
+      await popPage(tester);
+      expect(find.byType(LoginPage), findsOneWidget);
+      expect(find.byType(RegisterPage), findsNothing);
+    });
+  }
 
   testWidgets('lupa sandi generik lalu reset dengan konfirmasi dan kode yang bisa disalin', (tester) async {
     final calls = <String>[];
@@ -337,8 +453,11 @@ void main() {
       },
     );
     expect(find.byType(PendingPage), findsOneWidget);
+    expect(find.text('Permohonan ditolak'), findsOneWidget);
+    expect(find.text('Menunggu persetujuan'), findsNothing);
+    expect(find.textContaining('sedang ditinjau'), findsNothing);
     expect(find.text('Ditolak'), findsOneWidget);
-    expect(find.textContaining('Alamat tidak dikenali.'), findsOneWidget);
+    expect(find.textContaining('Alasan: Alamat tidak dikenali.'), findsNWidgets(2));
     expect(find.text('Iuran bulan ini'), findsNothing);
 
     await tester.tap(find.text('Periksa lagi'));
@@ -776,9 +895,39 @@ Future<void> popPage(WidgetTester tester) async {
 }
 
 Future<void> openRegister(WidgetTester tester) async {
-  await scrollAuth(tester, find.text('Daftar akun utama rumah'));
-  await tester.tap(find.text('Daftar akun utama rumah'));
+  await openRegisterKind(tester, additional: false);
+}
+
+Future<void> openRegisterKind(WidgetTester tester, {required bool additional}) async {
+  final label = additional ? 'Daftar akun tambahan keluarga' : 'Daftar akun utama rumah';
+  await scrollAuth(tester, find.text(label));
+  await tester.tap(find.text(label));
   await tester.pumpAndSettle();
+}
+
+Future<void> fillRegister(WidgetTester tester, {required bool additional}) async {
+  await enter(tester, 'field-token', '012345');
+  await enter(tester, 'field-email', additional ? 'anggota.uji@example.test' : 'kepala.uji@example.test');
+  await enter(tester, 'field-password', 'Rahasia1');
+  await enter(tester, 'field-password2', 'Rahasia1');
+  await enter(tester, 'field-nama', additional ? 'Anggota Uji' : 'Kepala Uji');
+  if (additional) await enter(tester, 'field-hubungan', 'Anak');
+  await enter(tester, 'field-jalan', 'Jalan Uji');
+  await enter(tester, 'field-nomor', '1');
+}
+
+bool registerCanPop(WidgetTester tester) {
+  final scope = tester.widget(
+    find.descendant(of: find.byType(RegisterPage), matching: find.byWidgetPredicate((widget) => widget.runtimeType.toString().startsWith('PopScope'))),
+  );
+  return (scope as dynamic).canPop as bool;
+}
+
+/// Tombol sistem ditolak saat `canPop` false. `maybePop` tetap true karena permintaan itu ditangani.
+Future<void> vetoRegisterBack(WidgetTester tester) async {
+  expect(await Navigator.of(tester.element(find.byType(RegisterPage))).maybePop(), isTrue);
+  await tester.pump();
+  expect(find.byType(RegisterPage), findsOneWidget);
 }
 
 Future<void> dismissSnack(WidgetTester tester) async {

@@ -100,6 +100,29 @@ APK, staging baru atau inbox. SMTP staging dicek langsung dengan output hanya
 nama key/status: mailer bukan smtp; HOST/PORT/USERNAME/PASSWORD tidak ada.
 Konfigurasi pengirim belum tersedia; acceptance reset tetap blocked.
 
+Checkpoint review12Oktober:
+- Source `8d0b3df` CI seluruhnya SUCCESS: API171/1461, Flutter107/analyze/format
+  dan kedua APK dev/staging, infra serta hygiene. [CI_RESULTS.md](evidence/m06/CI_RESULTS.md).
+- Review silang Claude mobile/Grok backend selesai pada source tersebut.
+  Grok memperbaiki bearer/epoch logout yang dipatok saat request dibuat,
+  menahan kembali selama registrasi, dan judul/alasan permohonan ditolak;
+  analyze clean dan114tes lokal passed. [GROK_REVIEW_FIXES.md](evidence/m06/GROK_REVIEW_FIXES.md).
+- Claude menutup bootstrap fail-fast, kecocokan password lama persis, exception
+  antrean sesudah commit dan limiter reset terpisah;179tes/1577assertions lokal
+  passed. [CLAUDE_REVIEW_FIXES.md](evidence/m06/CLAUDE_REVIEW_FIXES.md).
+  Review root menemukan race inisialisasi RateLimiter di implementasi reservasi
+  token yang baru; follow-up terbatas `task_f684bcfbae8b`/`ctx_660bb74c1bce`
+  menangani fresh/zero counter sebelum freeze kode final. Belum dianggap passed.
+  Hasil suite sesudah koreksi184tes/1679assertions dan Pint pass; uji mutasi
+  mendeteksi5reservasi lolos pada batas3 dalam versi vendor. CI baru menyusul.
+- Pemilik menegaskan pengirim email belum pernah disiapkan. Asumsi SMTP existing
+  pada rencana dicabut. Penerima uji sudah disimpan privat, bukan di Git.
+  [SMTP_OPERATOR.md](evidence/m06/SMTP_OPERATOR.md) menyediakan langkah konkret.
+  M06 belum passed dan implementasi baru M07 tetap terkunci.
+- Folder Drive sekarang16artefak termasuk Google Doc native pada folder yang
+  sama; isi/parents dan58paragraf readback verified. Final CI/live/screenshots
+  akan diperbarui pada fileID yang sama.
+
 ### Checkpoint sebelumnya
 
 **Penutupan patch keamanan fondasi M04**, PR18 merged8e2d8a5,

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Identity\PasswordPolicy;
+use App\Domain\Identity\PasswordReset;
 use App\Domain\Identity\Registration;
 use App\Domain\Identity\TokenAttempts;
 use App\Exceptions\DomainConflict;
@@ -85,7 +86,7 @@ class AuthController extends Controller
         ]);
 
         $akun = Akun::where('email', Registration::email($data['email']))->first();
-        if (! $this->credentialsMatch($akun, $data['password']) || in_array($akun->status, ['nonaktif', 'diarsipkan'], true)) {
+        if (! PasswordPolicy::matches($akun, $data['password']) || in_array($akun->status, ['nonaktif', 'diarsipkan'], true)) {
             throw ValidationException::withMessages(['email' => ['Email atau kata sandi salah.']]);
         }
 
@@ -106,7 +107,7 @@ class AuthController extends Controller
         ]);
 
         $akun = Akun::where('email', Registration::email($data['email']))->first();
-        if (! $this->credentialsMatch($akun, $data['password']) || ! $akun->isAktif() || ! $akun->isPengurus()) {
+        if (! PasswordPolicy::matches($akun, $data['password']) || ! $akun->isAktif() || ! $akun->isPengurus()) {
             throw ValidationException::withMessages(['email' => ['Email atau kata sandi salah.']]);
         }
 
@@ -137,7 +138,7 @@ class AuthController extends Controller
     /** Cabut semua bearer dan semua sesi browser akun, termasuk sesi/token request ini. */
     public function logoutAll(Request $request): JsonResponse
     {
-        $request->validate(['password' => ['required', 'current_password:sanctum']]);
+        $request->validate(['password' => ['required', PasswordPolicy::current($request->user())]]);
         $akun = $request->user();
         DB::transaction(function () use ($akun) {
             $akun->revokeAllAccess();
@@ -157,7 +158,7 @@ class AuthController extends Controller
     public function changePassword(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'current_password' => ['required', 'current_password:sanctum'],
+            'current_password' => ['required', PasswordPolicy::current($request->user())],
             'password' => ['required', 'confirmed', 'different:current_password', ...PasswordPolicy::rules()],
         ]);
         $akun = $request->user();
@@ -180,21 +181,28 @@ class AuthController extends Controller
 
     /**
      * Respons selalu generik agar tidak membuka daftar email terdaftar. Token reset dibuat dalam
-     * transaksi; email diantrekan after_commit (ResetPasswordNotification).
+     * transaksi; email diantrekan sesudah commit dan kegagalannya tidak mengubah respons 202.
      */
     public function forgotPassword(Request $request): JsonResponse
     {
         $request->validate(['email' => ['required', 'email', 'max:254']]);
         $email = Registration::email((string) $request->string('email'));
 
-        DB::transaction(function () use ($email) {
-            if (Akun::where('email', $email)->whereIn('status', self::STATUS_PULIH)->exists()) {
-                Password::broker('akun')->sendResetLink(['email' => $email]);
-            } else {
+        $pending = DB::transaction(function () use ($email) {
+            $akun = Akun::where('email', $email)->whereIn('status', self::STATUS_PULIH)->first();
+            if (! $akun) {
                 // Biaya hash setara pembuatan token agar waktu respons tidak membedakan email.
                 Hash::make(Str::random(40));
+
+                return null;
             }
+            $token = PasswordReset::createToken($akun);
+
+            return $token === null ? null : [$akun, $token];
         });
+        if ($pending) {
+            PasswordReset::notify(...$pending);
+        }
 
         return Api::data(['message' => self::FORGOT_MESSAGE], 202);
     }
@@ -245,27 +253,24 @@ class AuthController extends Controller
         ]);
     }
 
-    /** Registrasi + bearer perangkat atomik; kegagalan token RT dihitung limiter per IP. */
+    /**
+     * Registrasi + bearer perangkat atomik. Kuota kegagalan token RT per IP direservasi sebelum
+     * verifikasi dan dikembalikan kecuali token memang ditolak (TokenAttempts).
+     */
     private function registerWithToken(Request $request, Closure $register, string $device): array
     {
-        TokenAttempts::ensureAllowed($request);
+        TokenAttempts::reserve($request);
+        $tokenRejected = false;
         try {
             return DB::transaction(fn () => $this->issueToken($register(), $device));
         } catch (DomainConflict $e) {
-            if ($e->errorCode === 'REGISTRATION_TOKEN_INVALID') {
-                TokenAttempts::failed($request);
-            }
+            $tokenRejected = $e->errorCode === 'REGISTRATION_TOKEN_INVALID';
             throw $e;
+        } finally {
+            if (! $tokenRejected) {
+                TokenAttempts::release($request);
+            }
         }
-    }
-
-    /**
-     * Kata sandi tersimpan selalu <= 72 byte (PasswordPolicy). Input lebih panjang tidak pernah
-     * cocok; tanpa cek ini bcrypt mengabaikan byte setelah ke-72 sehingga sufiks apa pun diterima.
-     */
-    private function credentialsMatch(?Akun $akun, string $password): bool
-    {
-        return $akun && strlen($password) <= PasswordPolicy::MAX_BYTES && Hash::check($password, $akun->password_hash);
     }
 
     private function issueToken(Akun $akun, string $device): array

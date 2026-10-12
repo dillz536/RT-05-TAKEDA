@@ -74,7 +74,8 @@ String keptSessionMessage(ApiException error) {
 }
 
 /// Cabut token di server, lalu hapus token lokal hanya bila sesi belum berganti.
-/// Token dan epoch dicatat sebelum request. 401 ikut menghapus bila sesi itu masih yang aktif.
+/// Bearer dan epoch dipasang pada request sebelum interceptor membaca sesi aktif.
+/// 401 ikut menghapus bila sesi itu masih yang aktif.
 /// Jaringan, timeout, 5xx, dan 403 melempar kembali tanpa menghapus token lokal.
 Future<void> revokeServerSession(WidgetRef ref, {required String path, Object? data}) async {
   final session = ref.read(sessionProvider.notifier);
@@ -82,7 +83,7 @@ Future<void> revokeServerSession(WidgetRef ref, {required String path, Object? d
   final epoch = session.epoch;
   final api = ref.read(apiProvider);
   try {
-    await api.post(path, data: data);
+    await api.post(path, data: data, bearer: token, sessionEpoch: epoch);
   } on ApiException catch (error) {
     if (error.status != 401) rethrow;
   }

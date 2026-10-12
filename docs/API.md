@@ -62,11 +62,22 @@ email tiba; delivery nyata tetap gate. Reset berlaku60menit dan satu kali pakai.
 
 Password baru minimal8 karakter Unicode dengan huruf dan angka, maksimal72byte
 UTF-8 dan tanpa NUL, sesuai schema NewPassword dan PasswordPolicy sebelum bcrypt.
+Konfirmasi password saat logout-all/ganti memakai kecocokan persis, termasuk
+batas72byte dan larangan NUL; password lama tidak dipaksa memenuhi aturan
+kekuatan password baru. Gangguan antrean/email tidak membatalkan transaksi akun
+yang telah berhasil; forgot tetap memberi respons generik.
 Penolakan tambahan mencabut token lama. Akun tetap jenis tambahan/status menunggu
 dan permohonan ditolak; login ulang hanya membuka profil/status/alasan sendiri
 serta logout. Akun nonaktif/diarsipkan tetap tidak dapat login.
 
-Default limiter v1: login 5/menit per IP+normalized email; register 5/10 menit per IP; token failure 10/jam per IP; forgot 3/15 menit per IP+email. Angka konfigurabel. Perhatikan NAT bersama; jangan membuka enumerasi email.
+Default limiter v1: login 5/menit per IP+normalized email; register 5/10 menit per IP; token failure 10/jam per IP; forgot 3/15 menit per IP+email; reset 10/15 menit per IP+email dengan penghitung terpisah dari forgot. Angka konfigurabel. Perhatikan NAT bersama; jangan membuka enumerasi email.
+
+Kuota kegagalan token memesan slot sebelum verifikasi dan mengembalikannya
+bila token benar atau kegagalan disebabkan hal lain. Penghitung dan expiry
+diubah di bawah lock pada store limiter bersama; di staging Redis cache
+menyimpan penghitung dan Redis queue noeviction menyimpan lock. Lock sibuk
+ditolak429; release yang tidak memperoleh lock tetap memakai slot sampai
+jendela berakhir. File cache lokal tidak menjadi koordinasi beberapa host.
 
 ## Rumah dan keluarga
 

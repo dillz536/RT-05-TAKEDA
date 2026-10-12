@@ -4,8 +4,11 @@ namespace Tests\Feature;
 
 use App\Domain\Identity\Registration;
 use App\Domain\Identity\RegistrationToken;
+use App\Domain\Identity\TokenAttempts;
 use App\Models\Akun;
 use App\Models\TokenRegistrasi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Tests\Support\CommittedData;
@@ -144,6 +147,161 @@ class M06ConcurrencyTest extends TestCase
         $this->assertNotNull(DB::table('token_registrasi')->where('id', $oldId)->value('dicabut_at'));
         $this->assertSame(1, DB::table('permohonan_akun')->where('token_id', $oldId)->count());
         $this->assertNoOrphans();
+    }
+
+    /**
+     * Limiter token dibagi antar proses lewat cache store database (tabel tes sementara) beserta
+     * tabel lock-nya; setara Redis di staging (data di koneksi cache, lock di koneksi queue).
+     *
+     * @param  callable(array<string,string>): void  $body  menerima env worker
+     */
+    private function withSharedLimiterStore(callable $body): void
+    {
+        $migrator = DB::connection('pgsql_migrations');
+        $migrator->statement('CREATE TABLE rt05_race_cache (key varchar(255) PRIMARY KEY, value text NOT NULL, expiration integer NOT NULL)');
+        $migrator->statement('CREATE TABLE rt05_race_cache_locks (key varchar(255) PRIMARY KEY, owner varchar(255) NOT NULL, expiration integer NOT NULL)');
+        try {
+            $body([
+                'CACHE_STORE' => 'database', 'DB_CACHE_TABLE' => 'rt05_race_cache', 'DB_CACHE_LOCK_TABLE' => 'rt05_race_cache_locks',
+                'RT05_TOKEN_FAILURES_PER_HOUR' => '3',
+            ]);
+        } finally {
+            $migrator->statement('DROP TABLE IF EXISTS rt05_race_cache');
+            $migrator->statement('DROP TABLE IF EXISTS rt05_race_cache_locks');
+        }
+    }
+
+    /** Slot terpakai untuk IP burst, dibaca dari store bersama yang sama dengan worker. */
+    private function sharedHits(): int
+    {
+        config(['cache.default' => 'database', 'cache.stores.database.table' => 'rt05_race_cache', 'cache.stores.database.lock_table' => 'rt05_race_cache_locks']);
+        Cache::forgetDriver('database');
+
+        return TokenAttempts::hits(Request::create('/', 'GET', server: ['REMOTE_ADDR' => '10.8.0.1']));
+    }
+
+    private function wrongTokenBurst(string $wrong, array $env, int $from): array
+    {
+        return $this->runConcurrently(array_map(
+            fn ($i) => array_merge($this->register($wrong, [], $i), ['ip' => '10.8.0.1', 'env' => $env, 'label' => 'burst']),
+            range($from, $from + 9),
+        ));
+    }
+
+    /**
+     * Penghitung BARU (tanpa kunci di store): 10 token salah paralel dari satu IP dengan batas 3.
+     * Tepat 3 verifikasi gagal; sisanya 429 (limiter token atau throttle registrasi) tanpa verifikasi.
+     */
+    public function test_parallel_wrong_token_burst_on_a_fresh_counter_stops_exactly_at_the_limit(): void
+    {
+        $this->withSharedLimiterStore(function (array $env) {
+            $token = RegistrationToken::rotate(null, 'tes');
+            $wrong = $token === '000000' ? '111111' : '000000';
+
+            $results = $this->wrongTokenBurst($wrong, $env, 1);
+
+            $this->assertSame(['422:REGISTRATION_TOKEN_INVALID' => 3, '429:TOO_MANY_REQUESTS' => 7], $this->tally($results));
+            $this->assertSame(0, DB::table('akun')->where('email', 'like', 'ras%@proses.test')->count());
+        });
+    }
+
+    /**
+     * Penghitung yang kembali ke NOL setelah release (registrasi sukses dari IP yang sama tidak
+     * memakai kuota), lalu burst 10 token salah: tetap tepat 3 kegagalan.
+     */
+    public function test_parallel_wrong_token_burst_after_release_to_zero_stops_exactly_at_the_limit(): void
+    {
+        $this->withSharedLimiterStore(function (array $env) {
+            $token = RegistrationToken::rotate(null, 'tes');
+            $wrong = $token === '000000' ? '111111' : '000000';
+
+            $ok = $this->workerResult($this->spawnWorker(array_merge($this->register($token, [], 0), ['ip' => '10.8.0.1', 'env' => $env, 'label' => 'sukses'])));
+            $this->assertSame(201, $ok['status']);
+            $this->assertSame(0, $this->sharedHits(), 'Registrasi sukses mengembalikan slotnya (kunci tetap ada, nilai nol).');
+
+            $results = $this->wrongTokenBurst($wrong, $env, 1);
+
+            $this->assertSame(['422:REGISTRATION_TOKEN_INVALID' => 3, '429:TOO_MANY_REQUESTS' => 7], $this->tally($results));
+        });
+    }
+
+    /** @return list<array{status:int, code:?string, data:mixed}> */
+    private function reserveBurst(array $env, int $count, bool $release = false): array
+    {
+        return $this->runConcurrently(array_fill(0, $count, ['kind' => 'reserve', 'ip' => '10.8.0.1', 'env' => $env, 'label' => 'reservasi', 'release' => $release]));
+    }
+
+    /** Jumlah reservasi yang diterima (200) pada hasil worker. */
+    private static function granted(array $results): int
+    {
+        return count(array_filter($results, fn ($r) => $r['status'] === 200));
+    }
+
+    /**
+     * Tingkat limiter tanpa HTTP (throttle registrasi tidak ikut): penghitung baru, 10 reservasi
+     * paralel, batas 3 → tepat 3 diterima; 429 membawa Retry-After sisa jendela (<= 3600 detik).
+     */
+    public function test_parallel_reservations_on_a_fresh_counter_grant_exactly_the_limit(): void
+    {
+        $this->withSharedLimiterStore(function (array $env) {
+            $results = $this->reserveBurst($env, 10);
+
+            $this->assertSame(['200' => 3, '429:TOO_MANY_REQUESTS' => 7], $this->tally($results));
+            foreach (array_filter($results, fn ($r) => $r['status'] === 429) as $r) {
+                $this->assertGreaterThan(3500, (int) $r['data']);
+                $this->assertLessThanOrEqual(3600, (int) $r['data']);
+            }
+            $this->assertSame(3, $this->sharedHits());
+        });
+    }
+
+    /**
+     * Reserve+release paralel pada penghitung baru harus kembali tepat ke nol: sesudahnya batas
+     * penuh (3) tetap tersedia, tidak lebih.
+     */
+    public function test_parallel_reserve_and_release_returns_the_counter_to_zero(): void
+    {
+        $this->withSharedLimiterStore(function (array $env) {
+            $this->assertSame(['200' => 10], $this->tally($this->reserveBurst($env, 10, release: true)));
+            $this->assertSame(0, $this->sharedHits());
+
+            $this->assertSame(3, self::granted($this->reserveBurst($env, 10)));
+        });
+    }
+
+    /**
+     * Regresi race vendor RateLimiter::increment (add gagal + hasil INCR == 1 → put(1) menimpa):
+     * penghitung nol setelah release; reservasi pertama ditahan tepat sebelum menulis penghitung,
+     * sembilan reservasi lain berjalan (atau menunggu lock), lalu gerbang dilepas dan burst kedua
+     * menyusul. Dari 20 reservasi, total yang diterima harus tepat batas (3).
+     */
+    public function test_reservation_paused_before_its_counter_write_cannot_erase_concurrent_reservations(): void
+    {
+        $this->withSharedLimiterStore(function (array $env) {
+            $this->assertSame(200, $this->workerResult($this->spawnWorker(['kind' => 'reserve', 'ip' => '10.8.0.1', 'env' => $env, 'label' => 'nol', 'release' => true]))['status']);
+
+            $gate = $this->holdGate();
+            try {
+                $first = $this->spawnWorker(['kind' => 'reserve', 'ip' => '10.8.0.1', 'env' => $env, 'label' => 'tertahan', 'gate_on_limiter_write' => $gate]);
+                $this->awaitAdvisoryWait('tertahan', $gate, [$first]);
+                $others = [];
+                for ($i = 0; $i < 9; $i++) {
+                    $others[] = $this->spawnWorker(['kind' => 'reserve', 'ip' => '10.8.0.1', 'env' => $env, 'label' => 'lain']);
+                }
+                // Implementasi tanpa lock menyelesaikan kesembilannya di sini; implementasi berlock
+                // membuat mereka menunggu lock. Batas tunggu hanya memengaruhi kecepatan, bukan hasil.
+                $deadline = microtime(true) + 3;
+                while (microtime(true) < $deadline && array_filter($others, fn ($p) => $p->isRunning())) {
+                    usleep(50_000);
+                }
+            } finally {
+                $this->releaseGate($gate);
+            }
+            $round1 = array_map(fn ($p) => $this->workerResult($p), [$first, ...$others]);
+            $round2 = $this->reserveBurst($env, 10);
+
+            $this->assertSame(3, self::granted($round1) + self::granted($round2), 'Total reservasi diterima tidak boleh melewati batas.');
+        });
     }
 
     public function test_first_admin_token_view_from_concurrent_processes_creates_one_token(): void
