@@ -165,6 +165,14 @@ worktree lama, volume, DNS, proxy, port host, atau service aplikasi lain.
 Migration `akun.versi_sesi` additive dijalankan oleh job migrator sekali pakai;
 credential direct tetap tidak diberikan kepada API/worker/scheduler.
 
+Untuk M07, branch yang diotorisasi adalah `codex/m07-resident-data` (ditambahkan
+secara persis ke allowlist, tanpa wildcard). Deploy hanya SHA review yang CI-nya
+lulus. Migration `2026_10_13_000100_m07_keanggotaan_tautan_akun` menambah tabel
+keanggotaan/tautan dan versi rumah; backfill menjaga data lama dan tanggal awal
+yang tidak diketahui sebagai NULL. Job migrator tetap sementara dan terisolasi.
+Jangan menjalankan factory/seed/reset terhadap Neon. Bukti penerimaan M07 memakai
+fixture sintetis melalui API staging, kemudian ditampilkan di aplikasi Android.
+
 Setelah rollout, catat SHA image, readiness, heartbeat worker/scheduler, smoke
 DML dengan DDL ditolak, serta volume dan container unrelated tetap tersedia.
 Browser pada origin staging memanggil `GET /sanctum/csrf-cookie`, lalu

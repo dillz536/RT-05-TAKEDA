@@ -11,6 +11,7 @@ import '../../core/models.dart';
 import '../../core/session.dart';
 import '../../core/widgets.dart';
 import '../auth/account_access.dart';
+import '../household/family_page.dart';
 import 'providers.dart';
 
 // ─────────────────────────────────────────── Beranda warga
@@ -1077,7 +1078,6 @@ class AccountPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final akun = ref.watch(sessionProvider).akun!;
-    final hh = akun.rumah == null ? null : ref.watch(householdProvider);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -1110,88 +1110,15 @@ class AccountPage extends ConsumerWidget {
             ],
           ),
         ),
-        if (hh != null) ...[
+        if (akun.rumah == null) ...[
           const SizedBox(height: 16),
-          SectionCard(
+          const SectionCard(
             title: 'Keluarga',
-            trailing: akun.dapatUbahKeluarga
-                ? IconButton(
-                    tooltip: 'Tambah anggota',
-                    icon: const Icon(Icons.person_add_alt),
-                    onPressed: () async {
-                      final nama = await askText(context, title: 'Tambah anggota keluarga', label: 'Nama lengkap');
-                      if (nama == null || !context.mounted) return;
-                      final hub = await askText(context, title: 'Hubungan keluarga', label: 'mis. Anak, Istri, Orang tua');
-                      try {
-                        await ref.read(apiProvider).post('/household/members', data: {'nama': nama, 'hubungan_keluarga': hub ?? 'Anggota keluarga'});
-                        ref.invalidate(householdProvider);
-                      } on ApiException catch (e) {
-                        if (context.mounted) showMessage(context, e.display, error: true);
-                      }
-                    },
-                  )
-                : null,
-            child: AsyncView(
-              value: hh,
-              onRetry: () => ref.invalidate(householdProvider),
-              builder: (d) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text('${(d['rumah'] as Map?)?['alamat'] ?? ''} (${d['jenis_hunian'] ?? '-'})'),
-                      StatusChip(
-                        d['status'] == 'terverifikasi' ? 'aktif' : 'menunggu',
-                        label: d['status'] == 'terverifikasi' ? 'Terverifikasi' : 'Belum diverifikasi',
-                      ),
-                    ],
-                  ),
-                  if (akun.jenis == 'utama' && d['status'] != 'terverifikasi') ...[
-                    const SizedBox(height: 8),
-                    const Text('Akun utama sudah aktif. Keluarga belum diverifikasi pengurus.', style: TextStyle(color: Brand.muted, height: 1.35)),
-                  ],
-                  const SizedBox(height: 8),
-                  for (final w in (d['anggota'] as List).cast<Map>())
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(w['is_kepala'] == true ? Icons.star_rounded : Icons.person_outline, color: Brand.navy),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('${w['nama']}'),
-                                Text('${w['hubungan_keluarga']}${w['punya_akun'] == true ? ' • punya akun' : ''}', style: const TextStyle(color: Brand.muted)),
-                              ],
-                            ),
-                          ),
-                          if (akun.dapatUbahKeluarga && w['is_kepala'] != true && w['punya_akun'] != true)
-                            IconButton(
-                              tooltip: 'Tandai pindah',
-                              icon: const Icon(Icons.logout),
-                              onPressed: () async {
-                                if (!await confirm(context, title: 'Akhiri keanggotaan?', message: '${w['nama']} ditandai pindah. Riwayat tetap tersimpan.')) {
-                                  return;
-                                }
-                                await ref.read(apiProvider).delete('/household/members/${w['id']}');
-                                ref.invalidate(householdProvider);
-                              },
-                            ),
-                        ],
-                      ),
-                    ),
-                  if (!akun.dapatUbahKeluarga)
-                    const Text('Perubahan data keluarga dilakukan oleh akun utama.', style: TextStyle(color: Brand.muted, fontSize: 13)),
-                ],
-              ),
-            ),
+            child: Text('Belum terhubung ke rumah.', style: TextStyle(color: Brand.muted, height: 1.35)),
           ),
+        ] else ...[
+          const SizedBox(height: 16),
+          const FamilyPanel(),
         ],
         const SizedBox(height: 16),
         const _AccountSecurity(),

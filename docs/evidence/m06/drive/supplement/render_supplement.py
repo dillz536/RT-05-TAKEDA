@@ -297,8 +297,10 @@ class Seq:
             d.text((x1 + 20, y1 + 13 + i * 28), line, font=F(21), fill=NAVY)
         self.y = y2
 
-    def finish(self, source, name):
-        H = int(self.y + 100)
+    def finish(self, source, name, fixed_h=None):
+        H = fixed_h or int(self.y + 100)
+        if fixed_h is not None:
+            assert self.y + 100 <= fixed_h, f'{name}: konten {self.y + 100} melebihi kanvas {fixed_h}'
         img = self.img.crop((0, 0, self.W, H))
         ImageDraw.Draw(img).rectangle((0, self.y + 2, self.W, H), fill='white')
         footer(ImageDraw.Draw(img), self.W, H, source)
@@ -342,7 +344,7 @@ def reset_sequence():
     lanes = {'app': (160, 'Warga (aplikasi atau peramban)'), 'api': (470, 'REST API Laravel'), 'db': (790, 'PostgreSQL Neon'),
              'redis': (1100, 'Redis antrean'), 'worker': (1390, 'Worker antrean'), 'smtp': (1730, 'SMTP dan inbox (eksternal)')}
     s = Seq(1900, 'Sequence diagram lupa dan reset kata sandi',
-            'Token reset dibuat dalam transaksi; email diantrekan SETELAH commit | pengiriman SMTP ke inbox nyata masih DIBLOKIR', lanes,
+            'Token reset dibuat dalam transaksi; email diantrekan SETELAH commit | pengiriman SMTP ke inbox TERBUKTI 13 Oktober 2026', lanes,
             external=('smtp',))
     s.msg('app', 'api', 'POST /auth/forgot-password: email', num=1)
     t = s.open_frame()
@@ -354,11 +356,11 @@ def reset_sequence():
     s.frame(240, t, 1240, 'setelah commit', fill=SKY)
     s.msg('api', 'app', '202 pesan generik yang sama, email terdaftar atau tidak', ret=True, num=5)
     s.msg('redis', 'worker', 'Worker mengambil job', num=6, width=270)
-    s.self_msg('worker', 'Cek konfigurasi mailer; bila mailer hanya menulis ke log, email tidak dikirim agar kode tidak bocor', num=7, width=250)
+    s.self_msg('worker', 'Cek konfigurasi mailer; SMTP valid sehingga email dikirim; mailer log tetap menolak kirim demi privasi', num=7, width=250)
     t = s.open_frame()
     s.msg('worker', 'smtp', 'Kirim email berisi kode dan tautan', num=8, width=300)
     s.msg('smtp', 'app', 'Email tiba di inbox warga', ret=True, num=9)
-    s.frame(40, t, 1870, 'DIBLOKIR: SMTP staging belum dikonfigurasi; pengiriman ke inbox belum terbukti', fill=PALE_YELLOW, dashed_border=True)
+    s.frame(40, t, 1870, 'TERBUKTI 13 Okt 2026: SMTP aktif; email tiba di inbox (browser dan Android)', fill=SKY)
     s.msg('app', 'api', 'POST /auth/reset-password: email, kode, kata sandi baru', num=10)
     t = s.open_frame()
     s.msg('api', 'db', 'BEGIN; kunci baris token; cek kode dan masa berlaku', num=11, width=560)
@@ -366,11 +368,11 @@ def reset_sequence():
     s.frame(180, t, 1080, 'transaksi reset')
     s.msg('api', 'app', '200: silakan masuk kembali (kode salah atau kedaluwarsa dijawab 422)', ret=True, num=13)
     s.note('Gagal antre atau gagal kirim email tidak membatalkan token yang sudah commit; warga cukup meminta ulang setelah SMTP pulih. '
-           'Di staging 26a0b7e langkah 1 sampai 7 berjalan: respons 202, lalu worker mencatat email tidak dikirim karena SMTP belum ada. '
-           'Langkah 10 sampai 13 lulus tes otomatis dan 17 cek staging memakai kode yang dibuat di server, bukan dari inbox. '
-           'Langkah 8 dan 9 belum terbukti sampai operator menyiapkan SMTP staging.')
-    s.finish('Sumber: AuthController::forgotPassword dan resetPassword, PasswordReset, ResetPasswordNotification (ShouldQueueAfterCommit)',
-             '03-sequence-reset-kata-sandi.png')
+           'Seluruh langkah 1 sampai 13 terbukti di staging 26a0b7e pada 13 Oktober 2026: pengirim SMTP valid, email tiba di inbox pada '
+           'ronde browser 02:53:25Z dan ronde Android 03:10:10Z, lalu reset dan masuk dengan kata sandi baru berhasil. '
+           'Verifikasi 4/4 per ronde: sesi lama 401, kata sandi lama 422, kata sandi baru 200, kode yang sama 422 saat dipakai ulang.')
+    s.finish('Sumber: AuthController::forgotPassword dan resetPassword, PasswordReset, ResetPasswordNotification (ShouldQueueAfterCommit) | bukti inbox browser+Android 13 Okt 2026',
+             '03-sequence-reset-kata-sandi.png', fixed_h=1946)
 
 
 # ---------------------------------------------------------------- 4/5. ERD

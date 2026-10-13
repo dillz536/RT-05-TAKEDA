@@ -2,6 +2,58 @@
 
 Updated: 13 Oktober 2026.
 
+## M07 aktif — 13 Oktober 2026
+
+Checkpoint source final: backend **220/220, 2125 assertion** sesudah koreksi
+akses bersamaan/backfill; Flutter **152 tes**, analyzer/formatter lulus dengan
+capability household terbaru dan teks error benar-benar diperiksa pada320px/
+skala2. Worker source selesai; CI/staging/Android tetap gate berikutnya.
+Pemilik menyoroti penggunaan limit; root membatasi sisa kerja ke CI/deploy/
+demonstrasi, tanpa review baru. Pilihan inbox Gmail utama dikonfirmasi pemilik
+05:45UTC dan tidak mengulang uji M06 yang sudah lulus.
+
+- M06 ditutup pada commit `8eae8fc`, seluruh CI SUCCESS; PR #21 merged ke
+  main `bc57b4fa5f5d52f500fa3a81ece8b37c083c5e63`. Branch aktif
+  `codex/m07-resident-data` berasal dari main tersebut. Staging tetap M06
+  `26a0b7e` sampai source M07 direview, dicommit dan CI lulus.
+- Claude `task_7fddc750520f` / `ctx_e158a2b66bd5` menyelesaikan schema
+  membership/link additive, backfill tanggal lama NULL, transaksi pendataan,
+  kontrak API/OpenAPI/ERD. Laporan lokal: 212 tes / 2075 assertion PostgreSQL,
+  Pint dan Redocly lulus. Worker selesai dan dilepas; review akses bersamaan
+  diteruskan melalui `task_80f00e321932`. Belum bukti live M07.
+- Grok tahap pertama 137 tes/analyzer lulus, tetapi beberapa aksi pengurus belum
+  terpasang. Ownership terminal dialihkan ke `task_e7f9aa4f88e7` /
+  `ctx_a5d09cdb5e3e` untuk melengkapi seluruh aksi, pagination, dan menjaga
+  isian saat konflik versi. Root memegang Git/CI/deploy dan penerimaan perangkat.
+- Follow-up Grok melengkapi aksi pengurus/pagination (146 tes/analyzer lulus),
+  worker dilepas. Review root masih menemukan capability dari profil sesi
+  yang dapat basi dan tes teks hanya memeriksa konfigurasi; task final
+  `task_6d3d210196a6`/`ctx_979b8b302587` memperbaiki hak dari household terbaru
+  dan memeriksa RenderParagraph/error pada320px/skala2 sebelum source freeze.
+- Kimi menyelesaikan koreksi SMTP melalui task final `task_c22deef1be1a` /
+  `ctx_68e40a169e90`; worker_done valid diterima dan terminal dilepas. Dua laporan
+  dari dispatch sebelumnya ditolak karena capability dicabut, bukan gate baru.
+  Panduan native Drive dibaca kembali: 21 gambar (11 diagram, 10 layar nyata),
+  4 tabel. Diagram reset dan bukti browser/Android diperbarui dalam file existing;
+  laporan native juga mendapat checkpoint M06 passed/M07 aktif. PDF dirender
+  untuk memeriksa dua bukti baru; PDF akhir26halaman, halaman25/26 terbaca,
+  halaman kosong akhir dibuang. DOCX historis
+  tidak diklaim tersinkronisasi dengan native Doc.
+- Kimi M07 provider403/limit5jam sebelum menulis output; terminal failed dilepas.
+  Draft cadangan Claude `task_5a7d5ffb93eb`/`ctx_821e42a4cd20` menghasilkan
+  5 PNG+prosa. Root meminta diagram pendamping dengan huruf minimal44px untuk
+  halaman native425pt (detail teknis ukuran penuh tetap ditautkan), melalui
+  reuse terminal `task_4eba058596a5`/`ctx_a7d0690c2d67`. Draft bukan gate live.
+- Google Stitch edit mengembalikan koreksi teks/DOM pada referensi existing
+  `e267c2b12d8b4021861da1cda87716e8`, tetapi screenshot/HTML unduhan masih
+  menampilkan artefak lama saat diperiksa. Asumsi pending-primary/JWT/logo
+  buatan tidak diterapkan; Grok mendapat aturan yang benar dan menjaga brand
+  Flutter existing. Rancangan tidak menggantikan penerimaan aplikasi.
+
+Kontrak [M07](evidence/m07/CONTRACT.md), hasil [Claude](evidence/m07/CLAUDE_RESULT.md)
+dan [Grok](evidence/m07/GROK_RESULT.md). Status tetap **in_progress** sampai
+CI, migrasi additive staging, akses/konkurensi live, dan Android dapat diperagakan.
+
 ## Penutupan M06 — 13 Oktober 2026
 
 - Coordinator menerima **M06 passed** pada runtime26a0b7e, byte aplikasi sama
@@ -139,7 +191,7 @@ ditentukan hanya oleh tersedianya kode.
 | M04 | passed | Gate fungsional sebelumnya12b4642; patch isolasi credential6a8d4f8 diterapkan12 Oktober: runtime tanpa migrator, DML/DDLdenied, direct job rollback0, heartbeat dan volume/unrelated preserved. Insiden rotasi tetap open; production belum siap. Checkpoint keamanan di bawah. |
 | M05 | passed | PR17, source13de24e: 77 tes/analyzer/dua APK CI SUCCESS, checksum cocok; emulator health HTTPS, offline/retry proses sama, ikon dan skala teks1,3/2,0; review final Kimi PASS. docs/evidence/m05/LIVE_RESULTS.md |
 | M06 | passed | Staging26a0b7e; API52alur/17mekanika reset; Android akun/sesi; SMTP nyata, INBOX A/browser dan B/Android, verifier4/4 masing-masing. Penutupan13Oktober; INBOX_ACCEPTANCE |
-| M07 | planned | M06 passed; tahap berikutnya pendataan lengkap/histori membership/link, izin, concurrency dan penerimaan Android/staging |
+| M07 | in_progress | M06/PR21 merged; implementasi dan tes lokal pendataan, review integrasi berlangsung; CI/staging/Android belum diterima |
 | M08 | in_progress | Pengaduan + foto privat + anonim + status; tes CI lulus |
 | M09 | in_progress | Aspirasi terpisah; tes CI lulus |
 | M10 | in_progress | Agenda/ICS/Google Calendar, pengumuman, inbox; push FCM blocked (tanpa project Firebase) |

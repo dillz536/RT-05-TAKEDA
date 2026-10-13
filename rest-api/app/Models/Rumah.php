@@ -16,6 +16,7 @@ class Rumah extends Model
     {
         return [
             'tagihan_aktif' => 'boolean',
+            'versi' => 'integer',
             'mulai_tagih' => 'date',
             'archived_at' => 'datetime',
         ];

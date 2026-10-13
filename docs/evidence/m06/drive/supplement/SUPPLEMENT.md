@@ -5,16 +5,18 @@
 - Lingkup file: hanya `docs/evidence/m06/drive/supplement/`. Tidak mengubah dokumen master Kimi, DOCX, PROGRESS, kode domain/mobile/infra, OpenAPI, maupun Git.
 - Sesi ini tidak memakai connector Drive. Setelah review, root menambahkan gambar dan teks di bawah ke **Google Doc yang sama**, bukan ke dokumen baru.
 
-## Status yang dirujuk (12 Oktober 2026)
+## Status yang dirujuk (13 Oktober 2026)
 
 | Hal | Status | Bukti |
 | --- | --- | --- |
 | Staging `26a0b7e` | Ter-deploy, runtime smoke PASS | [Penerimaan Claude](../../CLAUDE_RESUMED_ACCEPTANCE.md) |
 | Probe staging backend | 52/52 PASS | Sama, §4 |
-| Mekanika reset kata sandi di staging | 17/17 PASS memakai kode yang dibuat server, bukan dari inbox | Sama, §6 |
-| Email reset sampai inbox | **DIBLOKIR**: SMTP staging belum dikonfigurasi | Sama, §7 |
-| M06 | Belum dinyatakan lulus, karena gerbang inbox | Sama |
-| M07 | Belum dibuka; rancangan saja | [ROADMAP](../../../../ROADMAP.md) |
+| Mekanika reset kata sandi di staging | 17/17 PASS memakai kode yang dibuat server, lalu dikonfirmasi end-to-end lewat inbox nyata | Sama, §6 dan §9 |
+| Email reset sampai inbox | **TERBUKTI** 13 Oktober 2026: SMTP aktif di staging; email tiba di inbox pada ronde browser (02:53:25Z) dan ronde Android (03:10:10Z); verifikasi 4/4 per ronde PASS | Sama, §9 |
+| M06 | **LULUS** — gate final coordinator 13 Oktober 2026 | Pesan gate root |
+| M07 | Dibuka sebagai pekerjaan berikutnya; belum diimplementasikan | [ROADMAP](../../../../ROADMAP.md) |
+
+Catatan historis 12 Oktober 2026 (email sampai inbox masih DIBLOKIR karena SMTP staging belum dikonfigurasi) tetap berlaku sebagai rekaman checkpoint sebelum tanggal tersebut.
 
 ## Cara menyisipkan ke Google Doc
 
@@ -39,8 +41,8 @@ Lalu sisipkan kelima gambar berikut, sesuai urutan. Untuk setiap gambar, tempel 
 ### Gambar L3. Sequence lupa dan reset kata sandi
 
 - File: `docs/evidence/m06/drive/supplement/03-sequence-reset-kata-sandi.png` (1900 × 1946)
-- Keterangan: *Gambar L3. Sequence diagram lupa dan reset kata sandi; pengiriman SMTP ke inbox masih diblokir.*
-- Penjelasan: Token reset disimpan dalam transaksi. Email baru diantrekan **setelah** transaksi commit, sehingga gangguan email tidak menghapus data. Jawaban server selalu sama (202), terdaftar atau tidak, agar daftar email warga tidak bocor. Kotak bergaris putus-putus menandai bagian yang belum terbukti. Server SMTP staging belum disiapkan, jadi email belum pernah sampai ke inbox. Langkah penggantian kata sandi (10 sampai 13) sudah lulus tes otomatis dan cek staging. Kode untuk cek itu dibuat di server, bukan diambil dari inbox.
+- Keterangan: *Gambar L3. Sequence diagram lupa dan reset kata sandi; pengiriman SMTP ke inbox terbukti 13 Oktober 2026.*
+- Penjelasan: Token reset disimpan dalam transaksi. Email baru diantrekan **setelah** transaksi commit, sehingga gangguan email tidak menghapus data. Jawaban server selalu sama (202), terdaftar atau tidak, agar daftar email warga tidak bocor. Sejak 13 Oktober 2026 pengirim SMTP staging aktif (hanya container api dan worker-default yang dikonfigurasi; kode sumber tetap `26a0b7e`) dan seluruh langkah terbukti: email tiba di inbox pada ronde browser (02:53:25Z) dan ronde Android (03:10:10Z), reset lewat tautan email asli dan lewat kode di aplikasi berhasil, lalu masuk dengan kata sandi baru berhasil. Verifikasi 4/4 per ronde: sesi lama ditolak (401), kata sandi lama ditolak (422), kata sandi baru diterima (200), dan kode yang sama ditolak saat dipakai ulang (422). Pada ronde Android kode diminta dari aplikasi terlebih dahulu, lalu kode baru dari email itulah yang dipakai; koreksi urutan uji ini bukan cacat kode.
 
 ### Gambar L4. ERD M06
 
@@ -74,3 +76,4 @@ Lalu sisipkan kelima gambar berikut, sesuai urutan. Untuk setiap gambar, tempel 
   - L5: angka kardinalitas `1` di sisi `rumah` dan `akun` sebelumnya menempel pada baris `alamat_key` dan header/`PK` `akun`. Angka itu kini digeser keluar dari tepi kotak. Garis `akun`–`tautan akun` sekarang masuk ke baris isi, bukan batas header.
   - L1: hubungan warga akun tambahan ke "Melihat data keluarga sendiri" kini diberi label "hanya setelah disetujui (aktif)". Akun tambahan yang masih menunggu tidak dapat membaca data keluarga.
   - Gambar L2, L3, dan L4 tidak berubah isinya.
+- Pembaruan 13 Oktober 2026 (setelah gate final root M06 PASSED): hanya L3 yang dirender ulang dari `render_supplement.py` — anotasi DIBLOKIR diganti status TERBUKTI, catatan memuat waktu penerimaan inbox ronde browser/Android dan hasil verifikasi 4/4. Kanvas tetap persis 1900 × 1946 agar penggantian gambar di Google Doc tidak mengubah bingkai; empat gambar lain byte-identik (hash SHA256 tidak berubah).

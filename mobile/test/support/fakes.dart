@@ -138,11 +138,22 @@ Map<String, Object?> shellFixtures() {
     },
     '/api/v1/household': {
       'data': {
-        'rumah': {'alamat': 'Jalan Uji Coba Nomor 1 Blok A'},
+        'id': 'k-1',
+        'versi': 1,
+        'rumah': {'kode_rumah': 'A-01', 'alamat': 'Jalan Uji Coba Nomor 1 Blok A'},
         'jenis_hunian': 'pemilik',
         'status': 'terverifikasi',
+        'dapat_ubah': true,
         'anggota': [
-          {'id': 'w-1', 'nama': 'Kepala Keluarga Uji', 'hubungan_keluarga': 'Kepala keluarga', 'is_kepala': true, 'punya_akun': true},
+          {
+            'id': 'w-1',
+            'nama': 'Kepala Keluarga Uji',
+            'hubungan_keluarga': 'Kepala keluarga',
+            'is_kepala': true,
+            'punya_akun': true,
+            'whatsapp': '081200000001',
+          },
+          {'id': 'w-2', 'nama': 'Anggota Keluarga Uji', 'hubungan_keluarga': 'Anak', 'is_kepala': false, 'punya_akun': false},
         ],
       },
     },

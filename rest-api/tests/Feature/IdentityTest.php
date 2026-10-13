@@ -161,7 +161,7 @@ class IdentityTest extends TestCase
         $b = $this->warga('13');
         $memberOfB = $b->keluarga()->warga()->where('is_kepala', false)->first();
 
-        $this->as($a)->patchJson("/api/v1/household/members/{$memberOfB->id}", ['nama' => 'Diretas'])->assertNotFound();
+        $this->as($a)->patchJson("/api/v1/household/members/{$memberOfB->id}", ['nama' => 'Diretas', 'versi' => 1])->assertNotFound();
         $this->assertNotSame('Diretas', $memberOfB->refresh()->nama);
     }
 

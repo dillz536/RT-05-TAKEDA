@@ -34,6 +34,26 @@ Occupancy dan account link aktif mempunyai ended_at null. Primary aktif per ruma
 
 Circular family.head_resident_id dibuat lewat migration/order dan registration transaction yang aman; family pertama dibuat dengan head null lalu dikaitkan sebelum commit.
 
+### Implementasi M07 (nama ADR17)
+
+Additive `2026_10_13_000100_m07_keanggotaan_tautan_akun`:
+
+| Tabel | Kolom dan constraint |
+| --- | --- |
+| keanggotaan_keluarga (family_memberships) | keluarga_id, warga_id, hubungan_keluarga, mulai_at/selesai_at timestamptz, alasan_selesai, sumber, dicatat_oleh_id, diakhiri_oleh_id; unique aktif per warga; selesai ≥ mulai; alasan wajib saat selesai |
+| tautan_akun (account_links) | akun_id, warga_id, keluarga_id, is_utama, mulai_at/selesai_at, alasan_selesai, sumber, aktor; unique aktif per akun dan per warga; unique `keluarga_id WHERE is_utama AND selesai_at IS NULL` |
+| rumah | + versi (≥1) |
+
+Rumah tidak disimpan pada tautan: rumah akun = penghunian aktif keluarga tautannya. Karena
+`penghunian` tetap satu aktif per rumah dan per keluarga, satu akun utama aktif per keluarga
+setara dengan satu akun utama aktif per rumah, dan perpindahan rumah tidak memutar tautan.
+Penghunian aktif = keluarga utama rumah (kolom is_primary tidak ditambahkan; v1 tidak membuka
+hunian bukan-utama). mulai_at NULL = baris backfill sebelum M07. Backfill tidak membuat tautan
+aktif untuk warga/keluarga yang sudah diarsipkan atau akun tanpa status aktif/nonaktif.
+
+Pointer lama `warga.keluarga_id`, `warga.is_kepala`, `akun.warga_id` (unik), `akun.jenis`
+dipertahankan untuk image M06 dan diperbarui dalam transaksi yang sama dengan histori.
+
 ## Layanan dan konten
 
 | Tabel | Kolom penting dan relasi |

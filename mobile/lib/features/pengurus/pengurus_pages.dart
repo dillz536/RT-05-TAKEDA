@@ -9,6 +9,10 @@ import '../../core/api.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../core/widgets.dart';
+import '../household/admin_census.dart';
+import '../household/admin_links.dart';
+import '../household/census_providers.dart';
+import '../household/paged_list.dart';
 import '../warga/providers.dart';
 import '../warga/warga_pages.dart';
 
@@ -23,17 +27,11 @@ String newKey() {
 }
 
 final dashboardProvider = FutureProvider.autoDispose<Json>((ref) async => Json.from(await ref.read(apiProvider).get('/admin/dashboard') as Map));
-final housesProvider = FutureProvider.autoDispose.family<List<Json>, String>(
-  (ref, q) async => ((await ref.read(apiProvider).page('/admin/houses', query: {'per_page': 100, if (q.isNotEmpty) 'q': q}))['data'] as List)
+final requestsProvider = FutureProvider.autoDispose.family<List<Json>, String>(
+  (ref, status) async => ((await ref.read(apiProvider).page('/admin/additional-account-requests', query: {'status': status, 'per_page': 50}))['data'] as List)
       .cast<Map>()
       .map(Json.from)
       .toList(),
-);
-final houseDuesProvider = FutureProvider.autoDispose.family<Json, String>(
-  (ref, id) async => Json.from(await ref.read(apiProvider).get('/admin/houses/$id/dues') as Map),
-);
-final requestsProvider = FutureProvider.autoDispose<List<Json>>(
-  (ref) async => ((await ref.read(apiProvider).page('/admin/additional-account-requests'))['data'] as List).cast<Map>().map(Json.from).toList(),
 );
 final tokenProvider = FutureProvider.autoDispose<Json>((ref) async => Json.from(await ref.read(apiProvider).get('/admin/registration-token') as Map));
 final paymentsProvider = FutureProvider.autoDispose<List<Json>>(
@@ -255,21 +253,27 @@ class ResidentsAdminPage extends ConsumerStatefulWidget {
 
 class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
   String _q = '';
+  bool _arsip = false;
+
+  HouseQuery get _query => (q: _q, arsip: _arsip, page: 1);
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
-    length: 2,
+    length: 3,
     child: Column(
       children: [
         const Material(
           color: Colors.white,
           child: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
             labelColor: Brand.navy,
             indicatorColor: Brand.yellow,
             indicatorWeight: 3,
             tabs: [
               Tab(text: 'Rumah & keluarga'),
               Tab(text: 'Permohonan akun'),
+              Tab(text: 'Akun warga'),
             ],
           ),
         ),
@@ -281,52 +285,100 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
                 children: [
                   TextField(
                     decoration: const InputDecoration(prefixIcon: Icon(Icons.search), labelText: 'Cari kode rumah / jalan'),
-                    onSubmitted: (v) => setState(() => _q = v.trim()),
+                    onSubmitted: (value) => setState(() => _q = value.trim()),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      FilterChip(label: const Text('Rumah arsip'), selected: _arsip, onSelected: (value) => setState(() => _arsip = value)),
+                      TextButton(
+                        onPressed: () async {
+                          final created = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const HouseCreatePage()));
+                          if (created == true) ref.invalidate(housesProvider(_query));
+                        },
+                        child: const Text('Rumah baru'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.push<void>(context, MaterialPageRoute(builder: (_) => const FamiliesAdminPage())),
+                        child: const Text('Daftar keluarga'),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   AsyncView(
-                    value: ref.watch(housesProvider(_q)),
-                    onRetry: () => ref.invalidate(housesProvider(_q)),
-                    builder: (list) => list.isEmpty
-                        ? const EmptyState(icon: Icons.home_outlined, title: 'Belum ada rumah terdaftar')
-                        : Column(
-                            children: [
-                              for (final h in list)
-                                Card(
-                                  margin: const EdgeInsets.only(bottom: 8),
-                                  child: ListTile(
-                                    title: Text('${h['kode_rumah']} • ${h['alamat']}', style: const TextStyle(fontWeight: FontWeight.w700)),
-                                    // Status di bawah subjudul (bukan trailing) agar judul alamat tetap lebar pada skala teks besar.
-                                    subtitle: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          h['keluarga'] == null
-                                              ? 'Belum ada keluarga aktif'
-                                              : '${(h['keluarga'] as Map)['kepala'] ?? '-'} • ${(h['keluarga'] as Map)['jumlah_anggota']} anggota',
-                                        ),
-                                        if (h['keluarga'] != null)
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 6),
-                                            child: StatusChip(
-                                              (h['keluarga'] as Map)['status'] == 'terverifikasi' ? 'aktif' : 'menunggu',
-                                              label: (h['keluarga'] as Map)['status'] == 'terverifikasi' ? 'Terverifikasi' : 'Perlu verifikasi',
+                    value: ref.watch(housesProvider(_query)),
+                    onRetry: () => ref.invalidate(housesProvider(_query)),
+                    builder: (page) => page.rows.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Text(
+                              _arsip ? 'Tidak ada rumah arsip.' : 'Belum ada rumah terdaftar.',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Brand.muted, height: 1.35),
+                            ),
+                          )
+                        : AppendedPage(
+                            key: ValueKey('rumah|$_q|$_arsip'),
+                            first: page,
+                            load: (n) => ref.read(housesProvider((q: _q, arsip: _arsip, page: n)).future),
+                            builder: (context, list) => Column(
+                              children: [
+                                for (final h in list)
+                                  Card(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    child: ListTile(
+                                      title: Text('${h['kode_rumah']} • ${h['alamat']}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                                      // Status di bawah subjudul (bukan trailing) agar judul alamat tetap lebar pada skala teks besar.
+                                      subtitle: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            h['keluarga'] == null
+                                                ? 'Belum ada keluarga aktif'
+                                                : '${(h['keluarga'] as Map)['kepala'] ?? '-'} • ${(h['keluarga'] as Map)['jumlah_anggota']} anggota',
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Wrap(
+                                            spacing: 6,
+                                            runSpacing: 6,
+                                            children: [
+                                              if (h['archived_at'] != null) const StatusChip('nonaktif', label: 'Arsip'),
+                                              if (h['keluarga'] != null)
+                                                StatusChip(
+                                                  (h['keluarga'] as Map)['status'] == 'terverifikasi' ? 'aktif' : 'menunggu',
+                                                  label: (h['keluarga'] as Map)['status'] == 'terverifikasi' ? 'Terverifikasi' : 'Perlu verifikasi',
+                                                ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      onTap: () async {
+                                        await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => HouseAdminPage(
+                                              summary: h,
+                                              onRecordPayment: (house) async {
+                                                await Navigator.push(context, MaterialPageRoute(builder: (_) => RecordPaymentPage(house: house)));
+                                              },
                                             ),
                                           ),
-                                      ],
+                                        );
+                                        ref.invalidate(housesProvider(_query));
+                                      },
                                     ),
-                                    onTap: () async {
-                                      await Navigator.push(context, MaterialPageRoute(builder: (_) => HouseAdminPage(h)));
-                                      ref.invalidate(housesProvider(_q));
-                                    },
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
                   ),
                 ],
               ),
               const _RequestsView(),
+              const AccountsAdminView(),
             ],
           ),
         ),
@@ -335,154 +387,121 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
   );
 }
 
-class _RequestsView extends ConsumerWidget {
+class _RequestsView extends ConsumerStatefulWidget {
   const _RequestsView();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => RefreshIndicator(
-    onRefresh: () async => ref.invalidate(requestsProvider),
-    child: AsyncView(
-      value: ref.watch(requestsProvider),
-      onRetry: () => ref.invalidate(requestsProvider),
-      builder: (list) => list.isEmpty
-          ? ListView(
-              children: const [EmptyState(icon: Icons.how_to_reg_outlined, title: 'Tidak ada permohonan menunggu')],
-            )
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                for (final p in list)
-                  Card(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('${p['nama_pemohon']} (${p['hubungan_keluarga'] ?? '-'})', style: Theme.of(context).textTheme.titleMedium),
-                          Text('${p['email']}', style: const TextStyle(color: Brand.muted)),
-                          const SizedBox(height: 6),
-                          Text('Alamat diajukan: ${p['alamat_diajukan']}'),
-                          Text(
-                            p['rumah_cocok'] == null
-                                ? 'Rumah tidak cocok dengan data — tolak atau minta pemohon mendaftar ulang.'
-                                : 'Cocok dengan rumah ${(p['rumah_cocok'] as Map)['kode_rumah']}',
-                            style: TextStyle(color: p['rumah_cocok'] == null ? Brand.danger : Brand.success),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: BusyButton(
-                                  label: 'Tolak',
-                                  outlined: true,
-                                  onPressed: () async {
-                                    final reason = await askText(context, title: 'Alasan penolakan', label: 'Alasan (wajib)');
-                                    if (reason == null) return;
-                                    await ref.read(apiProvider).post('/admin/additional-account-requests/${p['id']}/reject', data: {'alasan': reason});
-                                    ref.invalidate(requestsProvider);
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: BusyButton(
-                                  label: 'Setujui',
-                                  onPressed: p['rumah_cocok'] == null
-                                      ? null
-                                      : () async {
-                                          try {
-                                            await ref.read(apiProvider).post('/admin/additional-account-requests/${p['id']}/approve', data: {});
-                                            ref.invalidate(requestsProvider);
-                                            if (context.mounted) showMessage(context, 'Akun disetujui sebagai warga.');
-                                          } on ApiException catch (e) {
-                                            if (context.mounted) showMessage(context, e.display, error: true);
-                                          }
-                                        },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-    ),
-  );
+  ConsumerState<_RequestsView> createState() => _RequestsViewState();
 }
 
-class HouseAdminPage extends ConsumerWidget {
-  const HouseAdminPage(this.house, {super.key});
-  final Json house;
+class _RequestsViewState extends ConsumerState<_RequestsView> {
+  String _status = 'diajukan';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final id = '${house['id']}';
-    final dues = ref.watch(houseDuesProvider(id));
-    final fam = house['keluarga'] as Map?;
-    return Scaffold(
-      appBar: AppBar(title: Text('Rumah ${house['kode_rumah']}')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          SectionCard(
-            title: '${house['alamat']}',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Tagihan: ${house['tagihan_aktif'] == true ? 'aktif sejak ${house['mulai_tagih'] ?? '-'}' : 'nonaktif'}'),
-                if (fam != null) Text('Kepala keluarga: ${fam['kepala']} • ${fam['jumlah_anggota']} anggota'),
-                if (fam != null && fam['status'] != 'terverifikasi') ...[
-                  const SizedBox(height: 12),
-                  BusyButton(
-                    label: 'Verifikasi data keluarga',
-                    icon: Icons.verified_outlined,
-                    outlined: true,
-                    onPressed: () async {
-                      await ref.read(apiProvider).post('/admin/families/${fam['id']}/verify');
-                      if (context.mounted) {
-                        showMessage(context, 'Keluarga terverifikasi.');
-                        Navigator.pop(context);
-                      }
-                    },
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          SectionCard(
-            title: 'Iuran rumah',
-            trailing: TextButton(
-              onPressed: () async {
-                await Navigator.push(context, MaterialPageRoute(builder: (_) => RecordPaymentPage(house: house)));
-                ref.invalidate(houseDuesProvider(id));
-              },
-              child: const Text('Catat bayar'),
-            ),
-            child: AsyncView(
-              value: dues,
-              onRetry: () => ref.invalidate(houseDuesProvider(id)),
-              builder: (d) => Column(
-                children: [
-                  for (final t in (d['tagihan'] as List).cast<Map>().map((m) => Tagihan(Json.from(m))))
-                    ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(periode(t.periode)),
-                      subtitle: Text(rupiah(t.nominal)),
-                      trailing: StatusChip(t.status, label: t.label),
-                    ),
-                ],
+  Widget build(BuildContext context) => RefreshIndicator(
+    onRefresh: () async => ref.invalidate(requestsProvider(_status)),
+    child: AsyncView(
+      value: ref.watch(requestsProvider(_status)),
+      onRetry: () => ref.invalidate(requestsProvider(_status)),
+      builder: (list) {
+        final filters = Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final choice in const [('Menunggu', 'diajukan'), ('Disetujui', 'disetujui'), ('Ditolak', 'ditolak')])
+              ChoiceChip(label: Text(choice.$1), selected: _status == choice.$2, onSelected: (_) => setState(() => _status = choice.$2)),
+          ],
+        );
+        if (list.isEmpty) {
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              filters,
+              const SizedBox(height: 24),
+              Text(
+                _status == 'diajukan' ? 'Tidak ada permohonan menunggu.' : 'Tidak ada permohonan pada saringan ini.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Brand.muted, height: 1.35),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+            ],
+          );
+        }
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            filters,
+            const SizedBox(height: 12),
+            for (final p in list)
+              Card(
+                margin: const EdgeInsets.only(bottom: 10),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${p['nama_pemohon']} (${p['hubungan_keluarga'] ?? '-'})', style: Theme.of(context).textTheme.titleMedium),
+                      Text('${p['email']}', style: const TextStyle(color: Brand.muted)),
+                      const SizedBox(height: 6),
+                      Text('Alamat diajukan: ${p['alamat_diajukan']}'),
+                      Text(
+                        p['rumah_cocok'] == null
+                            ? 'Rumah tidak cocok dengan data — tolak atau minta pemohon mendaftar ulang.'
+                            : 'Cocok dengan rumah ${(p['rumah_cocok'] as Map)['kode_rumah']}',
+                        style: TextStyle(color: p['rumah_cocok'] == null ? Brand.danger : Brand.success),
+                      ),
+                      if (_status == 'diajukan') ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: BusyButton(
+                                label: 'Tolak',
+                                outlined: true,
+                                onPressed: () async {
+                                  final reason = await askText(context, title: 'Alasan penolakan', label: 'Alasan (wajib)');
+                                  if (!context.mounted || reason == null) return;
+                                  if (reason.isEmpty) {
+                                    showMessage(context, 'Alasan wajib diisi.', error: true);
+                                    return;
+                                  }
+                                  try {
+                                    await ref.read(apiProvider).post('/admin/additional-account-requests/${p['id']}/reject', data: {'alasan': reason});
+                                    ref.invalidate(requestsProvider(_status));
+                                  } on ApiException catch (error) {
+                                    if (context.mounted) showMessage(context, error.display, error: true);
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: BusyButton(
+                                label: 'Setujui',
+                                onPressed: p['rumah_cocok'] == null
+                                    ? null
+                                    : () async {
+                                        try {
+                                          await ref.read(apiProvider).post('/admin/additional-account-requests/${p['id']}/approve', data: {});
+                                          ref.invalidate(requestsProvider(_status));
+                                          if (context.mounted) showMessage(context, 'Akun disetujui sebagai warga.');
+                                        } on ApiException catch (error) {
+                                          if (context.mounted) showMessage(context, error.display, error: true);
+                                        }
+                                      },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    ),
+  );
 }
 
 // ─────────────────────────────────────────── Keuangan
@@ -627,7 +646,7 @@ class _RecordPaymentPageState extends ConsumerState<RecordPaymentPage> {
 
   @override
   Widget build(BuildContext context) {
-    final houses = ref.watch(housesProvider(''));
+    final houses = ref.watch(housesProvider((q: '', arsip: false, page: 1)));
     return Scaffold(
       appBar: AppBar(title: const Text('Catat pembayaran iuran')),
       body: ListView(
@@ -641,22 +660,30 @@ class _RecordPaymentPageState extends ConsumerState<RecordPaymentPage> {
           const SizedBox(height: 14),
           AsyncView(
             value: houses,
-            onRetry: () => ref.invalidate(housesProvider('')),
-            builder: (list) => DropdownButtonFormField<String>(
-              initialValue: _house?['id'] as String?,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Rumah'),
-              items: [
-                for (final h in list)
-                  DropdownMenuItem(
-                    value: '${h['id']}',
-                    child: Text('${h['kode_rumah']} • ${h['alamat']}', overflow: TextOverflow.ellipsis),
-                  ),
-              ],
-              onChanged: (v) => setState(() {
-                _house = list.firstWhere((h) => h['id'] == v);
-                _selected.clear();
-              }),
+            onRetry: () => ref.invalidate(housesProvider((q: '', arsip: false, page: 1))),
+            builder: (page) => AppendedPage(
+              first: page,
+              load: (n) => ref.read(housesProvider((q: '', arsip: false, page: n)).future),
+              builder: (context, list) {
+                final selected = _house == null ? null : '${_house!['id']}';
+                final current = selected != null && list.any((h) => '${h['id']}' == selected) ? selected : null;
+                return DropdownButtonFormField<String>(
+                  initialValue: current,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Rumah'),
+                  items: [
+                    for (final h in list)
+                      DropdownMenuItem(
+                        value: '${h['id']}',
+                        child: Text('${h['kode_rumah']} • ${h['alamat']}', overflow: TextOverflow.ellipsis),
+                      ),
+                  ],
+                  onChanged: (v) => setState(() {
+                    _house = list.firstWhere((h) => '${h['id']}' == v);
+                    _selected.clear();
+                  }),
+                );
+              },
             ),
           ),
           if (_house != null) ...[
