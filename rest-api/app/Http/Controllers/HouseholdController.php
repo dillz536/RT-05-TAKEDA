@@ -2,77 +2,77 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Residents\Households;
 use App\Exceptions\DomainConflict;
 use App\Http\Responses\Api;
 use App\Http\Responses\Present;
 use App\Models\Akun;
 use App\Models\Keluarga;
-use App\Models\Warga;
-use App\Support\Audit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 /**
- * Data keluarga sendiri (BR05, ADR10): semua akun aktif membaca keluarganya; hanya akun utama
- * (atau pengurus) yang mengubah. Warga tidak pernah membaca keluarga lain (404 bila di luar scope).
+ * Data keluarga sendiri (BR05, ADR10, M07). Keluarga ditentukan dari tautan akun aktif:
+ * akun utama membaca dan mengubah; akun tambahan yang disetujui hanya membaca (403 untuk
+ * mutasi); akun tanpa tautan aktif 404. Anggota keluarga lain selalu 404. Setiap mutasi wajib
+ * mengirim keluarga.versi (hilang 422, basi 409); respons anggota memuat versi_keluarga terbaru.
+ * Pemeriksaan di controller hanya jalur cepat dari tautan yang dimuat sebelum lock; keputusan akhir
+ * ada di domain (Links::assertEditor) setelah keluarga dikunci, sehingga akun yang kehilangan status
+ * utama/tautan/aktif secara bersamaan tidak dapat menulis.
  */
 class HouseholdController extends Controller
 {
+    private const WHATSAPP = ['nullable', 'string', 'max:25', 'regex:/^[0-9+ -]{8,25}$/'];
+
     private function keluargaOf(Akun $akun): Keluarga
     {
-        $keluarga = $akun->warga?->keluarga;
-        if (! $keluarga || $keluarga->archived_at) {
+        $keluarga = $akun->keluarga();
+        if (! $keluarga) {
             throw new DomainConflict('HOUSEHOLD_NOT_LINKED', 'Akun belum terhubung dengan keluarga.', 404);
         }
 
-        return $keluarga->load(['warga' => fn ($q) => $q->with('akun'), 'penghunianAktif.rumah']);
+        return $keluarga;
     }
 
-    private function assertCanEdit(Akun $akun): void
+    private function canEdit(Akun $akun): bool
     {
-        if (! $akun->isUtama() && ! $akun->isPengurus()) {
+        return $akun->isUtama() || $akun->isPengurus();
+    }
+
+    private function editableKeluarga(Akun $akun): Keluarga
+    {
+        $keluarga = $this->keluargaOf($akun);
+        if (! $this->canEdit($akun)) {
             throw new DomainConflict('PRIMARY_ACCOUNT_REQUIRED', 'Hanya akun utama yang dapat mengubah data keluarga.', 403);
         }
+
+        return $keluarga;
+    }
+
+    private function versi(Keluarga $k): int
+    {
+        return (int) Keluarga::whereKey($k->id)->value('versi');
     }
 
     public function show(Request $request): JsonResponse
     {
-        $k = $this->keluargaOf($request->user());
+        $akun = $request->user();
+        $k = $this->keluargaOf($akun)->refresh()->load(Present::KELUARGA);
 
-        return Api::data(Present::keluarga($k, $k->penghunianAktif?->rumah));
+        return Api::data(Present::keluarga($k, $k->penghunianAktif?->rumah, $this->canEdit($akun)));
     }
 
-    /** PATCH /household — ubah WhatsApp kepala keluarga dengan optimistic version. */
+    /** PATCH /household — ubah WhatsApp/nama kepala keluarga dengan optimistic version. */
     public function update(Request $request): JsonResponse
     {
         $akun = $request->user();
-        $this->assertCanEdit($akun);
+        $k = $this->editableKeluarga($akun);
         $data = $request->validate([
             'versi' => ['required', 'integer'],
-            'whatsapp' => ['nullable', 'string', 'max:25', 'regex:/^[0-9+ -]{8,25}$/'],
+            'whatsapp' => self::WHATSAPP,
             'nama_kepala' => ['sometimes', 'string', 'max:120'],
         ]);
-        $k = $this->keluargaOf($akun);
-
-        DB::transaction(function () use ($akun, $k, $data) {
-            $locked = Keluarga::whereKey($k->id)->lockForUpdate()->first();
-            if ($locked->versi !== (int) $data['versi']) {
-                throw new DomainConflict('VERSION_CONFLICT', 'Data keluarga sudah berubah. Muat ulang lalu coba lagi.');
-            }
-            $kepala = Warga::where('keluarga_id', $k->id)->where('is_kepala', true)->whereNull('archived_at')->first();
-            if ($kepala) {
-                if (array_key_exists('whatsapp', $data)) {
-                    $kepala->whatsapp = $data['whatsapp'];
-                }
-                if (array_key_exists('nama_kepala', $data)) {
-                    $kepala->nama = $data['nama_kepala'];
-                }
-                $kepala->save();
-            }
-            $locked->increment('versi');
-            Audit::record($akun, 'keluarga.diubah', 'keluarga', $k->id, ['field' => array_keys(array_diff_key($data, ['versi' => 1]))]);
-        });
+        Households::updateHead($akun, $k->id, $data);
 
         return $this->show($request);
     }
@@ -80,60 +80,45 @@ class HouseholdController extends Controller
     public function addMember(Request $request): JsonResponse
     {
         $akun = $request->user();
-        $this->assertCanEdit($akun);
+        $k = $this->editableKeluarga($akun);
         $data = $request->validate([
             'nama' => ['required', 'string', 'max:120'],
             'hubungan_keluarga' => ['required', 'string', 'max:40'],
-            'whatsapp' => ['nullable', 'string', 'max:25', 'regex:/^[0-9+ -]{8,25}$/'],
+            'whatsapp' => self::WHATSAPP,
+            'versi' => ['required', 'integer'],
         ]);
-        $k = $this->keluargaOf($akun);
-        $warga = DB::transaction(function () use ($akun, $k, $data) {
-            $w = Warga::create($data + ['keluarga_id' => $k->id, 'is_kepala' => false]);
-            Keluarga::whereKey($k->id)->increment('versi');
-            Audit::record($akun, 'warga.ditambah', 'warga', $w->id);
+        $warga = Households::addMember($akun, $k->id, $data, $data['versi'], 'akun_utama');
 
-            return $w;
-        });
-
-        return Api::data(Present::warga($warga), 201);
+        return Api::data(Present::warga($warga) + ['versi_keluarga' => $this->versi($k)], 201);
     }
 
     public function updateMember(Request $request, string $id): JsonResponse
     {
         $akun = $request->user();
-        $this->assertCanEdit($akun);
-        $k = $this->keluargaOf($akun);
-        $warga = Warga::where('keluarga_id', $k->id)->whereNull('archived_at')->findOrFail($id);
+        $k = $this->editableKeluarga($akun);
         $data = $request->validate([
             'nama' => ['sometimes', 'string', 'max:120'],
             'hubungan_keluarga' => ['sometimes', 'string', 'max:40'],
-            'whatsapp' => ['nullable', 'string', 'max:25', 'regex:/^[0-9+ -]{8,25}$/'],
+            'whatsapp' => self::WHATSAPP,
+            'versi' => ['required', 'integer'],
         ]);
-        DB::transaction(function () use ($akun, $warga, $data, $k) {
-            $warga->fill($data)->save();
-            Keluarga::whereKey($k->id)->increment('versi');
-            Audit::record($akun, 'warga.diubah', 'warga', $warga->id, ['field' => array_keys($data)]);
-        });
+        $versi = $data['versi'];
+        unset($data['versi']);
+        $warga = Households::updateMember($akun, $k->id, $id, $data, $versi);
 
-        return Api::data(Present::warga($warga->refresh()));
+        return Api::data(Present::warga($warga->refresh()) + ['versi_keluarga' => $this->versi($k)]);
     }
 
-    /** DELETE /household/members/{id} — arsip keanggotaan, bukan hapus permanen (BR18). */
+    /** DELETE /household/members/{id} — akhiri keanggotaan (arsip), bukan hapus permanen (BR18). */
     public function endMember(Request $request, string $id): JsonResponse
     {
         $akun = $request->user();
-        $this->assertCanEdit($akun);
-        $k = $this->keluargaOf($akun);
-        $warga = Warga::where('keluarga_id', $k->id)->whereNull('archived_at')->findOrFail($id);
-        if ($warga->is_kepala || $warga->akun) {
-            throw new DomainConflict('MEMBER_PROTECTED', 'Kepala keluarga atau anggota yang memiliki akun diubah melalui pengurus.', 422);
-        }
-        $request->validate(['status' => ['sometimes', 'in:pindah,meninggal']]);
-        DB::transaction(function () use ($akun, $warga, $request, $k) {
-            $warga->forceFill(['archived_at' => now(), 'status' => $request->input('status', 'pindah')])->save();
-            Keluarga::whereKey($k->id)->increment('versi');
-            Audit::record($akun, 'warga.diarsipkan', 'warga', $warga->id);
-        });
+        $k = $this->editableKeluarga($akun);
+        $data = $request->validate([
+            'status' => ['sometimes', 'in:pindah,meninggal'],
+            'versi' => ['required', 'integer'],
+        ]);
+        Households::endMember($akun, $k->id, $id, $data['status'] ?? 'pindah', $data['versi'], false);
 
         return Api::noContent();
     }

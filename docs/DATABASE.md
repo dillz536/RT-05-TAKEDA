@@ -64,7 +64,8 @@ dan state privat sebelum COPY di setiap build stage.
 | --- | --- |
 | houses | unique normalized address key / kode rumah |
 | occupancies | partial unique primary aktif per house; end ≥ start |
-| account_links | satu primary aktif per house; satu link aktif per user |
+| account_links | satu primary aktif per house; satu link aktif per user (M07: `tautan_akun`, utama per keluarga + satu hunian aktif per keluarga/rumah) |
+| family_memberships | M07 `keanggotaan_keluarga`: satu keanggotaan aktif per warga; rentang valid |
 | registration_invites | hanya satu aktif; 6 digit dipertahankan sebagai string |
 | dues_rates | unique effective_month; amount >0 |
 | dues_charges | unique house_id, period; amount_due >0 |
@@ -106,6 +107,25 @@ Setiap bulan scheduler melakukan catch-up, bukan hanya tepat tengah malam. Gener
 Index feed status/created_at, family-house active, charge house/period/status, cash posted_at/source, outbox status/available_at, media state/created_at. Semua list paginated. Gunakan eager loading untuk menghindari N+1.
 
 Audit memakai JSON before/after yang direduksi; jangan memasukkan password/token/PII penuh. Audit bukan tempat menyalin seluruh form keluarga.
+
+### Perubahan M07 — rumah, keluarga, akun
+
+Tabel additive `keanggotaan_keluarga`, `tautan_akun`, kolom `rumah.versi`; detail di ERD.md.
+Migration menjalankan backfill idempotent (`App\Domain\Residents\LegacyBackfill`): satu
+keanggotaan per warga dan paling banyak satu tautan per `akun.warga_id`, `mulai_at` NULL (tidak
+dikarang), akhir hanya dari `archived_at` warga/keluarga/akun yang tercatat, tanpa mengubah baris
+lama. Konservatif: tautan aktif hanya untuk akun aktif/nonaktif dengan warga dan keluarga yang
+belum diarsipkan serta keanggotaan aktif yang cocok; pointer ke warga/keluarga yang sudah
+berakhir menjadi tautan tertutup, dan pointer tidak konsisten tanpa tanggal tercatat (akun
+`diarsipkan` tanpa `archived_at`, akun `menunggu` yang menunjuk warga) tidak ditautkan. Setelah rollback
+aplikasi ke image M06, `php artisan rt05:residents-backfill` melengkapi histori baru.
+Down migration hanya menghapus tambahan M07.
+
+Transaksi di `App\Domain\Residents\{Households,Occupancies,Accounts,Links}`; urutan lock
+permohonan → rumah (id naik) → keluarga (id naik) → tautan → akun; tautan hanya diubah sambil
+memegang lock keluarganya. Hak aktor diperiksa ulang setelah lock keluarga. Constraint unik
+Postgres, deadlock (40P01) dan serialization failure (40001) dipetakan ke 409. Tagihan tetap per rumah: hunian mulai/akhiri/pindah tidak membuat, memindah, menghapus,
+atau membebaskan tagihan; arsip rumah mematikan tagihan berikutnya tanpa menyentuh histori.
 
 ## Migration workflow
 

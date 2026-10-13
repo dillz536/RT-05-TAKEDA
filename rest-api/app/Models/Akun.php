@@ -7,6 +7,7 @@ use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -72,6 +73,17 @@ class Akun extends Authenticatable implements CanResetPasswordContract
         return $this->belongsTo(Warga::class, 'warga_id');
     }
 
+    /** Tautan aktif (M07): sumber keputusan keluarga/rumah/hak ubah, bukan pointer warga_id. */
+    public function tautanAktif(): HasOne
+    {
+        return $this->hasOne(TautanAkun::class, 'akun_id')->whereNull('selesai_at');
+    }
+
+    public function tautan(): HasMany
+    {
+        return $this->hasMany(TautanAkun::class, 'akun_id');
+    }
+
     public function permohonan(): HasOne
     {
         return $this->hasOne(PermohonanAkun::class, 'akun_id');
@@ -87,15 +99,18 @@ class Akun extends Authenticatable implements CanResetPasswordContract
         return $this->status === 'aktif';
     }
 
+    /** Akun utama keluarga menurut tautan aktif (bukan kolom jenis yang dipertahankan untuk image lama). */
     public function isUtama(): bool
     {
-        return $this->jenis === 'utama';
+        return (bool) $this->tautanAktif?->is_utama;
     }
 
-    /** Keluarga aktif akun ini (melalui warga), atau null bila belum terhubung. */
+    /** Keluarga dari tautan aktif, atau null bila akun tidak tertaut/keluarga diarsipkan. */
     public function keluarga(): ?Keluarga
     {
-        return $this->warga?->keluarga;
+        $keluarga = $this->tautanAktif?->keluarga;
+
+        return $keluarga && ! $keluarga->archived_at ? $keluarga : null;
     }
 
     /** Rumah dari penghunian aktif keluarga akun. */
@@ -103,4 +118,7 @@ class Akun extends Authenticatable implements CanResetPasswordContract
     {
         return $this->keluarga()?->penghunianAktif?->rumah;
     }
+
+    /** Relasi eager-load standar untuk Present::akun. */
+    public const PROFIL = ['tautanAktif.keluarga.penghunianAktif.rumah'];
 }

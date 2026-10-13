@@ -3,6 +3,7 @@
 namespace App\Domain\Identity;
 
 use App\Domain\Residents\Address;
+use App\Domain\Residents\Links;
 use App\Exceptions\DomainConflict;
 use App\Models\Akun;
 use App\Models\Keluarga;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Registrasi (FR03/FR05, BR03/BR05/BR06). Satu transaksi: akun + rumah + keluarga + warga + penghunian
- * + preferensi + audit/outbox; token perangkat dibuat pemanggil di transaksi luar yang sama.
+ * + keanggotaan + tautan akun utama (M07) + preferensi + audit/outbox; token perangkat dibuat pemanggil di transaksi luar yang sama.
  * Rumah dengan alamat ternormalisasi yang sudah ada (termasuk rumah kosong/arsip yang dibuat
  * pengurus) selalu ditolak tanpa auto-merge; pemohon diarahkan ke akun tambahan/pengurus.
  *
@@ -76,13 +77,15 @@ final class Registration
                 'is_kepala' => true,
                 'whatsapp' => $data['whatsapp'] ?? null,
             ]);
+            Links::startMembership($kepala, $keluarga, $kepala->hubungan_keluarga, 'registrasi', null);
             foreach ($data['anggota'] ?? [] as $anggota) {
-                Warga::create([
+                $w = Warga::create([
                     'keluarga_id' => $keluarga->id,
                     'nama' => trim($anggota['nama']),
                     'hubungan_keluarga' => trim($anggota['hubungan_keluarga']),
                     'is_kepala' => false,
                 ]);
+                Links::startMembership($w, $keluarga, $w->hubungan_keluarga, 'registrasi', null);
             }
             Penghunian::create([
                 'rumah_id' => $rumah->id,
@@ -99,6 +102,7 @@ final class Registration
                 'jenis' => 'utama',
                 'status' => 'aktif',
             ]);
+            Links::startLink($akun, $kepala, true, 'registrasi', null);
             PermohonanAkun::create([
                 'akun_id' => $akun->id,
                 'token_id' => $token->id,
@@ -155,28 +159,50 @@ final class Registration
         });
     }
 
-    /** Persetujuan pengurus: buat warga di keluarga rumah tersebut dan aktifkan akun (peran tetap warga). */
-    public static function approve(PermohonanAkun $permohonan, Akun $pengurus, ?string $rumahId, ?string $catatan): void
+    /**
+     * Persetujuan pengurus (M07): akun tambahan ditautkan sebagai akun bukan-utama ke keluarga yang
+     * menghuni rumah, dalam satu transaksi dengan keanggotaan, versi keluarga, audit dan outbox.
+     * $wargaId opsional menautkan anggota aktif yang belum punya akun (tanpa warga ganda); bila
+     * kosong, warga baru dibuat dari data permohonan. Peran tetap warga; rumah/tagihan tidak berubah.
+     * Urutan lock: permohonan → rumah → keluarga → akun.
+     */
+    public static function approve(PermohonanAkun $permohonan, Akun $pengurus, ?string $rumahId, ?string $catatan, ?string $wargaId = null): void
     {
-        DB::transaction(function () use ($permohonan, $pengurus, $rumahId, $catatan) {
+        Links::transaction(function () use ($permohonan, $pengurus, $rumahId, $catatan, $wargaId) {
             $permohonan = PermohonanAkun::whereKey($permohonan->id)->lockForUpdate()->firstOrFail();
             if ($permohonan->status !== 'diajukan' || $permohonan->jenis !== 'tambahan') {
                 throw new DomainConflict('REQUEST_ALREADY_PROCESSED', 'Permohonan sudah diproses.');
             }
-            $rumah = Rumah::find($rumahId ?? $permohonan->rumah_id);
+            $rumahId ??= $permohonan->rumah_id;
+            Links::lockHouses([$rumahId]);
+            $rumah = $rumahId ? Rumah::whereNull('archived_at')->find($rumahId) : null;
             $penghunian = $rumah?->penghunianAktif;
-            if (! $penghunian) {
+            $keluarga = $penghunian ? (Links::lockFamilies([$penghunian->keluarga_id])[$penghunian->keluarga_id] ?? null) : null;
+            if (! $keluarga || $keluarga->archived_at) {
                 throw new DomainConflict('HOUSE_NOT_OCCUPIED', 'Pilih rumah yang memiliki keluarga aktif.', 422);
             }
 
-            $warga = Warga::create([
-                'keluarga_id' => $penghunian->keluarga_id,
-                'nama' => $permohonan->nama_pemohon,
-                'hubungan_keluarga' => $permohonan->hubungan_keluarga ?? 'Anggota keluarga',
-            ]);
+            if ($wargaId) {
+                $warga = Links::memberOf($keluarga, $wargaId);
+                if ($warga->akun()->exists()) {
+                    throw new DomainConflict('RESIDENT_HAS_ACCOUNT', 'Anggota ini sudah memiliki akun.');
+                }
+            } else {
+                $warga = Warga::create([
+                    'keluarga_id' => $keluarga->id,
+                    'nama' => $permohonan->nama_pemohon,
+                    'hubungan_keluarga' => $permohonan->hubungan_keluarga ?? 'Anggota keluarga',
+                ]);
+                Links::startMembership($warga, $keluarga, $warga->hubungan_keluarga, 'persetujuan', $pengurus);
+            }
             $akun = Akun::whereKey($permohonan->akun_id)->lockForUpdate()->firstOrFail();
-            $akun->forceFill(['warga_id' => $warga->id, 'status' => 'aktif'])->save();
+            if ($akun->status !== 'menunggu') {
+                throw new DomainConflict('REQUEST_ALREADY_PROCESSED', 'Permohonan sudah diproses.');
+            }
+            Links::startLink($akun, $warga, false, 'persetujuan', $pengurus);
+            $akun->forceFill(['status' => 'aktif'])->save();
             $akun->endBrowserSessions();
+            Links::bump($keluarga);
             $permohonan->forceFill([
                 'status' => 'disetujui',
                 'rumah_id' => $rumah->id,
@@ -185,7 +211,9 @@ final class Registration
                 'catatan' => $catatan,
             ])->save();
 
-            Audit::record($pengurus, 'permohonan_akun.disetujui', 'permohonan_akun', $permohonan->id, ['akun_id' => $akun->id]);
+            Audit::record($pengurus, 'permohonan_akun.disetujui', 'permohonan_akun', $permohonan->id, [
+                'akun_id' => $akun->id, 'keluarga_id' => $keluarga->id, 'warga_existing' => (bool) $wargaId,
+            ]);
             Outbox::record('akun.permohonan_disetujui', 'akun', $akun->id);
         });
     }
@@ -237,7 +265,8 @@ final class Registration
             $constraint = $e->getMessage();
             throw match (true) {
                 str_contains($constraint, 'akun_email') => new DomainConflict('REGISTRATION_REJECTED', self::REJECTED, 422),
-                str_contains($constraint, 'rumah_alamat_key'), str_contains($constraint, 'penghunian_satu_aktif') => new DomainConflict('HOUSE_ALREADY_REGISTERED', self::HOUSE_EXISTS),
+                str_contains($constraint, 'rumah_alamat_key'), str_contains($constraint, 'penghunian_satu_aktif'),
+                str_contains($constraint, 'tautan_satu_utama_per_keluarga') => new DomainConflict('HOUSE_ALREADY_REGISTERED', self::HOUSE_EXISTS),
                 default => new DomainConflict('CONFLICT', 'Pendaftaran bersamaan terdeteksi. Coba lagi.'),
             };
         }

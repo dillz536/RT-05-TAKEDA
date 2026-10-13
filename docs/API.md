@@ -83,24 +83,37 @@ jendela berakhir. File cache lokal tidak menjadi koordinasi beberapa host.
 
 | Endpoint | Perilaku |
 | --- | --- |
-| GET /household | Keluarga/rumah akun sendiri dan anggota yang diizinkan |
-| PATCH /household | Akun utama memperbaiki data yang diizinkan; version dan audit |
-| POST/PATCH /household/members | Akun utama mengelola anggota sendiri |
-| DELETE /household/members/{id} | Arsip/end membership, tidak hard-delete histori |
-| GET/POST/PATCH /admin/houses | Daftar/kelola rumah |
-| POST /admin/houses/{id}/archive | Arsip dengan alasan; financial history retained |
-| GET/POST/PATCH /admin/families | Administrasi keluarga |
-| GET/PATCH /admin/residents/{id} | Administrasi anggota |
-| GET/PATCH /admin/users/{id} | Data/status akun; tidak menerima role mass-assignment |
-| POST /admin/users/{id}/archive | Arsip dan revoke akses |
-| POST /admin/occupancies | Mulai occupancy/link yang tervalidasi |
-| POST /admin/occupancies/{id}/end | Tutup rentang; transfer primary lewat transaction |
+| GET /household | Keluarga/rumah dari tautan akun aktif; `dapat_ubah` |
+| PATCH /household | Akun utama; `versi` wajib; audit |
+| POST/PATCH /household/members | Akun utama mengelola anggota sendiri; `versi` wajib |
+| DELETE /household/members/{id} | Tutup keanggotaan + arsip warga, tidak hard-delete histori; `versi` wajib |
+| GET/POST /admin/houses, GET/PATCH /admin/houses/{id} | Daftar/kelola rumah; koreksi alamat/tagihan dengan alasan, `rumah.versi`; kode_rumah tetap |
+| POST /admin/houses/{id}/archive | Arsip dengan alasan; hunian aktif diakhiri, tagihan/kas tetap |
+| GET/POST /admin/families, GET/PATCH /admin/families/{id} | Daftar/tambah/detail histori/ganti kepala (versi) |
+| POST /admin/families/{id}/verify, /archive, /members, /primary-account | Verifikasi, arsip (tanpa hunian/akun aktif), tambah anggota, pindah akun utama |
+| GET/PATCH /admin/residents/{id}, POST …/end, …/move | Administrasi anggota; pindah keluarga ikut memindah tautan akun sebagai tambahan |
+| GET /admin/accounts, GET/PATCH /admin/accounts/{id} | Data/status akun; tidak menerima peran (pengganti rancangan `/admin/users`) |
+| POST /admin/accounts/{id}/archive | Arsip final, tutup tautan, revoke bearer+sesi |
+| POST /admin/occupancies, /{id}/end, /{id}/move | Mulai/akhiri/pindah hunian atomik; tagihan tetap di rumah |
 | GET /admin/additional-account-requests | Review permohonan |
-| POST /admin/additional-account-requests/{id}/approve atau /reject | Review+alasan+audit |
+| POST /admin/additional-account-requests/{id}/approve atau /reject | Approve membuat keanggotaan+tautan bukan-utama (opsional `warga_id` existing); reject+alasan |
 | GET /admin/registration-token | Admin-only, Cache-Control no-store |
 | POST /admin/registration-token/rotate | Manual rotation dan revoke token lama |
 
 Alamat/keluarga tidak searchable oleh anonymous/pending user. Semua update household menerapkan optimistic version.
+
+M07 (kontrak lengkap: docs/evidence/m07/CONTRACT.md): akses keluarga dari `tautan_akun`
+aktif. Akun utama ubah; akun tambahan disetujui baca saja (403 `PRIMARY_ACCOUNT_REQUIRED`);
+menunggu/ditolak 403 untuk household dan feed; tanpa tautan 404 `HOUSEHOLD_NOT_LINKED`;
+anggota keluarga lain 404; versi basi 409 `VERSION_CONFLICT`. Hak aktor diperiksa ulang di domain
+setelah keluarga dikunci (bukan dari relasi yang dimuat controller): akun utama yang dicabut
+bersamaan 403 `PRIMARY_ACCOUNT_REQUIRED`, akun yang dinonaktifkan/diarsipkan 403 `FORBIDDEN`,
+tautan yang berpindah keluarga 409 `CONFLICT`; deadlock/serialization yang lolos 409 `CONFLICT`.
+Kode 409 domain: `HOUSE_OCCUPIED`,
+`FAMILY_ALREADY_OCCUPYING`, `OCCUPANCY_ENDED`, `HOUSE_ARCHIVED`, `FAMILY_ARCHIVED`, `FAMILY_OCCUPYING`,
+`FAMILY_HAS_ACCOUNTS`, `HEAD_OF_FAMILY`, `RESIDENT_HAS_ACCOUNT`, `ACCOUNT_ARCHIVED`, `REQUEST_PENDING`,
+`ALREADY_ARCHIVED`, `HOUSE_EXISTS`; 422: `DATE_OVERLAP`, `DATE_IN_FUTURE`, `SAME_HOUSE`, `SAME_FAMILY`,
+`ALREADY_PRIMARY`, `ALREADY_HEAD`, `ACCOUNT_NOT_ACTIVE`, `ADMIN_ARCHIVE_OPERATOR_ONLY`, `MEMBER_PROTECTED`.
 
 ## Pengaduan dan aspirasi
 

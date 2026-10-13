@@ -4,6 +4,11 @@
 source aplikasi identik HEAD2dfe4ba yang seluruh CI-nya SUCCESS. Akun sintetis
 staging; tidak menggunakan production/data warga.
 
+Konfirmasi pemilik diterima13Oktober (dicatat05:45:44UTC): **Gmail utama yang
+sudah terhubung** untuk inbox uji. Pilihan ini sesuai default coordinator yang
+telah diumumkan dan dipakai saat uji di bawah; konfirmasi datang sesudah uji,
+bukan persetujuan yang dibakukan mundur. Email/reset tidak diulang.
+
 | Jalur | Bukti aktual (UTC) | Hasil |
 | --- | --- | --- |
 | Browser A | Gmail INBOX02:53:25; tautan email asli di Chrome, fragment dihapus; submit sekali | Reset sukses; verifier03:01:35: bearer lama401, sandi lama422, sandi baru200, kode ulang422 |

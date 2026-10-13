@@ -128,6 +128,9 @@ trait Concurrent
                     $this->fail("Worker selesai sebelum handshake '$label' (tidak menunggu lock yang diharapkan): ".$process->getErrorOutput().$process->getOutput());
                 }
             }
+            // pg_stat_activity di-snapshot per transaksi; tes yang memegang lock di dalam transaksi
+            // harus membuang snapshot itu agar setiap polling melihat status worker terbaru.
+            DB::select('SELECT pg_stat_clear_snapshot()');
             $n = (int) DB::selectOne($sql, ['rt05-race-'.$label, ...$bindings])->n;
             if ($n === $count) {
                 return;

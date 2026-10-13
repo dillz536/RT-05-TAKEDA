@@ -114,12 +114,12 @@ class AuthController extends Controller
         BrowserSession::start($request, $akun);
         Audit::record($akun, 'akun.login_web', 'akun', $akun->id);
 
-        return Api::data(Present::akun($akun->load('warga.keluarga.penghunianAktif.rumah')));
+        return Api::data(Present::akun($akun->load(Akun::PROFIL)));
     }
 
     public function me(Request $request): JsonResponse
     {
-        return Api::data(Present::akun($request->user()->load('warga.keluarga.penghunianAktif.rumah')));
+        return Api::data(Present::akun($request->user()->load(Akun::PROFIL)));
     }
 
     /** Bearer: cabut token perangkat ini. Cookie CMS: akhiri sesi browser ini (CSRF wajib). */
@@ -282,7 +282,7 @@ class AuthController extends Controller
             'token' => $token->plainTextToken,
             'token_type' => 'Bearer',
             'expires_at' => Present::ts($expires),
-            'akun' => Present::akun($akun->fresh()->load('warga.keluarga.penghunianAktif.rumah')),
+            'akun' => Present::akun($akun->fresh()->load(Akun::PROFIL)),
         ];
     }
 }

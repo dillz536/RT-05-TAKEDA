@@ -75,7 +75,7 @@ $result = match ($spec['kind']) {
             'HTTP_ACCEPT' => 'application/json',
             'CONTENT_TYPE' => 'application/json',
             'REMOTE_ADDR' => $spec['ip'] ?? '127.0.0.1',
-        ], json_encode($spec['body'] ?? [], JSON_THROW_ON_ERROR));
+        ] + (isset($spec['bearer']) ? ['HTTP_AUTHORIZATION' => 'Bearer '.$spec['bearer']] : []), json_encode($spec['body'] ?? [], JSON_THROW_ON_ERROR));
         $response = $http->handle($request);
         $body = json_decode((string) $response->getContent(), true);
 

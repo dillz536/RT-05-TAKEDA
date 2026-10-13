@@ -17,7 +17,7 @@ trait CommittedData
     /** Tabel anak lebih dulu agar FK RESTRICT tidak menolak penghapusan. */
     private const COMMITTED_TABLES = [
         'personal_access_tokens', 'password_reset_tokens', 'notifikasi', 'preferensi_notifikasi',
-        'permohonan_akun', 'audit_logs', 'outbox_events', 'token_registrasi', 'akun',
+        'permohonan_akun', 'audit_logs', 'outbox_events', 'token_registrasi', 'tautan_akun', 'keanggotaan_keluarga', 'akun',
         'penghunian', 'warga', 'keluarga', 'rumah',
     ];
 

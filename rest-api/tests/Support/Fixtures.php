@@ -34,6 +34,24 @@ trait Fixtures
         ], $overrides), $code);
     }
 
+    /** Akun tambahan menunggu persetujuan untuk alamat fixture warga($nomor). */
+    protected function pemohon(string $nomor, string $email, string $nama = 'Uji Tambahan'): Akun
+    {
+        return Registration::additional([
+            'email' => $email, 'password' => 'Rahasia123', 'nama' => $nama, 'hubungan_keluarga' => 'Anak',
+            'blok' => 'Z', 'jalan' => 'Jl. Uji', 'nomor' => $nomor,
+        ], $this->tokenCode ?? $this->freshToken());
+    }
+
+    /** Akun tambahan yang sudah disetujui pengurus (tautan bukan-utama ke keluarga rumah $nomor). */
+    protected function tambahan(string $nomor, string $email, ?Akun $pengurus = null): Akun
+    {
+        $akun = $this->pemohon($nomor, $email);
+        Registration::approve($akun->permohonan, $pengurus ?? $this->pengurus('penyetuju-'.$email), null, null);
+
+        return $akun->refresh();
+    }
+
     protected function pengurus(string $email = 'pengurus@contoh.test'): Akun
     {
         $akun = new Akun(['nama' => 'Uji Pengurus', 'email' => $email, 'password_hash' => 'Rahasia123', 'jenis' => 'utama', 'status' => 'aktif']);

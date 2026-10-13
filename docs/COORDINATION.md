@@ -1,5 +1,57 @@
 # Koordinasi RT05 TAKEDA
 
+## Penutupan M06–M07 — 13 Oktober 2026
+
+M06 dan M07 **passed**; source M07 `979634f` diterima di staging sintetis.
+Claude: 220tes/2125assertion, deploy additive, API live77/327, demonstrasi
+Android `task_767258d6330a`/`ctx_999485d251a5` selesai. Grok: 152tes,
+capability terbaru dan teks dirender320px/skala2. Semua9CI source SUCCESS.
+Kimi menyelesaikan M06; M07 provider-limit403 sebelum output, sehingga
+Claude cadangan membuat diagram dan root menerbitkan di native Drive existing.
+Panduan31gambar/4tabel/PDF37halaman dan laporan5halaman dibaca/render ulang.
+
+Worker final Android dilepas retained/external_terminal; Grok retained/
+user_takeover. Terminal pengguna dipertahankan, worker owned lain selesai/
+dilepas, mailbox kosong. Bukti [REPORT](evidence/m07/REPORT.md), API live,
+deploy, Android dan Drive tersimpan. Root menutup PR22 setelah CI head bukti;
+tidak memperluas review atau membuka M08. Source runtime tidak diubah.
+Catatan UI kecil dan batas production/UAT tercantum di laporan penerimaan.
+
+## Checkpoint historis M07 — 13 Oktober 2026
+
+M06 passed dan PR21 merged ke `main` (`bc57b4f`). Branch aktif
+`codex/m07-resident-data`; run `run_d783036e0906` dipertahankan.
+Claude implementasi `task_7fddc750520f`/`ctx_e158a2b66bd5` selesai (212 tes
+PostgreSQL lokal), worker dilepas. Review akses bersamaan sekarang
+`task_80f00e321932`/`ctx_1f2753e0f5b8` pada terminal baru.
+Grok `task_790c8c817259`/`ctx_d3e42fd5d5e5` selesai parsial (137 tes),
+terminal yang sama dialihkan ke `task_e7f9aa4f88e7`/`ctx_a5d09cdb5e3e`
+untuk seluruh aksi pengurus, pagination dan konflik versi tanpa kehilangan isian.
+Follow-up tersebut selesai146tes; terminal dilepas. Review root kemudian
+membuka `task_6d3d210196a6`/`ctx_979b8b302587` untuk capability household segar
+dan tes teks/error yang dirender (320px/skala2), bukan sekadar widget settings.
+Claude memiliki backend/kontrak/ERD; Grok mobile; root Git/CI/infra integrasi,
+Chrome/Stitch/Drive, penerimaan staging dan Android. Jangan commit file worker
+yang sedang berubah sebelum laporan final; `.agents/` milik pengguna dipertahankan.
+
+Kimi final `task_c22deef1be1a`/`ctx_68e40a169e90` menyelesaikan koreksi SMTP,
+worker_done valid diterima dan resource dilepas. Laporan dispatch lama yang
+ditolak capability tidak dihitung ulang. Root telah menerbitkan koreksi pada
+panduan/laporan native existing di Drive; 21 gambar/4 tabel dibaca kembali,
+dua halaman screenshot baru diperiksa dari ekspor PDF. File DOCX historis
+bukan salinan terkini native Doc. Gate M07 tetap menunggu CI/staging/perangkat.
+
+Percobaan dokumentasi M07 Kimi `task_0eedd9132c2c`/`ctx_15cc25715563`
+benar-benar membaca sumber, tetapi provider403 menyatakan limit5jam sebelum
+menulis artefak. `worker-stop` mengembalikan alreadySettled/none; kemudian
+`worker-release` menutup terminal worker yang tepat. Tidak ada restart/upgrade
+atau output Kimi M07 yang diklaim. Ownership draft dialihkan ke Claude
+`task_5a7d5ffb93eb`/`ctx_821e42a4cd20` hanya `docs/evidence/m07/drive/`
+dan DRIVE_UPDATE; penulis cadangan dicatat, publikasi tetap root.
+Draft cadangan selesai5PNG+prosa; reuse worker ke `task_4eba058596a5`/
+`ctx_a7d0690c2d67` membuat versi diagram native dengan huruf minimal44px.
+Detail teknis tetap disimpan sebagai tautan ukuran penuh; M06 tidak digambar ulang.
+
 Checkpoint13 Oktober: root menerima **M06 passed** sesudah dua reset dari email
 INBOX nyata/browser/Android dan verifier4/4 masing-masing. Claude/Grok completed;
 release mempertahankan terminal existing. Task penutupan dokumentasi Kimi
@@ -39,7 +91,7 @@ kode/domain tidak tumpang tindih. Folder Drive existing
 `1Dxax50Kckfuc2cCO4_PlanRIlNNQVLpsIN0S42s5VMU` diverifikasi ulang lewat
 connector. Status provider/deploy/M07 tidak dianggap selesai hanya oleh dispatch.
 
-## Tahap aktif
+## Riwayat tahap aktif M06
 
 **M06, instruksi rencana pemilik12 Oktober2026.** Baseline `fb6e59f` pada
 `codex/m06-account-access`. Kontrak [CONTRACT.md](evidence/m06/CONTRACT.md),

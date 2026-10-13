@@ -124,7 +124,7 @@ class Api {
 
   Future<dynamic> put(String path, {Object? data}) => _wrap(() => _dio.put(path, data: data), (b) => b is Map ? b['data'] : null);
 
-  Future<void> delete(String path) => _wrap(() => _dio.delete(path), (_) {});
+  Future<void> delete(String path, {Object? data}) => _wrap(() => _dio.delete(path, data: data), (_) {});
 }
 
 final apiProvider = Provider<Api>((ref) => Api(ref));

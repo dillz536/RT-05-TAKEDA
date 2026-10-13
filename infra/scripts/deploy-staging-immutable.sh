@@ -143,9 +143,9 @@ prepare_worktree() {
   if git -c safe.directory="$BARE" -C "$BARE" merge-base --is-ancestor "$sha" "$approved_head"; then
     trusted=1
   else
-    # M06 is explicitly authorized for synthetic staging; no wildcard/fork refs.
+    # M04/M06/M07 are authorized for synthetic staging; no wildcard/fork refs.
     local approved_ref
-    for approved_ref in refs/heads/codex/m04-staging-recovery refs/heads/codex/m06-account-access; do
+    for approved_ref in refs/heads/codex/m04-staging-recovery refs/heads/codex/m06-account-access refs/heads/codex/m07-resident-data; do
       if git -c safe.directory="$BARE" -C "$BARE" fetch --no-tags origin "$approved_ref"; then
         approved_head=$(git -c safe.directory="$BARE" -C "$BARE" rev-parse FETCH_HEAD)
         if git -c safe.directory="$BARE" -C "$BARE" merge-base --is-ancestor "$sha" "$approved_head"; then

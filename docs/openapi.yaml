@@ -84,13 +84,54 @@ paths:
   /api/v1/admin/accounts/{id}:
     parameters:
       - $ref: "#/components/parameters/Id"
+    get:
+      operationId: adminAccountsShow
+      tags:
+        - Residents
+      summary: Detail akun, riwayat tautan dan permohonan
+      x-status: implemented
+      x-milestone: M07
+      responses:
+        "200":
+          $ref: "#/components/responses/Data"
+        default:
+          $ref: "#/components/responses/Error"
     patch:
       operationId: patchUpdateAccountAdminAccounts
       tags:
         - Residents
-      summary: updateAccount /admin/accounts/{id}
+      summary: Aktif/nonaktif akun dengan alasan; peran tidak diterima
       x-status: implemented
       x-milestone: M07
+      description: Nonaktif mencabut bearer dan sesi. Akun diarsipkan → 409 ACCOUNT_ARCHIVED; menunggu → 422 PENDING_ACCOUNT; akun sendiri → 422.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountStatusInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/Data"
+        default:
+          $ref: "#/components/responses/Error"
+  /api/v1/admin/accounts/{id}/archive:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      operationId: adminAccountsArchive
+      tags:
+        - Residents
+      summary: Arsip akun warga, tutup tautan, cabut akses
+      x-status: implemented
+      x-milestone: M07
+      description: Final. Akun pengurus → 422 ADMIN_ARCHIVE_OPERATOR_ONLY; permohonan diajukan → 409 REQUEST_PENDING.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonInput"
       responses:
         "200":
           $ref: "#/components/responses/Data"
@@ -116,9 +157,16 @@ paths:
       operationId: adminAdditionalRequestsApprove
       tags:
         - Residents
-      summary: Setujui permohonan
+      summary: Setujui permohonan; tautan akun tambahan + keanggotaan atomik
       x-status: implemented
       x-milestone: M07
+      description: warga_id opsional menautkan anggota aktif tanpa akun. 409 REQUEST_ALREADY_PROCESSED/RESIDENT_HAS_ACCOUNT; 422 HOUSE_NOT_OCCUPIED.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveRequestInput"
       responses:
         "200":
           $ref: "#/components/responses/Data"
@@ -596,33 +644,143 @@ paths:
       operationId: adminFamiliesIndex
       tags:
         - Residents
-      summary: Daftar keluarga
-      x-status: planned
+      summary: Daftar keluarga (q, status, arsip)
+      x-status: implemented
       x-milestone: M07
       responses:
+        "200":
+          $ref: "#/components/responses/Data"
         default:
           $ref: "#/components/responses/Error"
     post:
       operationId: adminFamiliesStore
       tags:
         - Residents
-      summary: Tambah keluarga
-      x-status: planned
+      summary: Tambah keluarga; hunian opsional atomik
+      x-status: implemented
       x-milestone: M07
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FamilyCreateInput"
       responses:
+        "201":
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyDetailEnvelope"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/admin/families/{id}:
     parameters:
       - $ref: "#/components/parameters/Id"
+    get:
+      operationId: adminFamiliesShow
+      tags:
+        - Residents
+      summary: Detail keluarga + histori hunian/keanggotaan/tautan
+      x-status: implemented
+      x-milestone: M07
+      responses:
+        "200":
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyDetailEnvelope"
+        default:
+          $ref: "#/components/responses/Error"
     patch:
       operationId: adminFamiliesUpdate
       tags:
         - Residents
-      summary: Ubah keluarga
-      x-status: planned
+      summary: Ganti kepala keluarga (versi wajib)
+      x-status: implemented
       x-milestone: M07
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FamilyHeadInput"
       responses:
+        "200":
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyDetailEnvelope"
+        default:
+          $ref: "#/components/responses/Error"
+  /api/v1/admin/families/{id}/archive:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      operationId: adminFamiliesArchive
+      tags:
+        - Residents
+      summary: Arsip keluarga tanpa hunian/akun aktif
+      x-status: implemented
+      x-milestone: M07
+      description: 409 FAMILY_OCCUPYING atau FAMILY_HAS_ACCOUNTS; keanggotaan ditutup, histori tetap.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonInput"
+      responses:
+        "204":
+          description: Berhasil tanpa body.
+        default:
+          $ref: "#/components/responses/Error"
+  /api/v1/admin/families/{id}/members:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      operationId: adminFamiliesMemberStore
+      tags:
+        - Residents
+      summary: Tambah anggota keluarga
+      x-status: implemented
+      x-milestone: M07
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberCreateInput"
+      responses:
+        "201":
+          $ref: "#/components/responses/Data"
+        default:
+          $ref: "#/components/responses/Error"
+  /api/v1/admin/families/{id}/primary-account:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      operationId: adminFamiliesPrimaryAccount
+      tags:
+        - Residents
+      summary: Pindahkan akun utama ke akun tertaut lain
+      x-status: implemented
+      x-milestone: M07
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrimaryTransferInput"
+      responses:
+        "200":
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyDetailEnvelope"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/admin/families/{id}/verify:
@@ -632,9 +790,15 @@ paths:
       operationId: postVerifyFamilyAdminFamilies
       tags:
         - Residents
-      summary: verifyFamily /admin/families/{id}/verify
+      summary: Verifikasi keluarga
       x-status: implemented
       x-milestone: M07
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OptionalVersionInput"
       responses:
         "200":
           $ref: "#/components/responses/Data"
@@ -675,6 +839,7 @@ paths:
       summary: Detail rumah
       x-status: implemented
       x-milestone: M07
+      description: 'Memuat penghunian_aktif_id, riwayat_penghunian[].id (target end/move) dan pemilik (pengurus saja).'
       responses:
         "200":
           $ref: "#/components/responses/Data"
@@ -684,9 +849,16 @@ paths:
       operationId: adminHousesUpdate
       tags:
         - Residents
-      summary: Ubah rumah
+      summary: Koreksi alamat/pengaturan tagihan dengan alasan
       x-status: implemented
       x-milestone: M07
+      description: kode_rumah tidak diubah. Alamat ganda 409 HOUSE_EXISTS; versi basi 409 VERSION_CONFLICT; arsip 409 HOUSE_ARCHIVED.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HouseUpdateInput"
       responses:
         "200":
           $ref: "#/components/responses/Data"
@@ -699,9 +871,15 @@ paths:
       operationId: adminHousesArchive
       tags:
         - Residents
-      summary: Arsip rumah; histori keuangan tetap
+      summary: Arsip rumah; hunian aktif diakhiri, histori keuangan tetap
       x-status: implemented
       x-milestone: M07
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonInput"
       responses:
         "204":
           description: Berhasil tanpa body.
@@ -727,10 +905,19 @@ paths:
       operationId: adminOccupanciesStore
       tags:
         - Residents
-      summary: Mulai hunian/link
-      x-status: planned
+      summary: Mulai hunian keluarga di rumah
+      x-status: implemented
       x-milestone: M07
+      description: 409 HOUSE_OCCUPIED, FAMILY_ALREADY_OCCUPYING, HOUSE_ARCHIVED, FAMILY_ARCHIVED; 422 DATE_OVERLAP/DATE_IN_FUTURE. Tagihan tidak berubah.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OccupancyStartInput"
       responses:
+        "201":
+          $ref: "#/components/responses/Data"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/admin/occupancies/{id}/end:
@@ -741,9 +928,39 @@ paths:
       tags:
         - Residents
       summary: Akhiri hunian
-      x-status: planned
+      x-status: implemented
       x-milestone: M07
+      description: 409 OCCUPANCY_ENDED. Tagihan/tunggakan tetap di rumah.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OccupancyEndInput"
       responses:
+        "200":
+          $ref: "#/components/responses/Data"
+        default:
+          $ref: "#/components/responses/Error"
+  /api/v1/admin/occupancies/{id}/move:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      operationId: adminOccupanciesMove
+      tags:
+        - Residents
+      summary: 'Pindah rumah: akhiri dan mulai hunian atomik'
+      x-status: implemented
+      x-milestone: M07
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OccupancyMoveInput"
+      responses:
+        "201":
+          $ref: "#/components/responses/Data"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/admin/registration-token:
@@ -779,10 +996,12 @@ paths:
       operationId: adminResidentsShow
       tags:
         - Residents
-      summary: Detail anggota
-      x-status: planned
+      summary: Detail anggota + riwayat keanggotaan
+      x-status: implemented
       x-milestone: M07
       responses:
+        "200":
+          $ref: "#/components/responses/Data"
         default:
           $ref: "#/components/responses/Error"
     patch:
@@ -790,9 +1009,60 @@ paths:
       tags:
         - Residents
       summary: Ubah anggota
-      x-status: planned
+      x-status: implemented
       x-milestone: M07
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberUpdateInput"
       responses:
+        "200":
+          $ref: "#/components/responses/Data"
+        default:
+          $ref: "#/components/responses/Error"
+  /api/v1/admin/residents/{id}/end:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      operationId: adminResidentsEnd
+      tags:
+        - Residents
+      summary: Akhiri keanggotaan (pindah/meninggal)
+      x-status: implemented
+      x-milestone: M07
+      description: 409 HEAD_OF_FAMILY atau RESIDENT_HAS_ACCOUNT; anggota dipindah keluarga bersamaan 409 CONFLICT. alasan disimpan di audit warga.diarsipkan.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResidentEndInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/Data"
+        default:
+          $ref: "#/components/responses/Error"
+  /api/v1/admin/residents/{id}/move:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      operationId: adminResidentsMove
+      tags:
+        - Residents
+      summary: Pindah anggota ke keluarga lain; tautan akun ikut sebagai tambahan
+      x-status: implemented
+      x-milestone: M07
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResidentMoveInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/Data"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/admin/site-profile:
@@ -803,42 +1073,6 @@ paths:
       summary: Fakta profil tervalidasi
       x-status: planned
       x-milestone: M13
-      responses:
-        default:
-          $ref: "#/components/responses/Error"
-  /api/v1/admin/users/{id}:
-    parameters:
-      - $ref: "#/components/parameters/Id"
-    get:
-      operationId: adminUsersShow
-      tags:
-        - Residents
-      summary: Detail akun
-      x-status: planned
-      x-milestone: M07
-      responses:
-        default:
-          $ref: "#/components/responses/Error"
-    patch:
-      operationId: adminUsersUpdate
-      tags:
-        - Residents
-      summary: Ubah status akun (tanpa role mass-assignment)
-      x-status: planned
-      x-milestone: M07
-      responses:
-        default:
-          $ref: "#/components/responses/Error"
-  /api/v1/admin/users/{id}/archive:
-    parameters:
-      - $ref: "#/components/parameters/Id"
-    post:
-      operationId: adminUsersArchive
-      tags:
-        - Residents
-      summary: Arsip akun dan cabut akses
-      x-status: planned
-      x-milestone: M07
       responses:
         default:
           $ref: "#/components/responses/Error"
@@ -1400,24 +1634,40 @@ paths:
       operationId: householdShow
       tags:
         - Residents
-      summary: Rumah/keluarga akun sendiri
+      summary: Rumah/keluarga akun sendiri dari tautan aktif
       x-status: implemented
       x-milestone: M07
+      description: Akun tanpa tautan aktif 404 HOUSEHOLD_NOT_LINKED; akun menunggu 403.
       responses:
         "200":
-          $ref: "#/components/responses/Data"
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseholdEnvelope"
         default:
           $ref: "#/components/responses/Error"
     patch:
       operationId: householdUpdate
       tags:
         - Residents
-      summary: Akun utama memperbarui data keluarga (version)
+      summary: Akun utama memperbarui data kepala keluarga (versi wajib)
       x-status: implemented
       x-milestone: M07
+      description: 'Akun tambahan 403 PRIMARY_ACCOUNT_REQUIRED; versi basi 409 VERSION_CONFLICT. Hak diperiksa ulang di bawah lock keluarga: hak utama/akun dicabut bersamaan 403 PRIMARY_ACCOUNT_REQUIRED/FORBIDDEN, tautan pindah keluarga 409 CONFLICT.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HouseholdUpdateInput"
       responses:
         "200":
-          $ref: "#/components/responses/Data"
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseholdEnvelope"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/household/members:
@@ -1428,6 +1678,13 @@ paths:
       summary: Tambah anggota keluarga sendiri
       x-status: implemented
       x-milestone: M07
+      description: 'versi wajib (hilang 422, basi 409). Hak diperiksa ulang di bawah lock keluarga: hak utama/akun dicabut bersamaan 403 PRIMARY_ACCOUNT_REQUIRED/FORBIDDEN, tautan pindah keluarga 409 CONFLICT.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberCreateInput"
       responses:
         "201":
           $ref: "#/components/responses/Data"
@@ -1443,6 +1700,13 @@ paths:
       summary: Ubah anggota keluarga sendiri
       x-status: implemented
       x-milestone: M07
+      description: 'Anggota keluarga lain 404; versi wajib (hilang 422, basi 409). Hak diperiksa ulang di bawah lock keluarga: hak utama/akun dicabut bersamaan 403 PRIMARY_ACCOUNT_REQUIRED/FORBIDDEN, tautan pindah keluarga 409 CONFLICT.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberUpdateInput"
       responses:
         "200":
           $ref: "#/components/responses/Data"
@@ -1455,6 +1719,7 @@ paths:
       summary: Akhiri keanggotaan (arsip, bukan hapus)
       x-status: implemented
       x-milestone: M07
+      description: 'versi wajib (body JSON atau query); status pindah|meninggal opsional. Hilang 422, basi 409; kepala/anggota berakun 422 MEMBER_PROTECTED. Hak diperiksa ulang di bawah lock keluarga: hak utama/akun dicabut bersamaan 403 PRIMARY_ACCOUNT_REQUIRED/FORBIDDEN, tautan pindah keluarga 409 CONFLICT.'
       responses:
         "204":
           description: Berhasil tanpa body.
@@ -1548,6 +1813,19 @@ paths:
           $ref: "#/components/responses/Data"
         default:
           $ref: "#/components/responses/Error"
+  /api/v1/notifications/read-all:
+    post:
+      operationId: notificationsReadAll
+      tags:
+        - Community
+      summary: Tandai semua dibaca
+      x-status: implemented
+      x-milestone: M10
+      responses:
+        "200":
+          $ref: "#/components/responses/Data"
+        default:
+          $ref: "#/components/responses/Error"
   /api/v1/notifications/{id}/read:
     parameters:
       - $ref: "#/components/parameters/Id"
@@ -1556,19 +1834,6 @@ paths:
       tags:
         - Community
       summary: Tandai dibaca
-      x-status: implemented
-      x-milestone: M10
-      responses:
-        "200":
-          $ref: "#/components/responses/Data"
-        default:
-          $ref: "#/components/responses/Error"
-  /api/v1/notifications/read-all:
-    post:
-      operationId: notificationsReadAll
-      tags:
-        - Community
-      summary: Tandai semua dibaca
       x-status: implemented
       x-milestone: M10
       responses:
@@ -1709,19 +1974,6 @@ paths:
                 status: not_ready
                 checks:
                   database: unavailable
-  /sanctum/csrf-cookie:
-    get:
-      operationId: authCsrfCookie
-      tags: [Identity]
-      summary: Inisialisasi cookie CSRF API untuk CMS
-      x-status: implemented
-      x-milestone: M06
-      security: []
-      responses:
-        "204":
-          description: Cookie rt05_api_xsrf dan rt05_api_session; CMS membaca rt05_api_xsrf lalu mengirim X-XSRF-TOKEN. Cookie API terpisah dari cookie website.
-        default:
-          $ref: "#/components/responses/Error"
   /reset-password:
     get:
       operationId: authResetPasswordForm
@@ -1736,6 +1988,19 @@ paths:
           content:
             text/html:
               schema: {type: string}
+        default:
+          $ref: "#/components/responses/Error"
+  /sanctum/csrf-cookie:
+    get:
+      operationId: authCsrfCookie
+      tags: [Identity]
+      summary: Inisialisasi cookie CSRF API untuk CMS
+      x-status: implemented
+      x-milestone: M06
+      security: []
+      responses:
+        "204":
+          description: Cookie rt05_api_xsrf dan rt05_api_session; CMS membaca rt05_api_xsrf lalu mengirim X-XSRF-TOKEN. Cookie API terpisah dari cookie website.
         default:
           $ref: "#/components/responses/Error"
 security:
@@ -2081,3 +2346,250 @@ components:
           $ref: "#/components/schemas/Meta"
         links:
           type: object
+    Versi:
+      type: integer
+      minimum: 1
+      description: Optimistic version (keluarga.versi atau rumah.versi). Nilai basi → 409 VERSION_CONFLICT.
+    Whatsapp:
+      type: [string, 'null']
+      maxLength: 25
+      pattern: '^[0-9+ -]{8,25}$'
+    ReasonInput:
+      type: object
+      required: [alasan]
+      properties:
+        alasan: {type: string, minLength: 1, maxLength: 300}
+    OptionalVersionInput:
+      type: object
+      required: [versi]
+      properties:
+        versi: {$ref: '#/components/schemas/Versi'}
+    AccountStatusInput:
+      type: object
+      required: [status, alasan]
+      description: Tidak menerima peran; grant/revoke pengurus hanya command operator.
+      properties:
+        status: {type: string, enum: [aktif, nonaktif]}
+        alasan: {type: string, minLength: 1, maxLength: 300}
+    ApproveRequestInput:
+      type: object
+      properties:
+        rumah_id: {type: [string, 'null'], format: uuid}
+        warga_id: {type: [string, 'null'], format: uuid, description: Anggota aktif keluarga rumah tersebut yang belum punya akun.}
+        catatan: {type: [string, 'null'], maxLength: 300}
+    HouseholdUpdateInput:
+      type: object
+      required: [versi]
+      properties:
+        versi: {$ref: '#/components/schemas/Versi'}
+        whatsapp: {$ref: '#/components/schemas/Whatsapp'}
+        nama_kepala: {type: string, minLength: 1, maxLength: 120}
+    MemberCreateInput:
+      type: object
+      required: [nama, hubungan_keluarga, versi]
+      description: Respons 201 memuat Member + versi_keluarga terbaru.
+      properties:
+        nama: {type: string, minLength: 1, maxLength: 120}
+        hubungan_keluarga: {type: string, minLength: 1, maxLength: 40}
+        whatsapp: {$ref: '#/components/schemas/Whatsapp'}
+        versi: {$ref: '#/components/schemas/Versi'}
+    MemberUpdateInput:
+      type: object
+      required: [versi]
+      description: Respons memuat versi_keluarga terbaru.
+      properties:
+        nama: {type: string, minLength: 1, maxLength: 120}
+        hubungan_keluarga: {type: string, minLength: 1, maxLength: 40}
+        whatsapp: {$ref: '#/components/schemas/Whatsapp'}
+        versi: {$ref: '#/components/schemas/Versi'}
+    FamilyCreateInput:
+      type: object
+      required: [nama_kepala]
+      properties:
+        nama_kepala: {type: string, minLength: 1, maxLength: 120}
+        hubungan_kepala: {type: [string, 'null'], maxLength: 40}
+        whatsapp: {$ref: '#/components/schemas/Whatsapp'}
+        anggota:
+          type: array
+          maxItems: 20
+          items: {$ref: '#/components/schemas/MemberCreateInput'}
+        rumah_id: {type: [string, 'null'], format: uuid}
+        jenis_hunian: {type: [string, 'null'], enum: [pemilik, kontrak, null], description: Wajib bila rumah_id dikirim.}
+        mulai_tanggal: {type: [string, 'null'], format: date}
+    FamilyHeadInput:
+      type: object
+      required: [versi, kepala_warga_id]
+      properties:
+        versi: {$ref: '#/components/schemas/Versi'}
+        kepala_warga_id: {type: string, format: uuid}
+    PrimaryTransferInput:
+      type: object
+      required: [akun_id, versi, alasan]
+      properties:
+        akun_id: {type: string, format: uuid}
+        versi: {$ref: '#/components/schemas/Versi'}
+        alasan: {type: string, minLength: 1, maxLength: 300}
+    HouseUpdateInput:
+      type: object
+      required: [alasan, versi]
+      properties:
+        blok: {type: [string, 'null'], maxLength: 30}
+        jalan: {type: string, maxLength: 150}
+        nomor: {type: string, maxLength: 20}
+        tagihan_aktif: {type: boolean}
+        mulai_tagih: {type: [string, 'null'], pattern: '^\d{4}-\d{2}$'}
+        pemilik:
+          type: [object, 'null']
+          description: Pemilik rumah (bukan otomatis penghuni/kepala), hanya terlihat pengurus. null melepas tautan tanpa hard-delete.
+          required: [nama]
+          properties:
+            nama: {type: string, minLength: 1, maxLength: 120}
+            whatsapp: {$ref: '#/components/schemas/Whatsapp'}
+            catatan: {type: [string, 'null'], maxLength: 300}
+        alasan: {type: string, minLength: 1, maxLength: 300}
+        versi: {$ref: '#/components/schemas/Versi'}
+    ResidentEndInput:
+      type: object
+      required: [status, alasan, versi]
+      properties:
+        status: {type: string, enum: [pindah, meninggal]}
+        alasan: {type: string, minLength: 1, maxLength: 300}
+        versi: {$ref: '#/components/schemas/Versi'}
+    ResidentMoveInput:
+      type: object
+      required: [keluarga_id, hubungan_keluarga, alasan, versi]
+      properties:
+        versi: {$ref: '#/components/schemas/Versi'}
+        keluarga_id: {type: string, format: uuid}
+        hubungan_keluarga: {type: string, minLength: 1, maxLength: 40}
+        alasan: {type: string, minLength: 1, maxLength: 300}
+    OccupancyStartInput:
+      type: object
+      required: [rumah_id, keluarga_id, jenis_hunian]
+      properties:
+        rumah_id: {type: string, format: uuid}
+        keluarga_id: {type: string, format: uuid}
+        jenis_hunian: {type: string, enum: [pemilik, kontrak]}
+        mulai_tanggal: {type: [string, 'null'], format: date, description: 'Asia/Jakarta, default hari ini, tidak boleh masa depan.'}
+    OccupancyEndInput:
+      type: object
+      required: [alasan]
+      properties:
+        selesai_tanggal: {type: [string, 'null'], format: date}
+        alasan: {type: string, minLength: 1, maxLength: 300}
+    OccupancyMoveInput:
+      type: object
+      required: [rumah_id, alasan]
+      properties:
+        rumah_id: {type: string, format: uuid}
+        jenis_hunian: {type: [string, 'null'], enum: [pemilik, kontrak, null]}
+        tanggal: {type: [string, 'null'], format: date}
+        alasan: {type: string, minLength: 1, maxLength: 300}
+    HouseSummary:
+      type: object
+      additionalProperties: false
+      required: [id, kode_rumah, blok, jalan, nomor, alamat, tagihan_aktif, mulai_tagih, versi, archived_at]
+      properties:
+        id: {type: string, format: uuid}
+        kode_rumah: {type: string}
+        blok: {type: [string, 'null']}
+        jalan: {type: string}
+        nomor: {type: string}
+        alamat: {type: string}
+        tagihan_aktif: {type: boolean}
+        mulai_tagih: {type: [string, 'null'], pattern: '^\d{4}-\d{2}$'}
+        versi: {type: integer}
+        archived_at: {type: [string, 'null'], format: date-time}
+    Member:
+      type: object
+      required: [id, nama, hubungan_keluarga, is_kepala, whatsapp, status, punya_akun]
+      properties:
+        id: {type: string, format: uuid}
+        nama: {type: string}
+        hubungan_keluarga: {type: string}
+        is_kepala: {type: boolean}
+        whatsapp: {type: [string, 'null']}
+        status: {type: string, enum: [aktif, pindah, meninggal]}
+        punya_akun: {type: [boolean, 'null'], description: Tautan akun aktif.}
+    Household:
+      type: object
+      required: [id, status, versi, rumah, jenis_hunian, anggota]
+      properties:
+        id: {type: string, format: uuid}
+        status: {type: string, enum: [belum_verifikasi, terverifikasi]}
+        versi: {type: integer, minimum: 1}
+        rumah:
+          oneOf:
+            - {$ref: '#/components/schemas/HouseSummary'}
+            - {type: 'null'}
+        jenis_hunian: {type: [string, 'null'], enum: [pemilik, kontrak, null]}
+        anggota:
+          type: array
+          items: {$ref: '#/components/schemas/Member'}
+        dapat_ubah: {type: boolean, description: 'GET /household: true untuk akun utama/pengurus, false untuk akun tambahan.'}
+    HouseholdEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/Household'
+            - required: [dapat_ubah]
+        meta: {$ref: '#/components/schemas/Meta'}
+    Membership:
+      type: object
+      additionalProperties: false
+      required: [id, keluarga_id, warga, hubungan_keluarga, mulai_at, selesai_at, alasan_selesai, sumber]
+      properties:
+        id: {type: string, format: uuid}
+        keluarga_id: {type: string, format: uuid}
+        warga: {type: object, required: [id], properties: {id: {type: string, format: uuid}, nama: {type: string}}}
+        hubungan_keluarga: {type: string}
+        mulai_at: {type: [string, 'null'], format: date-time, description: null = tercatat sebelum M07 (tidak diketahui).}
+        selesai_at: {type: [string, 'null'], format: date-time}
+        alasan_selesai: {type: [string, 'null'], enum: [pindah_keluarga, pindah, meninggal, diarsipkan, null]}
+        sumber: {type: string, enum: [migrasi, registrasi, persetujuan, akun_utama, pengurus]}
+    AccountLink:
+      type: object
+      additionalProperties: false
+      required: [id, akun, warga, keluarga_id, is_utama, mulai_at, selesai_at, alasan_selesai, sumber]
+      properties:
+        id: {type: string, format: uuid}
+        akun: {type: object, required: [id], properties: {id: {type: string, format: uuid}, nama: {type: string}, email: {type: string}, status: {type: string}}}
+        warga: {type: object, required: [id], properties: {id: {type: string, format: uuid}, nama: {type: string}}}
+        keluarga_id: {type: string, format: uuid}
+        is_utama: {type: boolean}
+        mulai_at: {type: [string, 'null'], format: date-time}
+        selesai_at: {type: [string, 'null'], format: date-time}
+        alasan_selesai: {type: [string, 'null'], enum: [pindah_keluarga, pergantian_utama, akun_diarsipkan, diarsipkan, null]}
+        sumber: {type: string, enum: [migrasi, registrasi, persetujuan, pengurus]}
+    Occupancy:
+      type: object
+      additionalProperties: false
+      required: [id, rumah, keluarga_id, jenis_hunian, mulai_tanggal, selesai_tanggal, aktif]
+      properties:
+        id: {type: string, format: uuid}
+        rumah: {type: [object, 'null']}
+        keluarga_id: {type: string, format: uuid}
+        jenis_hunian: {type: string, enum: [pemilik, kontrak]}
+        mulai_tanggal: {type: string, format: date}
+        selesai_tanggal: {type: [string, 'null'], format: date}
+        aktif: {type: boolean}
+    FamilyDetailEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        meta: {$ref: '#/components/schemas/Meta'}
+        data:
+          allOf:
+            - $ref: '#/components/schemas/Household'
+            - type: object
+              required: [archived_at, created_at, penghunian, riwayat_keanggotaan, akun]
+              properties:
+                archived_at: {type: [string, 'null'], format: date-time}
+                created_at: {type: string, format: date-time}
+                penghunian: {type: array, items: {$ref: '#/components/schemas/Occupancy'}}
+                riwayat_keanggotaan: {type: array, items: {$ref: '#/components/schemas/Membership'}}
+                akun: {type: array, items: {$ref: '#/components/schemas/AccountLink'}}

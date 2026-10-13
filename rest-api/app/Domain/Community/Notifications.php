@@ -99,19 +99,23 @@ final class Notifications
         return Akun::where('status', 'aktif')->pluck('id');
     }
 
-    /** Akun utama aktif pada keluarga yang menghuni rumah (penerima pengingat iuran, BR v1). */
+    /**
+     * Akun utama aktif pada keluarga yang menghuni rumah (penerima pengingat iuran, BR v1).
+     * M07: dari tautan_akun aktif is_utama, bukan pointer akun.warga_id/jenis.
+     */
     public static function primaryAccountsOf(?string $rumahId): Collection
     {
         if (! $rumahId) {
             return collect();
         }
 
-        return DB::table('akun')
-            ->join('warga', 'warga.id', '=', 'akun.warga_id')
-            ->join('penghunian', 'penghunian.keluarga_id', '=', 'warga.keluarga_id')
+        return DB::table('tautan_akun')
+            ->join('akun', 'akun.id', '=', 'tautan_akun.akun_id')
+            ->join('penghunian', 'penghunian.keluarga_id', '=', 'tautan_akun.keluarga_id')
             ->where('penghunian.rumah_id', $rumahId)
             ->whereNull('penghunian.selesai_tanggal')
-            ->where('akun.jenis', 'utama')
+            ->whereNull('tautan_akun.selesai_at')
+            ->where('tautan_akun.is_utama', true)
             ->where('akun.status', 'aktif')
             ->pluck('akun.id');
     }
