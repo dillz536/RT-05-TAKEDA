@@ -10,6 +10,7 @@ import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../core/session.dart';
 import '../../core/widgets.dart';
+import '../auth/account_access.dart';
 import 'providers.dart';
 
 // ─────────────────────────────────────────── Beranda warga
@@ -1136,24 +1137,42 @@ class AccountPage extends ConsumerWidget {
               builder: (d) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Expanded(child: Text('${(d['rumah'] as Map?)?['alamat'] ?? ''} (${d['jenis_hunian'] ?? '-'})')),
+                      Text('${(d['rumah'] as Map?)?['alamat'] ?? ''} (${d['jenis_hunian'] ?? '-'})'),
                       StatusChip(
                         d['status'] == 'terverifikasi' ? 'aktif' : 'menunggu',
                         label: d['status'] == 'terverifikasi' ? 'Terverifikasi' : 'Belum diverifikasi',
                       ),
                     ],
                   ),
+                  if (akun.jenis == 'utama' && d['status'] != 'terverifikasi') ...[
+                    const SizedBox(height: 8),
+                    const Text('Akun utama sudah aktif. Keluarga belum diverifikasi pengurus.', style: TextStyle(color: Brand.muted, height: 1.35)),
+                  ],
                   const SizedBox(height: 8),
                   for (final w in (d['anggota'] as List).cast<Map>())
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(w['is_kepala'] == true ? Icons.star_rounded : Icons.person_outline, color: Brand.navy),
-                      title: Text('${w['nama']}'),
-                      subtitle: Text('${w['hubungan_keluarga']}${w['punya_akun'] == true ? ' • punya akun' : ''}'),
-                      trailing: akun.dapatUbahKeluarga && w['is_kepala'] != true && w['punya_akun'] != true
-                          ? IconButton(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(w['is_kepala'] == true ? Icons.star_rounded : Icons.person_outline, color: Brand.navy),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('${w['nama']}'),
+                                Text('${w['hubungan_keluarga']}${w['punya_akun'] == true ? ' • punya akun' : ''}', style: const TextStyle(color: Brand.muted)),
+                              ],
+                            ),
+                          ),
+                          if (akun.dapatUbahKeluarga && w['is_kepala'] != true && w['punya_akun'] != true)
+                            IconButton(
                               tooltip: 'Tandai pindah',
                               icon: const Icon(Icons.logout),
                               onPressed: () async {
@@ -1163,8 +1182,9 @@ class AccountPage extends ConsumerWidget {
                                 await ref.read(apiProvider).delete('/household/members/${w['id']}');
                                 ref.invalidate(householdProvider);
                               },
-                            )
-                          : null,
+                            ),
+                        ],
+                      ),
                     ),
                   if (!akun.dapatUbahKeluarga)
                     const Text('Perubahan data keluarga dilakukan oleh akun utama.', style: TextStyle(color: Brand.muted, fontSize: 13)),
@@ -1174,30 +1194,7 @@ class AccountPage extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: 16),
-        SectionCard(
-          title: 'Keamanan',
-          child: Column(
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.password),
-                title: const Text('Ganti kata sandi'),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordPage())),
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.logout, color: Brand.danger),
-                title: const Text('Keluar', style: TextStyle(color: Brand.danger)),
-                onTap: () async {
-                  try {
-                    await ref.read(apiProvider).post('/auth/logout');
-                  } catch (_) {}
-                  await ref.read(sessionProvider.notifier).signOut();
-                },
-              ),
-            ],
-          ),
-        ),
+        const _AccountSecurity(),
         const SizedBox(height: 16),
         const Center(
           child: Text('RT05 TAKEDA • data warga hanya untuk administrasi RT', style: TextStyle(color: Brand.muted, fontSize: 12)),
@@ -1207,6 +1204,111 @@ class AccountPage extends ConsumerWidget {
   }
 }
 
+class _AccountSecurity extends ConsumerStatefulWidget {
+  const _AccountSecurity();
+
+  @override
+  ConsumerState<_AccountSecurity> createState() => _AccountSecurityState();
+}
+
+class _AccountSecurityState extends ConsumerState<_AccountSecurity> {
+  bool _busy = false;
+
+  Future<void> _guard(Future<void> Function() action) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _logout() => _guard(() async {
+    try {
+      await revokeServerSession(ref, path: '/auth/logout');
+    } on ApiException catch (error) {
+      if (mounted) showMessage(context, keptSessionMessage(error), error: true);
+    }
+  });
+
+  Future<void> _logoutAll() => _guard(() async {
+    final password = await askCurrentPassword(context);
+    if (password == null || password.isEmpty || !mounted) return;
+    try {
+      await revokeServerSession(ref, path: '/auth/logout-all', data: {'password': password});
+    } on ApiException catch (error) {
+      if (mounted) showMessage(context, keptSessionMessage(error), error: true);
+    }
+  });
+
+  @override
+  Widget build(BuildContext context) => SectionCard(
+    title: 'Keamanan',
+    child: Column(
+      children: [
+        _SecurityTile(
+          icon: Icons.password,
+          title: 'Ganti kata sandi',
+          onTap: _busy ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordPage())),
+        ),
+        _SecurityTile(
+          icon: Icons.devices,
+          title: 'Keluar dari semua perangkat',
+          subtitle: 'Mencabut semua token setelah kata sandi dikonfirmasi.',
+          onTap: _busy ? null : _logoutAll,
+        ),
+        _SecurityTile(
+          icon: Icons.logout,
+          iconColor: Brand.danger,
+          title: 'Keluar',
+          titleColor: Brand.danger,
+          subtitle: 'Mencabut token perangkat ini di server, lalu menghapusnya dari perangkat.',
+          onTap: _busy ? null : _logout,
+        ),
+      ],
+    ),
+  );
+}
+
+class _SecurityTile extends StatelessWidget {
+  const _SecurityTile({required this.icon, required this.title, required this.onTap, this.subtitle, this.iconColor = Brand.navy, this.titleColor});
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onTap;
+  final Color iconColor;
+  final Color? titleColor;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: iconColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(color: titleColor, fontWeight: FontWeight.w700),
+                ),
+                if (subtitle != null) Text(subtitle!, style: const TextStyle(color: Brand.muted)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class ChangePasswordPage extends ConsumerStatefulWidget {
   const ChangePasswordPage({super.key});
   @override
@@ -1214,51 +1316,101 @@ class ChangePasswordPage extends ConsumerStatefulWidget {
 }
 
 class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
+  final _form = GlobalKey<FormState>();
   final _old = TextEditingController();
   final _new = TextEditingController();
   final _again = TextEditingController();
+  var _busy = false;
+  var _fields = <String, List<String>>{};
+  String? _error;
+
+  @override
+  void dispose() {
+    _old.dispose();
+    _new.dispose();
+    _again.dispose();
+    super.dispose();
+  }
+
+  String? _err(String key) => _fields[key]?.first;
+
+  Future<void> _submit() async {
+    if (_busy) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _busy = true;
+      _fields = {};
+      _error = null;
+    });
+    if (!_form.currentState!.validate()) {
+      if (mounted) setState(() => _busy = false);
+      return;
+    }
+    final session = ref.read(sessionProvider.notifier);
+    final epoch = session.epoch;
+    final token = ref.read(sessionProvider).token;
+    try {
+      await ref.read(apiProvider).patch('/auth/password', data: {'current_password': _old.text, 'password': _new.text, 'password_confirmation': _again.text});
+      if (!mounted || session.epoch != epoch || ref.read(sessionProvider).token != token) return;
+      showMessage(context, 'Kata sandi diperbarui. Perangkat lain telah dikeluarkan.');
+      Navigator.pop(context);
+    } on ApiException catch (error) {
+      if (!mounted || session.epoch != epoch || ref.read(sessionProvider).token != token) return;
+      setState(() {
+        _fields = error.fields;
+        _error = error.fields.isEmpty ? error.display : 'Periksa kembali isian yang ditandai.';
+      });
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Ganti kata sandi')),
-    body: ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        TextField(
-          controller: _old,
-          obscureText: true,
-          decoration: const InputDecoration(labelText: 'Kata sandi saat ini'),
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _new,
-          obscureText: true,
-          decoration: const InputDecoration(labelText: 'Kata sandi baru (min. 8, huruf & angka)'),
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _again,
-          obscureText: true,
-          decoration: const InputDecoration(labelText: 'Ulangi kata sandi baru'),
-        ),
-        const SizedBox(height: 20),
-        BusyButton(
-          label: 'Simpan',
-          onPressed: () async {
-            try {
-              await ref
-                  .read(apiProvider)
-                  .patch('/auth/password', data: {'current_password': _old.text, 'password': _new.text, 'password_confirmation': _again.text});
-              if (context.mounted) {
-                showMessage(context, 'Kata sandi diperbarui. Perangkat lain telah dikeluarkan.');
-                Navigator.pop(context);
-              }
-            } on ApiException catch (e) {
-              if (context.mounted) showMessage(context, e.display, error: true);
-            }
-          },
-        ),
-      ],
+    body: Form(
+      key: _form,
+      child: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.all(16),
+        children: [
+          TextFormField(
+            key: const ValueKey('field-current-password'),
+            controller: _old,
+            obscureText: true,
+            decoration: InputDecoration(labelText: 'Kata sandi saat ini', errorText: _err('current_password'), errorMaxLines: 16),
+            validator: (value) => (value == null || value.isEmpty) ? 'Wajib diisi' : null,
+          ),
+          const SizedBox(height: 14),
+          TextFormField(
+            key: const ValueKey('field-new-password'),
+            controller: _new,
+            obscureText: true,
+            decoration: passwordRuleDecoration(label: 'Kata sandi baru', errorText: _err('password')),
+            validator: validateNewPassword,
+          ),
+          const SizedBox(height: 14),
+          TextFormField(
+            key: const ValueKey('field-new-password2'),
+            controller: _again,
+            obscureText: true,
+            decoration: InputDecoration(labelText: 'Ulangi kata sandi baru', errorText: _err('password_confirmation'), errorMaxLines: 16),
+            validator: (value) {
+              final match = validatePasswordConfirmation(value, _new.text);
+              if (match != null) return match;
+              if (value == _old.text) return 'Kata sandi baru harus berbeda.';
+              return null;
+            },
+          ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(_error!, style: const TextStyle(color: Brand.danger)),
+            ),
+          const SizedBox(height: 20),
+          BusyButton(label: 'Simpan', onPressed: _busy ? null : _submit),
+        ],
+      ),
     ),
   );
 }

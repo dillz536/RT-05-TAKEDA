@@ -1,13 +1,59 @@
 # Koordinasi RT05 TAKEDA
 
-Instruksi pemilik 11 Oktober 2026: Codex mengelola Claude Code, Grok, dan Kimi;
+Checkpoint13 Oktober: root menerima **M06 passed** sesudah dua reset dari email
+INBOX nyata/browser/Android dan verifier4/4 masing-masing. Claude/Grok completed;
+release mempertahankan terminal existing. Task penutupan dokumentasi Kimi
+task_84cb2119d017/ctx_b7ab54d137ff menyelesaikan proposal Native Doc dan diagram
+SMTP aktual; receipt awal agent_prompt_stalled bukan bukti tidak bekerja.
+Root menjaga publikasi cloud dan Git. M07 menjadi tahap berikut sesudah checkpoint
+M06 disimpan. Run tetap run_d783036e0906; jangan mengulang rollout/SMTP/forgot.
+
+Wait background Claude sempat dihentikan oleh Claude Code karena RAM PC kritis;
+root membaca status, lalu membangunkan task yang sama untuk verify B langsung.
+Status sender/key/config dan inbox tidak perlu ditebak dari terminal idle.
+Ini kejadian baru yang terverifikasi, bukan kepastian sebab CLI lama tertutup.
+
+Instruksi awal pemilik 11 Oktober 2026: Codex mengelola Claude Code, Grok, dan Kimi;
 pekerjaan dilanjutkan dari checkpoint Claude, satu tahap dengan bukti penerimaan
-sebelum tahap berikutnya. Target instruksi terbaru adalah sampai M05 secara
+sebelum tahap berikutnya. Target saat itu adalah sampai M05 secara
 bertahap; setiap perbedaan terhadap planning/Drive capstone dilaporkan kepada
 pemilik. Dokumen ini adalah checkpoint proyek, bukan layanan
 otomasi yang dijamin terus hidup saat komputer atau Orca mati.
 
+Instruksi terbaru setelah pemulihan sesi12 Oktober menargetkan M06, lalu M07
+hanya sesudah M06 passed. Claude Code menangani backend/database, Grok
+mobile/build/infrastruktur, dan Codex membantu Chrome serta koordinasi Orca.
+Kimi Code diminta memperbarui dokumentasi manusia di folder Drive existing,
+termasuk user flow, use case, diagram, layar nyata, dan penjelasan perubahan.
+Pengelolaan akun existing GitHub/Vercel/Drive/VPS Hostinger diotorisasi dalam
+lingkup ini; credential privat dan batas data sintetis tetap dipertahankan.
+
+Run pemulihan: `run_d783036e0906`. Claude `task_a48b08a965dc` /
+`ctx_b78db9af3f87`; Grok `task_593ef31250a7` / `ctx_eaf951e6dc27`.
+Kimi `task_b9a7fa2bad17` / `ctx_d7f1339207a6`: penerimaan prompt sempat dilaporkan
+`agent_prompt_stalled`, tetapi worker_done valid kemudian diterima dan task
+completed. Tugas koreksi juga selesai; suplemen baru gagal quota403 lalu
+dipindahkan ke Claude setelah ownership Kimi dilepas. Codex menjaga Git dan dokumen koordinasi; ownership
+kode/domain tidak tumpang tindih. Folder Drive existing
+`1_WweESw5u0iHaDlw6LUfFAuUgOzAstpj` dan laporan native
+`1Dxax50Kckfuc2cCO4_PlanRIlNNQVLpsIN0S42s5VMU` diverifikasi ulang lewat
+connector. Status provider/deploy/M07 tidak dianggap selesai hanya oleh dispatch.
+
 ## Tahap aktif
+
+**M06, instruksi rencana pemilik12 Oktober2026.** Baseline `fb6e59f` pada
+`codex/m06-account-access`. Kontrak [CONTRACT.md](evidence/m06/CONTRACT.md),
+matriks [REQUIREMENTS.md](evidence/m06/REQUIREMENTS.md). Run baru
+`run_f3422d73e850` adalah run implementasi awal; pemulihan sekarang memakai
+`run_d783036e0906`. Sesi Claude dan Grok existing digunakan lewat worker-start.
+Claude memiliki `rest-api/` dan CLAUDE_RESULT; Grok `mobile/` dan GROK_RESULT;
+Codex dokumen/OpenAPI/ERD, website, infra integrasi, Stitch/Drive, Git/CI.
+Kontrak berubah melalui mailbox. Hanya Codex switch/commit/push/merge.
+Sesudah paket implementasi, review silang baca-saja sebelum acceptance.
+M07 baru tetap terkunci sampai M06 passed; provider/inbox tanpa bukti membuat
+gate reset blocked. Data sintetis saja; production/credential incident M16.
+
+### Riwayat fondasi dan ownership sebelum M06
 
 **Penutupan keamanan fondasi M04, instruksi12 Oktober.** PR18 merged8e2d8a5;
 staging6a8d4f8 lulus bukti runtime. Branch dokumentasi
@@ -128,6 +174,32 @@ credential pada checkpoint sebelumnya.
 
 ## Laporan per tahap
 
+Checkpoint M06 review12Oktober: initial source8d0b3df CI all SUCCESS;
+review-only Claude `task_36ad989936b2` dan Grok `task_fe6347e00d6e` selesai.
+Koreksi pemilik Claude `task_1c5604b7434d`/`ctx_ee3d9ac0a662`179tes lokal dan
+Grok `task_3b14402de68e`/`ctx_f070274d6534`114tes lokal selesai, released dengan
+external_terminal retained. Root mengirim koreksi spesifik race fresh-counter
+ke Claude `task_f684bcfbae8b`/`ctx_660bb74c1bce`; hanya backend/tes/laporannya.
+Kontrak/OpenAPI root mengikuti reset limiter10/15 terpisah dan password lama
+exact<=72byte/noNUL. Sender belum pernah disiapkan menurut pemilik; inbox privat
+tersedia. M07 tidak dibuka. Run tetap `run_f3422d73e850`.
+
 Catat perubahan/file/commit, task tiap agent, perintah dan hasil nyata, link CI,
 review independen, gate passed/blocked, batas lingkungan, serta tahap berikutnya.
 Sesi berakhir pada checkpoint yang bisa dilanjutkan tanpa mengulang pekerjaan.
+
+### Pemulihan akhir12 Oktober malam
+
+Run baru `run_d783036e0906`: Claude penerimaan backend, Grok Android/infra,
+Kimi panduan Drive, Codex Chrome/SSH/integrasi. Semua penerimaan selesai;
+Kimi suplemen gagal quota403 lalu ownership dipindahkan ke Claude. Tidak
+memakai identitas/model lain seolah-olah Kimi atau mengarang completion.
+Staging source26a0b7e terpasang; API52alur dan17mekanika reset serta Android
+akun/password/revocation/logout-all terbukti. Dua event drill root/Grok
+berbeda dan keduanya dicatat, tidak perlu restart/deploy/tes ulang.
+Panduan native Drive24halaman/19gambar/4tabel memiliki user flow, UML,
+sequence, ERD, perubahan sebelum/sesudah dan screenshot nyata; ekspor terakhir
+diinspeksi visual dan tidak ada gambar melewati halaman. M06 blocked hanya
+untuk gate reset inbox: pengirim valid belum tersedia, metadata provider401,
+akun Chrome tidak cocok dengan inbox privat. M07 belum dibuka. Input berikut
+adalah akses pengirim/SMTP, bukan otorisasi VPS baru. Insiden historis tetap open.

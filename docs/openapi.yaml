@@ -1014,9 +1014,20 @@ paths:
       x-status: implemented
       x-milestone: M06
       security: []
+      description: Akun menunggu hanya dapat membaca profil/status sendiri dan logout. Penolakan tidak memberi akses layanan warga.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdditionalRegistrationInput"
       responses:
-        "201":
-          $ref: "#/components/responses/Data"
+        "202":
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MobileAuthEnvelope"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/auth/forgot-password:
@@ -1028,9 +1039,20 @@ paths:
       x-status: implemented
       x-milestone: M06
       security: []
+      description: Respons generik tidak membuktikan email sudah tiba. Notification diantrekan after_commit; token berlaku 60 menit dan hanya sekali pakai. Batas 3 permintaan per 15 menit per IP dan email, terpisah dari reset.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordInput"
       responses:
-        "200":
-          $ref: "#/components/responses/Data"
+        "202":
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageEnvelope"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/auth/logout:
@@ -1054,9 +1076,15 @@ paths:
       summary: Cabut semua token/sesi
       x-status: implemented
       x-milestone: M06
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordConfirmationInput"
       responses:
-        "200":
-          $ref: "#/components/responses/Data"
+        "204":
+          description: Berhasil tanpa body.
         default:
           $ref: "#/components/responses/Error"
   /api/v1/auth/me:
@@ -1069,7 +1097,11 @@ paths:
       x-milestone: M06
       responses:
         "200":
-          $ref: "#/components/responses/Data"
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountEnvelope"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/auth/mobile-login:
@@ -1078,12 +1110,23 @@ paths:
       tags:
         - Identity
       summary: Login mobile, bearer token per perangkat
+      description: Berbagi kuota login dengan web-login, maksimum 5 permintaan per menit untuk kombinasi IP dan email yang dinormalisasi. Kuota habis menghasilkan 429.
       x-status: implemented
       x-milestone: M06
       security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MobileLoginInput"
       responses:
         "200":
-          $ref: "#/components/responses/Data"
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MobileAuthEnvelope"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/auth/password:
@@ -1094,9 +1137,19 @@ paths:
       summary: Ganti password
       x-status: implemented
       x-milestone: M06
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordInput"
       responses:
         "200":
-          $ref: "#/components/responses/Data"
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageEnvelope"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/auth/register:
@@ -1108,9 +1161,20 @@ paths:
       x-status: implemented
       x-milestone: M06
       security: []
+      description: Akun utama aktif dan keluarga belum_verifikasi; alamat rumah existing ditolak tanpa auto-merge. Semua rekaman dan token perangkat atomik.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrimaryRegistrationInput"
       responses:
         "201":
-          $ref: "#/components/responses/Data"
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MobileAuthEnvelope"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/auth/reset-password:
@@ -1122,9 +1186,20 @@ paths:
       x-status: implemented
       x-milestone: M06
       security: []
+      description: Password baru mencabut semua bearer dan sesi cookie; token invalid, kedaluwarsa atau digunakan ulang ditolak 422. Batas reset 10 percobaan per 15 menit per IP dan email, terpisah dari forgot.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordInput"
       responses:
         "200":
-          $ref: "#/components/responses/Data"
+          description: Respons berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageEnvelope"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/auth/web-login:
@@ -1133,10 +1208,23 @@ paths:
       tags:
         - Identity
       summary: Login CMS dengan sesi cookie dan CSRF
-      x-status: planned
+      x-status: implemented
       x-milestone: M06
       security: []
+      description: Cookie API HttpOnly/Secure/SameSite=Lax untuk pengurus aktif. GET csrf-cookie dahulu lalu X-XSRF-TOKEN; sesi idle 120 menit. Tidak menghasilkan bearer. Berbagi kuota login dengan mobile-login, maksimum 5 permintaan per menit untuk kombinasi IP dan email yang dinormalisasi; kuota habis menghasilkan 429.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebLoginInput"
       responses:
+        "200":
+          description: Akun pengurus; cookie session dibuat tanpa bearer.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountEnvelope"
         default:
           $ref: "#/components/responses/Error"
   /api/v1/cash/summary:
@@ -1621,6 +1709,35 @@ paths:
                 status: not_ready
                 checks:
                   database: unavailable
+  /sanctum/csrf-cookie:
+    get:
+      operationId: authCsrfCookie
+      tags: [Identity]
+      summary: Inisialisasi cookie CSRF API untuk CMS
+      x-status: implemented
+      x-milestone: M06
+      security: []
+      responses:
+        "204":
+          description: Cookie rt05_api_xsrf dan rt05_api_session; CMS membaca rt05_api_xsrf lalu mengirim X-XSRF-TOKEN. Cookie API terpisah dari cookie website.
+        default:
+          $ref: "#/components/responses/Error"
+  /reset-password:
+    get:
+      operationId: authResetPasswordForm
+      tags: [Identity]
+      summary: Form pemulihan password browser pada origin API
+      x-status: implemented
+      x-milestone: M06
+      security: []
+      responses:
+        "200":
+          description: Form HTML no-store dan no-referrer. Email memakai fragment token/email yang dibaca JS dan tidak dikirim ke access log; kode juga dapat disalin ke Android.
+          content:
+            text/html:
+              schema: {type: string}
+        default:
+          $ref: "#/components/responses/Error"
 security:
   - bearerAuth: []
   - cookieAuth: []
@@ -1634,7 +1751,7 @@ components:
       type: apiKey
       in: cookie
       name: rt05_api_session
-      description: Sesi CMS web (M06). Mutation wajib header X-XSRF-TOKEN setelah GET /sanctum/csrf-cookie.
+      description: Sesi CMS web (M06). Mutation wajib header X-XSRF-TOKEN dari cookie rt05_api_xsrf setelah GET /sanctum/csrf-cookie. Idle120 menit; versi_sesi mencabut cookie lama.
   headers:
     X-Request-Id:
       description: UUID request; sama dengan meta.request_id / error.request_id. Client boleh mengirim UUID sendiri.
@@ -1699,6 +1816,148 @@ components:
           schema:
             $ref: "#/components/schemas/DataEnvelope"
   schemas:
+    NewPassword:
+      type: string
+      minLength: 8
+      maxLength: 72
+      writeOnly: true
+      description: 'Minimal 8 karakter Unicode dengan huruf dan angka, maksimal 72 byte UTF-8, tanpa NUL. maxLength adalah batas karakter; server juga memeriksa batas byte sebelum bcrypt.'
+    RegistrationCredentials:
+      type: object
+      required: [email, password, password_confirmation, registration_token, device_name, jalan, nomor]
+      properties:
+        email: {type: string, format: email, maxLength: 254}
+        password: {$ref: '#/components/schemas/NewPassword'}
+        password_confirmation: {type: string, writeOnly: true}
+        registration_token: {type: string, pattern: '^[0-9]{6}$', writeOnly: true, description: 'String; nol di depan dipertahankan. Bukan OTP atau hak admin.'}
+        device_name: {type: string, minLength: 1, maxLength: 100}
+        blok: {type: [string, 'null'], maxLength: 30}
+        jalan: {type: string, minLength: 1, maxLength: 150}
+        nomor: {type: string, minLength: 1, maxLength: 20}
+    PrimaryRegistrationInput:
+      allOf:
+        - $ref: "#/components/schemas/RegistrationCredentials"
+        - type: object
+          required: [nama_kepala, jenis_hunian]
+          properties:
+            nama_kepala: {type: string, minLength: 1, maxLength: 120}
+            jenis_hunian: {type: string, enum: [pemilik, kontrak]}
+            whatsapp: {type: [string, 'null'], maxLength: 25}
+            anggota:
+              type: array
+              maxItems: 15
+              items:
+                type: object
+                required: [nama, hubungan_keluarga]
+                properties:
+                  nama: {type: string, minLength: 1, maxLength: 120}
+                  hubungan_keluarga: {type: string, minLength: 1, maxLength: 40}
+    AdditionalRegistrationInput:
+      allOf:
+        - $ref: "#/components/schemas/RegistrationCredentials"
+        - type: object
+          required: [nama, hubungan_keluarga]
+          properties:
+            nama: {type: string, minLength: 1, maxLength: 120}
+            hubungan_keluarga: {type: string, minLength: 1, maxLength: 40}
+    WebLoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: {type: string, format: email, maxLength: 254}
+        password: {type: string, maxLength: 200, writeOnly: true}
+    MobileLoginInput:
+      allOf:
+        - $ref: "#/components/schemas/WebLoginInput"
+        - type: object
+          required: [device_name]
+          properties:
+            device_name: {type: string, minLength: 1, maxLength: 100}
+    ForgotPasswordInput:
+      type: object
+      required: [email]
+      properties:
+        email: {type: string, format: email, maxLength: 254}
+    ResetPasswordInput:
+      type: object
+      required: [email, token, password, password_confirmation]
+      properties:
+        email: {type: string, format: email}
+        token: {type: string, writeOnly: true}
+        password: {$ref: '#/components/schemas/NewPassword'}
+        password_confirmation: {type: string, writeOnly: true}
+    ChangePasswordInput:
+      type: object
+      required: [current_password, password, password_confirmation]
+      properties:
+        current_password: {type: string, maxLength: 72, writeOnly: true, description: 'Kecocokan persis password lama; maksimal 72 byte UTF-8 tanpa NUL. Tidak menerapkan kekuatan password baru.'}
+        password: {$ref: '#/components/schemas/NewPassword'}
+        password_confirmation: {type: string, writeOnly: true}
+    PasswordConfirmationInput:
+      type: object
+      required: [password]
+      properties:
+        password: {type: string, maxLength: 72, writeOnly: true, description: 'Kecocokan persis password lama; maksimal 72 byte UTF-8 tanpa NUL. Tidak menerapkan kekuatan password baru.'}
+    AuthAccount:
+      type: object
+      additionalProperties: false
+      required: [id, nama, email, peran, jenis, status, rumah, keluarga_id, dapat_ubah_keluarga]
+      properties:
+        id: {type: string, format: uuid}
+        nama: {type: string}
+        email: {type: string, format: email}
+        peran: {type: string, enum: [warga, pengurus]}
+        jenis: {type: string, enum: [utama, tambahan]}
+        status: {type: string, enum: [menunggu, aktif, nonaktif, diarsipkan]}
+        keluarga_id: {type: [string, 'null'], format: uuid}
+        dapat_ubah_keluarga: {type: boolean}
+        rumah:
+          type: [object, 'null']
+          required: [id, kode_rumah, alamat]
+          additionalProperties: false
+          properties:
+            id: {type: string, format: uuid}
+            kode_rumah: {type: string}
+            alamat: {type: string}
+    AccountEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/AuthAccount"
+        meta:
+          $ref: "#/components/schemas/Meta"
+    MobileAuthEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        meta:
+          $ref: "#/components/schemas/Meta"
+        data:
+          type: object
+          additionalProperties: false
+          required: [token, token_type, expires_at, akun]
+          properties:
+            token: {type: string, description: 'Bearer rahasia; tidak dicontohkan dengan nilai nyata.'}
+            token_type: {type: string, const: Bearer}
+            expires_at: {type: string, format: date-time}
+            akun:
+              $ref: "#/components/schemas/AuthAccount"
+    MessageEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        meta:
+          $ref: "#/components/schemas/Meta"
+        data:
+          type: object
+          required: [message]
+          additionalProperties: false
+          properties:
+            message: {type: string}
     Meta:
       type: object
       required:

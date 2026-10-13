@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
-
 return [
 
     /*
@@ -128,10 +126,8 @@ return [
     |
     */
 
-    'cookie' => env(
-        'SESSION_COOKIE',
-        Str::slug((string) env('APP_NAME', 'laravel')).'-session'
-    ),
+    // Nama tetap, terpisah dari cookie sesi website pada origin yang sama.
+    'cookie' => env('SESSION_COOKIE', 'rt05_api_session'),
 
     /*
     |--------------------------------------------------------------------------
@@ -170,7 +166,8 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Default Secure bila APP_URL HTTPS (staging/production).
+    'secure' => env('SESSION_SECURE_COOKIE', str_starts_with((string) env('APP_URL', ''), 'https://')),
 
     /*
     |--------------------------------------------------------------------------

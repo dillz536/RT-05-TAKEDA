@@ -5,6 +5,14 @@ bertahap dengan bukti sebelum maju. Pemeriksaan ini membandingkan dokumen
 yang dibaca dan kode yang tersedia; bukan hasil UAT atau pernyataan bahwa
 seluruh dokumen Drive/prototype sudah diperiksa.
 
+Pembaruan12 Oktober: pemilik membuka M06–M07 secara berurutan. PRD repo
+terverifikasi identik dengan PRD asli di folder induk; Tugas03 dibaca ulang
+melalui connector. Akun utama valid langsung aktif, data keluarga belum
+diverifikasi, tambahan tetap menunggu persetujuan. Diagram semua permohonan
+menunggu di capstone asli dipertahankan sebagai dokumen akademik; rekonsiliasi
+baru ada pada [matriks M06–M07](evidence/m06/REQUIREMENTS.md) dan laporan Drive.
+M07 hanya dibuka setelah M06 passed, SMTP delivery belum dapat diklaim.
+
 ## Sumber yang dibaca
 
 - [Tugas 03 — Perancangan solusi](https://docs.google.com/document/d/1024MDDGIh6xQFAdJwLH4PXGsWnsEMgC6mU4bCqOVQBo/edit), revisi 6 Oktober.

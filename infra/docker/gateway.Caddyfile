@@ -14,11 +14,13 @@
 	encode gzip
 	header {
 		X-Content-Type-Options nosniff
-		Referrer-Policy strict-origin-when-cross-origin
+		# Default saja: halaman reset API mempertahankan no-referrer upstream.
+		?Referrer-Policy strict-origin-when-cross-origin
 		-Server
 	}
 
-	@api path /api /api/* /health/*
+	# Cookie CMS dan halaman pemulihan dimiliki API, sama origin dengan website.
+	@api path /api /api/* /health/* /sanctum/csrf-cookie /reset-password /auth-assets/*
 	handle @api {
 		reverse_proxy api:80
 	}

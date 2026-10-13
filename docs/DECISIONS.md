@@ -31,6 +31,8 @@ Konflik tidak diselesaikan dengan menyalin keputusan lama yang tampak paling tek
 | P15 | Kerjakan semampunya lintas milestone dengan izin VPS/Docker/PC; hemat SSD; desain mobile boleh kolaborasi Google Stitch | Instruksi pemilik sesi 3, 10 Oktober 2026 |
 | P16 | Codex mengoordinasikan Claude Code, Grok, dan Kimi dengan ownership terpisah; selesaikan satu tahap dan gate sebelum maju, checkpoint bila limit atau listrik mati | Instruksi pemilik 11 Oktober 2026; mempersempit eksekusi serentak P15. Rencana di COORDINATION.md |
 | P17 | Target lanjutan sampai M05 secara bertahap; cocokkan dengan planning dan Drive capstone, laporkan setiap perbedaan; tidak membuka seluruh roadmap dalam satu hari | Instruksi pemilik terbaru 11 Oktober 2026 |
+| P18 | Buka M06 lalu M07 setelah M06 passed; akun utama langsung aktif dengan keluarga belum_verifikasi, tambahan menunggu persetujuan; rumah existing tidak auto-merge; email menggunakan password aplikasi tanpa Google OAuth; album tambahan sekarang; laporan pada satu folder Drive; SMTP harus terbukti sampai inbox; production/data nyata tertahan insiden credential | Rencana pemilik yang diminta diimplementasikan12 Oktober2026; memperluas batas P17 secara bertahap |
+| P19 | Lanjutkan sampai M06 dan M07 melalui Orca; andalkan Claude Code untuk backend/database serta Grok untuk mobile/build/infrastruktur, Codex membantu Chrome dan koordinasi. Pemilik mengotorisasi pengelolaan akun existing GitHub, Vercel, Drive, dan VPS Hostinger dalam lingkup ini. Kimi Code memperbarui dokumentasi manusia di folder Drive Capstone/Tugas dan Project existing: user flow, use case, diagram, layar nyata, alasan dan perbandingan perubahan. Credential tetap privat; gate M06 sebelum M07 dan batas data sintetis/production tetap berlaku. | Instruksi langsung pemilik setelah pemulihan sesi12 Oktober2026 |
 
 ## ADR rekayasa v1
 
@@ -151,6 +153,20 @@ Tanggal/status: 10 Oktober 2026, diterapkan M02.
 Keputusan: migration default Laravel (users/sessions/cache/jobs bigint) dihapus. users UUID dengan role/status dibuat M06; `audit_logs.actor_id` dan `idempotency_requests.actor_id` mendapat FK pada migration M06. Sesi/cache/queue memakai Redis (M03), bukan tabel database.
 
 ## Input operasional yang belum tersedia
+
+### ADR20 — SMTP Resend untuk staging M06
+
+13 Oktober2026. Pemilik melanjutkan pekerjaan sesudah login Resend. Domain
+pengirim existing terverifikasi; coordinator membuat key khusus RT05 dengan
+izin Sending/domain, Claude memasang hanya MAIL_* pada API/worker-default
+staging. Tidak memakai key proyek lain atau mengubah DB/APP_KEY/DNS/production.
+Ini integrasi SMTP pengirim; autentikasi warga tetap email/sandi aplikasi.
+
+Coordinator memilih Gmail pemilik yang sudah terhubung sebagai default uji
+sintetis setelah pertanyaan preferensi dan asumsi diumumkan; pilihan itu bukan
+persetujuan RT atas kontak resmi baru. Akun/fixture penerima lama dipertahankan
+privat. Bukti INBOX/browser/Android dan verifier A/B4/4 menerima gate M06.
+Credential/recipient/kode tetap privat, bukan Git atau dokumentasi publik.
 
 ### Otorisasi lanjutan pemilik 11 Oktober 2026
 

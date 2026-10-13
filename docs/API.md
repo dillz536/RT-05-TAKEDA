@@ -47,7 +47,37 @@ JSON UTF-8, snake_case, UUID, timestamp ISO-8601 UTC, period YYYY-MM, amount_rup
 
 GET /sanctum/csrf-cookie adalah route API gateway di luar /api/v1. CMS memanggilnya sebelum web-login/mutation dan mengirim X-XSRF-TOKEN. Native mobile hanya bearer; role/policy tetap diperiksa.
 
-Default limiter v1: login 5/menit per IP+normalized email; register 5/10 menit per IP; token failure 10/jam per IP; forgot 3/15 menit per IP+email. Angka konfigurabel. Perhatikan NAT bersama; jangan membuka enumerasi email.
+M06: CMS membaca cookie `rt05_api_xsrf` untuk header tersebut, terpisah dari
+cookie `XSRF-TOKEN` shell website yang memakai kunci berbeda. Cookie session
+`rt05_api_session` HttpOnly/Secure/SameSite=Lax, idle120menit. Semua mutation
+cookie memerlukan token CSRF, termasuk request same-origin. `akun.versi_sesi`
+memastikan pencabutan reset/logout-all/status/role berlaku terhadap browser.
+Login web mengembalikan `data` akun tanpa bearer; endpoint/path mobile existing
+dan nama field Indonesia ADR17 dipertahankan pada OpenAPI M06.
+
+Email reset diantrekan after_commit. Tautan HTTPS `/reset-password` memakai
+fragment token/email (dibaca JS, tidak masuk request/access log) dan menampilkan
+kode yang bisa disalin ke Android. Respons forgot202 generik tidak membuktikan
+email tiba; delivery nyata tetap gate. Reset berlaku60menit dan satu kali pakai.
+
+Password baru minimal8 karakter Unicode dengan huruf dan angka, maksimal72byte
+UTF-8 dan tanpa NUL, sesuai schema NewPassword dan PasswordPolicy sebelum bcrypt.
+Konfirmasi password saat logout-all/ganti memakai kecocokan persis, termasuk
+batas72byte dan larangan NUL; password lama tidak dipaksa memenuhi aturan
+kekuatan password baru. Gangguan antrean/email tidak membatalkan transaksi akun
+yang telah berhasil; forgot tetap memberi respons generik.
+Penolakan tambahan mencabut token lama. Akun tetap jenis tambahan/status menunggu
+dan permohonan ditolak; login ulang hanya membuka profil/status/alasan sendiri
+serta logout. Akun nonaktif/diarsipkan tetap tidak dapat login.
+
+Default limiter v1: login 5/menit per IP+normalized email; register 5/10 menit per IP; token failure 10/jam per IP; forgot 3/15 menit per IP+email; reset 10/15 menit per IP+email dengan penghitung terpisah dari forgot. Angka konfigurabel. Perhatikan NAT bersama; jangan membuka enumerasi email.
+
+Kuota kegagalan token memesan slot sebelum verifikasi dan mengembalikannya
+bila token benar atau kegagalan disebabkan hal lain. Penghitung dan expiry
+diubah di bawah lock pada store limiter bersama; di staging Redis cache
+menyimpan penghitung dan Redis queue noeviction menyimpan lock. Lock sibuk
+ditolak429; release yang tidak memperoleh lock tetap memakai slot sampai
+jendela berakhir. File cache lokal tidak menjadi koordinasi beberapa host.
 
 ## Rumah dan keluarga
 

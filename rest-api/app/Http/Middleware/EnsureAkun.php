@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Akun;
+use App\Support\BrowserSession;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -15,6 +16,8 @@ use Symfony\Component\HttpFoundation\Response;
  *   akun:menunggu   → aktif atau menunggu (endpoint terbatas akun tambahan pending)
  *   akun:pengurus   → aktif dan peran pengurus
  * Akun nonaktif/diarsipkan: token dicabut dan 403.
+ * Sesi cookie CMS hanya untuk pengurus aktif dengan generasi sesi terbaru dan belum idle;
+ * selain itu sesi diakhiri dan 401 (BrowserSession).
  */
 class EnsureAkun
 {
@@ -23,6 +26,12 @@ class EnsureAkun
         /** @var Akun|null $akun */
         $akun = $request->user();
         if (! $akun) {
+            throw new AuthenticationException;
+        }
+
+        // Fail closed: user sesi tanpa sesi yang berjalan pada request ini juga ditolak.
+        if (BrowserSession::isCookie($akun) && (! $request->hasSession() || ! BrowserSession::valid($request, $akun))) {
+            BrowserSession::end($request);
             throw new AuthenticationException;
         }
 

@@ -158,9 +158,13 @@ class ResidentsController extends Controller
             throw new DomainConflict('PENDING_ACCOUNT', 'Akun menunggu diproses melalui permohonan.', 422);
         }
         DB::transaction(function () use ($request, $akun, $data) {
+            $akun = Akun::whereKey($akun->id)->lockForUpdate()->firstOrFail();
             $akun->forceFill(['status' => $data['status']])->save();
+            // Nonaktif: cabut bearer dan sesi browser. Perubahan status apa pun mengakhiri sesi CMS lama.
             if ($data['status'] === 'nonaktif') {
-                $akun->tokens()->delete();
+                $akun->revokeAllAccess();
+            } else {
+                $akun->endBrowserSessions();
             }
             Audit::record($request->user(), 'akun.status', 'akun', $akun->id, ['status' => $data['status'], 'alasan' => $data['alasan']]);
         });
@@ -197,11 +201,7 @@ class ResidentsController extends Controller
     /** GET /admin/registration-token — lihat/salin token aktif (no-store). */
     public function token(Request $request): JsonResponse
     {
-        $token = RegistrationToken::active();
-        if (! $token) {
-            RegistrationToken::rotate($request->user(), 'otomatis: belum ada token aktif');
-            $token = RegistrationToken::active();
-        }
+        $token = RegistrationToken::ensureActive($request->user());
         Audit::record($request->user(), 'token_registrasi.dilihat', 'token_registrasi', $token->id);
 
         return Api::data([

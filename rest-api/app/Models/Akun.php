@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -36,7 +38,33 @@ class Akun extends Authenticatable implements CanResetPasswordContract
             'password_hash' => 'hashed',
             'email_verified_at' => 'datetime',
             'archived_at' => 'datetime',
+            'versi_sesi' => 'integer',
         ];
+    }
+
+    /**
+     * Mengakhiri sesi browser CMS lama: sesi cookie menyimpan versi_sesi saat login dan
+     * ditolak bila nilainya berbeda (EnsureAkun). Mengembalikan generasi baru.
+     */
+    public function endBrowserSessions(): int
+    {
+        $versi = (int) DB::selectOne('UPDATE akun SET versi_sesi = versi_sesi + 1 WHERE id = ? RETURNING versi_sesi', [$this->id])->versi_sesi;
+        $this->forceFill(['versi_sesi' => $versi])->syncOriginalAttribute('versi_sesi');
+
+        return $versi;
+    }
+
+    /** Cabut semua bearer perangkat dan semua sesi browser (status/peran/reset/logout-all). */
+    public function revokeAllAccess(): void
+    {
+        $this->tokens()->delete();
+        $this->endBrowserSessions();
+    }
+
+    /** Email reset diantrekan after_commit; tautan HTTPS ke /reset-password dan kode untuk Android. */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     public function warga(): BelongsTo

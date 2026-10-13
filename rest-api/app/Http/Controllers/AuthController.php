@@ -2,31 +2,42 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Identity\PasswordPolicy;
+use App\Domain\Identity\PasswordReset;
 use App\Domain\Identity\Registration;
+use App\Domain\Identity\TokenAttempts;
+use App\Exceptions\DomainConflict;
 use App\Http\Responses\Api;
 use App\Http\Responses\Present;
 use App\Models\Akun;
 use App\Support\Audit;
+use App\Support\BrowserSession;
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\Rules\Password as PasswordRule;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    private function passwordRule(): PasswordRule
-    {
-        return PasswordRule::min(8)->letters()->numbers();
-    }
+    /** Status yang boleh memulihkan kata sandi; akun nonaktif/diarsipkan tidak menerima email. */
+    private const STATUS_PULIH = ['aktif', 'menunggu'];
 
-    /** POST /auth/register — akun utama + rumah + keluarga dalam satu transaksi (FR03). */
+    /** Respons lupa password identik untuk semua hasil; tidak mengklaim email sudah terkirim/tiba. */
+    public const FORGOT_MESSAGE = 'Jika email terdaftar, permintaan reset kata sandi telah diterima dan diantrekan.';
+
+    /**
+     * POST /auth/register — akun utama + rumah + keluarga + token perangkat dalam satu transaksi
+     * (FR03). Gagal di langkah mana pun, termasuk penerbitan bearer, tidak meninggalkan rekaman.
+     */
     public function register(Request $request): JsonResponse
     {
         $data = $request->validate([
             'email' => ['required', 'email:rfc', 'max:254'],
-            'password' => ['required', 'confirmed', $this->passwordRule()],
+            'password' => ['required', 'confirmed', ...PasswordPolicy::rules()],
             'registration_token' => ['required', 'string', 'size:6'],
             'device_name' => ['required', 'string', 'max:100'],
             'nama_kepala' => ['required', 'string', 'max:120'],
@@ -40,9 +51,9 @@ class AuthController extends Controller
             'anggota.*.hubungan_keluarga' => ['required', 'string', 'max:40'],
         ]);
 
-        $akun = Registration::primary($data, $data['registration_token']);
+        $issued = $this->registerWithToken($request, fn () => Registration::primary($data, $data['registration_token']), $data['device_name']);
 
-        return Api::data($this->issueToken($akun, $data['device_name']), 201);
+        return Api::data($issued, 201);
     }
 
     /** POST /auth/additional-register — akun tambahan menunggu persetujuan pengurus (FR05). */
@@ -50,7 +61,7 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'email' => ['required', 'email:rfc', 'max:254'],
-            'password' => ['required', 'confirmed', $this->passwordRule()],
+            'password' => ['required', 'confirmed', ...PasswordPolicy::rules()],
             'registration_token' => ['required', 'string', 'size:6'],
             'device_name' => ['required', 'string', 'max:100'],
             'nama' => ['required', 'string', 'max:120'],
@@ -60,9 +71,9 @@ class AuthController extends Controller
             'nomor' => ['required', 'string', 'max:20'],
         ]);
 
-        $akun = Registration::additional($data, $data['registration_token']);
+        $issued = $this->registerWithToken($request, fn () => Registration::additional($data, $data['registration_token']), $data['device_name']);
 
-        return Api::data($this->issueToken($akun, $data['device_name']), 202);
+        return Api::data($issued, 202);
     }
 
     /** POST /auth/mobile-login — bearer Sanctum per perangkat, berlaku 30 hari. */
@@ -74,8 +85,8 @@ class AuthController extends Controller
             'device_name' => ['required', 'string', 'max:100'],
         ]);
 
-        $akun = Akun::where('email', strtolower(trim($data['email'])))->first();
-        if (! $akun || ! Hash::check($data['password'], $akun->password_hash) || in_array($akun->status, ['nonaktif', 'diarsipkan'], true)) {
+        $akun = Akun::where('email', Registration::email($data['email']))->first();
+        if (! PasswordPolicy::matches($akun, $data['password']) || in_array($akun->status, ['nonaktif', 'diarsipkan'], true)) {
             throw ValidationException::withMessages(['email' => ['Email atau kata sandi salah.']]);
         }
 
@@ -84,66 +95,147 @@ class AuthController extends Controller
         return Api::data($this->issueToken($akun, $data['device_name']));
     }
 
+    /**
+     * POST /auth/web-login — sesi cookie CMS untuk pengurus aktif (route group sesi-api: CSRF
+     * wajib). Tidak menerbitkan bearer. Akun bukan pengurus/nonaktif mendapat pesan generik.
+     */
+    public function webLogin(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email', 'max:254'],
+            'password' => ['required', 'string', 'max:200'],
+        ]);
+
+        $akun = Akun::where('email', Registration::email($data['email']))->first();
+        if (! PasswordPolicy::matches($akun, $data['password']) || ! $akun->isAktif() || ! $akun->isPengurus()) {
+            throw ValidationException::withMessages(['email' => ['Email atau kata sandi salah.']]);
+        }
+
+        BrowserSession::start($request, $akun);
+        Audit::record($akun, 'akun.login_web', 'akun', $akun->id);
+
+        return Api::data(Present::akun($akun->load('warga.keluarga.penghunianAktif.rumah')));
+    }
+
     public function me(Request $request): JsonResponse
     {
         return Api::data(Present::akun($request->user()->load('warga.keluarga.penghunianAktif.rumah')));
     }
 
+    /** Bearer: cabut token perangkat ini. Cookie CMS: akhiri sesi browser ini (CSRF wajib). */
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()?->delete();
+        $akun = $request->user();
+        if (BrowserSession::isCookie($akun)) {
+            BrowserSession::end($request);
+        } else {
+            $akun->currentAccessToken()?->delete();
+        }
 
         return Api::noContent();
     }
 
+    /** Cabut semua bearer dan semua sesi browser akun, termasuk sesi/token request ini. */
     public function logoutAll(Request $request): JsonResponse
     {
-        $request->validate(['password' => ['required', 'current_password:sanctum']]);
-        $request->user()->tokens()->delete();
-        Audit::record($request->user(), 'akun.logout_semua', 'akun', $request->user()->id);
+        $request->validate(['password' => ['required', PasswordPolicy::current($request->user())]]);
+        $akun = $request->user();
+        DB::transaction(function () use ($akun) {
+            $akun->revokeAllAccess();
+            Audit::record($akun, 'akun.logout_semua', 'akun', $akun->id);
+        });
+        if (BrowserSession::isCookie($akun)) {
+            BrowserSession::end($request);
+        }
 
         return Api::noContent();
     }
 
+    /**
+     * Ganti password: bearer perangkat ini tetap, bearer lain dicabut, semua sesi browser lama
+     * berakhir. Bila request ini sendiri sesi cookie, sesi ini diikat ke generasi baru.
+     */
     public function changePassword(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'current_password' => ['required', 'current_password:sanctum'],
-            'password' => ['required', 'confirmed', 'different:current_password', $this->passwordRule()],
+            'current_password' => ['required', PasswordPolicy::current($request->user())],
+            'password' => ['required', 'confirmed', 'different:current_password', ...PasswordPolicy::rules()],
         ]);
         $akun = $request->user();
-        $akun->forceFill(['password_hash' => $data['password']])->save();
-        $current = $akun->currentAccessToken()?->id;
-        $akun->tokens()->where('id', '!=', $current)->delete();
-        Audit::record($akun, 'akun.ganti_password', 'akun', $akun->id);
+        $cookie = BrowserSession::isCookie($akun);
+        DB::transaction(function () use ($akun, $data, $cookie) {
+            $akun->forceFill(['password_hash' => $data['password']])->save();
+            $current = $cookie ? null : $akun->currentAccessToken()?->id;
+            $akun->tokens()->when($current, fn ($q) => $q->where('id', '!=', $current))->delete();
+            $akun->endBrowserSessions();
+            DB::table('password_reset_tokens')->where('email', $akun->email)->delete();
+            Audit::record($akun, 'akun.ganti_password', 'akun', $akun->id);
+        });
+        if ($cookie) {
+            $request->session()->regenerate();
+            BrowserSession::bind($request, $akun);
+        }
 
         return Api::data(['message' => 'Kata sandi diperbarui. Perangkat lain telah dikeluarkan.']);
     }
 
-    /** Respons selalu generik agar tidak membuka daftar email terdaftar. */
+    /**
+     * Respons selalu generik agar tidak membuka daftar email terdaftar. Token reset dibuat dalam
+     * transaksi; email diantrekan sesudah commit dan kegagalannya tidak mengubah respons 202.
+     */
     public function forgotPassword(Request $request): JsonResponse
     {
         $request->validate(['email' => ['required', 'email', 'max:254']]);
-        Password::broker('akun')->sendResetLink(['email' => strtolower(trim($request->string('email')))]);
+        $email = Registration::email((string) $request->string('email'));
 
-        return Api::data(['message' => 'Jika email terdaftar, tautan reset kata sandi telah dikirim.'], 202);
+        $pending = DB::transaction(function () use ($email) {
+            $akun = Akun::where('email', $email)->whereIn('status', self::STATUS_PULIH)->first();
+            if (! $akun) {
+                // Biaya hash setara pembuatan token agar waktu respons tidak membedakan email.
+                Hash::make(Str::random(40));
+
+                return null;
+            }
+            $token = PasswordReset::createToken($akun);
+
+            return $token === null ? null : [$akun, $token];
+        });
+        if ($pending) {
+            PasswordReset::notify(...$pending);
+        }
+
+        return Api::data(['message' => self::FORGOT_MESSAGE], 202);
     }
 
+    /**
+     * Reset: token sekali pakai berlaku auth.passwords.akun.expire menit. Baris token dikunci agar
+     * dua request concurrent dengan token sama tidak sama-sama berhasil. Semua bearer dan sesi
+     * browser dicabut.
+     */
     public function resetPassword(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'email' => ['required', 'email'],
-            'token' => ['required', 'string'],
-            'password' => ['required', 'confirmed', $this->passwordRule()],
+            'email' => ['required', 'email', 'max:254'],
+            'token' => ['required', 'string', 'max:200'],
+            'password' => ['required', 'confirmed', ...PasswordPolicy::rules()],
         ]);
-        $status = Password::broker('akun')->reset(
-            ['email' => strtolower(trim($data['email'])), 'token' => $data['token'], 'password' => $data['password'], 'password_confirmation' => $data['password']],
-            function (Akun $akun, string $password) {
-                $akun->forceFill(['password_hash' => $password])->save();
-                $akun->tokens()->delete();
-                Audit::record($akun, 'akun.reset_password', 'akun', $akun->id);
+        $email = Registration::email($data['email']);
+
+        $status = DB::transaction(function () use ($data, $email) {
+            DB::table('password_reset_tokens')->where('email', $email)->lockForUpdate()->first();
+            if (! Akun::where('email', $email)->whereIn('status', self::STATUS_PULIH)->exists()) {
+                return Password::INVALID_TOKEN;
             }
-        );
+
+            return Password::broker('akun')->reset(
+                ['email' => $email, 'token' => $data['token'], 'password' => $data['password'], 'password_confirmation' => $data['password']],
+                function (Akun $akun, string $password) {
+                    $akun->forceFill(['password_hash' => $password])->save();
+                    $akun->revokeAllAccess();
+                    Audit::record($akun, 'akun.reset_password', 'akun', $akun->id);
+                }
+            );
+        });
         if ($status !== Password::PASSWORD_RESET) {
             throw ValidationException::withMessages(['token' => ['Tautan reset tidak valid atau kedaluwarsa.']]);
         }
@@ -159,6 +251,26 @@ class AuthController extends Controller
             'status_akun' => $request->user()->status,
             'permohonan' => $p ? ['jenis' => $p->jenis, 'status' => $p->status, 'catatan' => $p->status === 'ditolak' ? $p->catatan : null, 'created_at' => Present::ts($p->created_at)] : null,
         ]);
+    }
+
+    /**
+     * Registrasi + bearer perangkat atomik. Kuota kegagalan token RT per IP direservasi sebelum
+     * verifikasi dan dikembalikan kecuali token memang ditolak (TokenAttempts).
+     */
+    private function registerWithToken(Request $request, Closure $register, string $device): array
+    {
+        TokenAttempts::reserve($request);
+        $tokenRejected = false;
+        try {
+            return DB::transaction(fn () => $this->issueToken($register(), $device));
+        } catch (DomainConflict $e) {
+            $tokenRejected = $e->errorCode === 'REGISTRATION_TOKEN_INVALID';
+            throw $e;
+        } finally {
+            if (! $tokenRejected) {
+                TokenAttempts::release($request);
+            }
+        }
     }
 
     private function issueToken(Akun $akun, string $device): array

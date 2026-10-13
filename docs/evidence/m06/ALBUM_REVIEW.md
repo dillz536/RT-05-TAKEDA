@@ -44,4 +44,12 @@ Layout/logo/font/palette/heroslideshow diterima tetap dipertahankan.
   37 tautan, nol error browser; interaksi/editor/slideshow PASS. Dua konteks
   browser terpisah membuktikan draf lokal tidak memengaruhi album publik.
 - `php artisan test --compact`:9 tes/173 assertions passed.
-- Publikasi online dan browser independen dicatat terpisah dari build lokal.
+- PR20 digabung ke main (`9dd047f`) setelah checks konten lulus. Deploy Git
+  Vercel gagal pada pengambilan informasi Git, sebelum build. Publikasi ulang
+  menggunakan snapshot bersih commit `e472f7a`: hanya `website/preview` dan
+  konfigurasi website kanonik, tanpa perubahan M06 atau env privat.
+- Deployment `dpl_7s7K4HwAf7UK4j8AZSY6JpqwDqFT` READY; alias publik
+  https://rt05takeda.vercel.app. `node scripts/check-live.mjs
+  https://rt05takeda.vercel.app` pada 12 Oktober 2026 07:42:25 UTC: **21/21
+  HTML identik, 32 aset identik, rute tidak dikenal 404, mobile browser PASS,
+  nol error browser**. Bukti terstruktur: `ALBUM_LIVE.json`.

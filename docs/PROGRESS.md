@@ -1,6 +1,128 @@
 # Progress — RT05 TAKEDA
 
-Updated: 12 Oktober 2026.
+Updated: 13 Oktober 2026.
+
+## Penutupan M06 — 13 Oktober 2026
+
+- Coordinator menerima **M06 passed** pada runtime26a0b7e, byte aplikasi sama
+  dengan HEAD2dfe4ba yang seluruh CI-nya SUCCESS: API184/1679, Flutter117/
+  duaAPK, infra. Bukti52alur akun/17mekanika reset dan Android sebelumnya tetap.
+- Key Resend khusus RT05 dibatasi Sending/domain terverifikasi. Claude mengubah
+  hanya MAIL_* staging dan recreate API/worker-default pada tag yang sama,
+  tanpa build/migration. DB/APP_KEY/Redis, ID service lain dan volume tetap.
+  Recycle alami worker media/exports per jam bukan restart tambahan oleh task.
+- Inbox lama tidak dapat diakses dari sesi tersedia; coordinator memakai Gmail
+  pemilik yang terhubung sebagai default uji yang diumumkan setelah kesempatan
+  memilih. Fixture/akun lama dipertahankan privat. Kontak resmi RT tidak berubah.
+- **INBOX A02:53:25UTC**, tautan email asli/Chrome reset sukses; verifier A4/4:
+  bearer lama401, sandi lama422, sandi baru200, kode ulang422. Fragment hilang.
+- Android meminta kode03:09:56.910UTC; **INBOX B03:10:10UTC**, reset03:20:24.104,
+  login Beranda03:22:55.348. Verifier B **4/4 PASS03:29:00.769UTC**. B awal dari
+  helper digantikan; tidak dihitung sebagai reset akhir. Empat job DONE, nol
+  FAIL/exception/pola kode atau fragment pada log yang diperiksa.
+- Claude task_e6babca81a7e/ctx_0ec47366d23f dan Grok task_86000e8c6e85/
+  ctx_13987cde954b completed; release mempertahankan terminal existing. Wait
+  background Claude sempat dihentikan karena RAM PC kritis; root melanjutkan
+  verify B langsung. Ini bukan kepastian penyebab penutupan CLI sesi sebelumnya.
+- [INBOX_ACCEPTANCE.md](evidence/m06/INBOX_ACCEPTANCE.md) dan laporan/screenshots
+  aman menjadi bukti penutupan. M07 boleh dimulai sesudah checkpoint tersimpan;
+  belum terimplementasi. Insiden credential historis tetap open untuk M16.
+
+## Pemulihan sesi12 Oktober malam — M06 lalu M07
+
+- Pemilik meminta Claude Code backend/database, Grok mobile/build/infra,
+  Codex koordinasi/Chrome, Kimi dokumentasi manusia di Drive. Otorisasi akun
+  existing GitHub/Vercel/Drive/VPS Hostinger tercatat sebagai P19. Run Orca
+  `run_d783036e0906`; tidak mengulang provisioning fondasi atau mereset data.
+- Preflight konsol root srv2030339: Linux6.8.0-139, disk /opt tersedia79G,
+  MemAvailable5454MB, env staging mode600, service existing sehat. Script
+  immutable SHA256 `ad80d976f8b04f3a9d6969d9e8f70995c55b645170202cdcea7a340bbd75a096`
+  sesuai source. Job2130943 menghasilkan footer **Selesai staging
+  SHA26a0b7e22cfe96941266cb9c194072512eca707e** sekitar20.21WIB.
+  Log privat `/root/rt05-m06-26a0b7e-deploy.log`; tidak memasukkan env ke Git.
+  Smoke runtime kemudian **PASS** melalui SSH: marker
+  `01a1305b-6267-72eb-970d-0023e9912c44` published→completed dengan attempts1
+  sesudah restart Redis/worker-default; sentinel AOF bertahan, empat heartbeat
+  sehat, DML pooled/direct rollback0, DDL runtime ditolak, volume dan container
+  lain tetap. Hash script smoke
+  `d74df7482c514c61812bd8153ba05ed5dbccce266d888b1f722f1997134aa93f`
+  sesuai source. Hasil akun Claude/Grok dicatat pada checkpoint akhir di bawah.
+- Key SSH publik existing ditambahkan idempotent lewat konsol root ke
+  authorized_keys mode600; entry existing dipertahankan. Probe SSH strict
+  host-key/BatchMode keluar0, hostname srv2030339 dan UID0. Tidak memindahkan
+  password root atau menulis DB/SMTP secret store. Bootstrap sintetis dan
+  penerimaan staging dialihkan ke Claude melalui akses SSH tersebut.
+- Kimi menyusun panduan manusia16bagian,4tabel,6diagram dan6screenshot nyata.
+  Folder Drive existing diverifikasi memiliki parent Tugas dan Project dalam
+  `[Kamis] PG194 - Capstone Project`. Panduan native:
+  https://docs.google.com/document/d/18yoO1-BY7-ylFyujpkDrpp_NkPQOwq-9-mTRPK_-KlM/edit
+  Readback16heading/4tabel/12inlineImages; ekspor PDF16halaman. Pemeriksaan
+  halaman4/6/8/14 menunjukkan diagram/layar terbaca; seluruh gambar di dalam
+  batas halaman. Laporan existing ditambah checkpoint dan tautan panduan,
+  tanpa mengubah dokumen akademik asli. Artefak sumber pada
+  `docs/evidence/m06/drive/RT05-TAKEDA-Dokumentasi-Akses-M06.docx`.
+- Stitch menghasilkan referensi M07 lalu koreksi aturan pada layar
+  `e267c2b12d8b4021861da1cda87716e8` (MOBILE780×3256). Referensi belum menjadi
+  bukti aplikasi M07; asumsi KK/SQLite dari keluaran awal tidak diterapkan.
+- Claude rerun PostgreSQL lokal184tes/1679assertion dan Pint passed. Root
+  `node infra/scripts/check-repo.mjs`653berkas dan diff-check lulus sebelum
+  tambahan artefak berikutnya; pemeriksaan akhir dicatat sesudah semua worker.
+  SMTP pengirim belum tersedia; pilihan pengirim ditanyakan sambil pekerjaan
+  lain dilanjutkan. M06 belum passed; implementasi M07 tetap menunggu gate.
+- Penerimaan backend live Claude:52/52alur akun,17/17mekanika reset dengan
+  token buatan server (bukan inbox). Probe tambahan29/30 awal terkena pacing
+  limiter; rerun terisolasi memenuhi respons yang diharapkan. OpenAPI kini
+  menjelaskan kuota bersama mobile-login/web-login5permintaan/menit/IP+email,
+  sesuai source dan uji live. Tidak ada perubahan implementasi backend.
+- Android Grok membuktikan registrasi utama aktif/keluarga belum diverifikasi,
+  tambahan pending, logout/login dan sesi offline→retry PID sama. Follow-up
+  terbatas membuktikan ganti sandi/logout-all. Drill runtime Grok yang terpisah juga
+  PASS dengan event `01a1305e-6dbe-71f3-bec4-ff4af89c01c9`; tidak menggabungkan
+  event itu dengan event root atau menganggap dua drill sebagai satu event.
+- Pengirim existing Resend di project lain diperiksa read-only untuk metadata,
+  credential tetap di memori server dan tidak disalin/dipakai mengirim RT05:
+  GET `/domains` HTTP401. Tidak membuat key atau mengubah env/service proyek
+  lain. Pilihan akun Google Chrome tidak cocok dengan inbox uji privat.
+  Dibutuhkan login akun pengirim yang tepat atau credential SMTP RT05 valid;
+  helper inbox privat siap, tetapi belum dijalankan. Ini blocker akses/input
+  nyata, terpisah dari insiden rotasi DB/APP_KEY historis yang tetap tidak diubah.
+- Kimi menyelesaikan panduan utama dan koreksi atribusi sebelum quota403.
+  Suplemen5diagram UML/sequence/ERD dikerjakan Claude, bukan diklaim karya Kimi.
+  Review root meminta label kardinalitas M07 di luar kotak dan akses keluarga
+  tambahan hanya setelah approval sebelum suplemen dipublikasikan.
+- Suplemen tersebut sudah dipublikasikan ke native Doc yang sama, ditambah
+  dua screenshot Android terautentikasi. Readback19inlineImages; ekspor23halaman
+  sebelum direktori tautan PNG ukuran penuh ditambahkan. Root memeriksa halaman
+  17/19/20/21/22: gambar/caption dan penjelasan berada dalam halaman. Lima PNG
+  ukuran penuh terverifikasi MIME/parents pada folder existing; narasi plain
+  Google Docs dibersihkan dari penanda Markdown/karakter rusak. Tidak menambah
+  folder atau mengubah sharing/dokumen akademik asli.
+- Checkpoint akhir: native panduan **24halaman/19gambar inline/4tabel** sesudah
+  direktori tautan PNG ukuran penuh. Ekspor PDF terakhir menunjukkan nol gambar
+  di luar halaman; halaman diagram, screenshot dan direktori diperiksa visual.
+  Google Doc adalah versi terbaru; DOCX Kimi tetap sumber checkpoint sebelumnya.
+- Android terakhir membuktikan sandi lama ditolak, sandi baru berhasil, bearer
+  dicabut menghasilkan Sesi berakhir tanpa data akun, dan logout-all kembali
+  ke form kosong. Sandi akun perangkat sintetis dipulihkan dan dibuktikan login.
+  Login fixture bersama ditolak sekali dan tidak diulang; pemeriksaan memakai
+  akun perangkat yang sudah terdaftar. Font1,0/jaringan pulih, emulator tetap.
+- Prompt bootstrap milik sesi ini yang tertinggal dibersihkan: cmdline lengkap
+  PID2138345 dicocokkan dengan perintah bootstrap sintetis sendiri, lalu SIGTERM
+  hanya proses tersebut. Admin valid sudah dibuat lewat stdin SSH oleh Claude;
+  tidak menghentikan service atau proses milik pekerjaan lain.
+- Semua worker penerimaan/dokumentasi selesai. Tugas suplemen Kimi gagal quota
+  provider403 dan dialihkan ke Claude tanpa pembelian/bypass. Gate M06 sekarang
+  **blocked** pada input pengirim valid/inbox nyata, bukan izin VPS. M07 tetap
+  planned. Langkah berikut: login pengirim atau konfigurasi SMTP RT05 valid,
+  recreate API/worker-default sesuai runbook, lalu buktikan inbox browser dan
+  Android sebelum membuka implementasi M07. Jangan mengulang rollout/drill PASS.
+- Validasi penutupan bukti: `node infra/scripts/check-repo.mjs` PASS682berkas;
+  `git diff --check` PASS; Redocly2 lint OpenAPI exit0. Perubahan sesi pemulihan
+  hanya README/dokumentasi/deskripsi OpenAPI/artefak diagram dan screenshot;
+  source rest-api/mobile/infra/website/workflow identik26a0b7e yang diuji.
+  Laporan Drive existing menerima checkpoint akhir dan readback verified;
+  PR21 tetap draft karena gate inbox belum lulus. Tidak mengklaim deploy kode
+  baru hanya dari commit dokumentasi berikutnya.
 
 ## Status
 
@@ -16,8 +138,8 @@ ditentukan hanya oleh tersedianya kode.
 | M03 | passed | PR #15, kode 0d678bb: API CI 88 tes/727 assertion, recovery worker/Redis nyata dan build infra SUCCESS; review final Kimi PASS; docs/evidence/m03/CI_RESULTS.md |
 | M04 | passed | Gate fungsional sebelumnya12b4642; patch isolasi credential6a8d4f8 diterapkan12 Oktober: runtime tanpa migrator, DML/DDLdenied, direct job rollback0, heartbeat dan volume/unrelated preserved. Insiden rotasi tetap open; production belum siap. Checkpoint keamanan di bawah. |
 | M05 | passed | PR17, source13de24e: 77 tes/analyzer/dua APK CI SUCCESS, checksum cocok; emulator health HTTPS, offline/retry proses sama, ikon dan skala teks1,3/2,0; review final Kimi PASS. docs/evidence/m05/LIVE_RESULTS.md |
-| M06 | in_progress | Registrasi/login/token/approval + tes CI lulus; SMTP reset belum (log) |
-| M07 | in_progress | Rumah/keluarga/akun/permohonan API + layar mobile; tes CI lulus |
+| M06 | passed | Staging26a0b7e; API52alur/17mekanika reset; Android akun/sesi; SMTP nyata, INBOX A/browser dan B/Android, verifier4/4 masing-masing. Penutupan13Oktober; INBOX_ACCEPTANCE |
+| M07 | planned | M06 passed; tahap berikutnya pendataan lengkap/histori membership/link, izin, concurrency dan penerimaan Android/staging |
 | M08 | in_progress | Pengaduan + foto privat + anonim + status; tes CI lulus |
 | M09 | in_progress | Aspirasi terpisah; tes CI lulus |
 | M10 | in_progress | Agenda/ICS/Google Calendar, pengumuman, inbox; push FCM blocked (tanpa project Firebase) |
@@ -30,7 +152,135 @@ ditentukan hanya oleh tersedianya kode.
 
 M00 memakai label accepted_baseline khusus, bukan status passed hasil tes baru. M01–M16 menggunakan planned/in_progress/passed/blocked.
 
-## Milestone aktif
+## Riwayat pembukaan M06 (checkpoint 12 Oktober)
+
+**M06 — registrasi dan akses akun**, dibuka oleh instruksi pemilik12 Oktober
+melalui rencana M06–M07. Baseline `fb6e59f`; branch `codex/m06-account-access`.
+M03/M04/M05 passed berdasarkan bukti existing. M07 belum dibuka untuk
+implementasi baru sampai gate M06 lengkap. Rencana/kontrak dan matriks di
+[CONTRACT.md](evidence/m06/CONTRACT.md) dan
+[REQUIREMENTS.md](evidence/m06/REQUIREMENTS.md). Run Orca `run_f3422d73e850`:
+Claude backend `task_3cdd792156f2`/`ctx_684922fbe969`, Grok Flutter
+`task_3873a1c7e6bc`/`ctx_0b094886b9fe`; Codex integrasi/website/dokumen/CI.
+Keputusan utama langsung aktif dengan keluarga belum_verifikasi dikonfirmasi
+oleh rencana pemilik; capstone asli dipertahankan, selisih dilaporkan.
+
+Checkpoint awal:
+- PRD repo dan `PRD (2).md` induk identik SHA256
+  `63c5888fa6005d3fbe893ddef66f7172a16800621dc21045bd3652a97d17fbac`.
+- Folder laporan Drive dibuat pada Capstone/Tugas dan Project:
+  https://drive.google.com/drive/folders/1_WweESw5u0iHaDlw6LUfFAuUgOzAstpj.
+  Empat contact sheet diunggah; readback final dan laporan menyusul.
+-40 foto ditinjau visual; satu duplikat persis; enam foto menjadi turunan
+  WebP tanpa metadata. Dua album tambahan, album17Agustus bertambah dua foto;
+  semua tanggal/tahun kosong. [ALBUM_REVIEW.md](evidence/m06/ALBUM_REVIEW.md).
+- Website `npm.cmd run build:preview`:21 rute; `npm.cmd run test:preview`:
+  105 kasus responsif,45 Axe +3 editor,37 link, nol error browser; interaksi,
+  IndexedDB isolation/recovery dan slideshow3detik PASS. `php artisan test
+  --compact`:9 tes/173 assertions passed. Ini QA lokal, bukan deploy online.
+- OpenAPI M06 payload/auth envelopes diperinci; `npx.cmd --yes @redocly/cli@2
+  lint docs/openapi.yaml` exit0. Gateway cookie/CSRF/reset dan session/mail
+  env disiapkan; belum dibuktikan di server.
+- SMTP host belum terlihat pada env lokal/staging yang diperiksa (hanya key
+  dan status konfigurasi, tanpa mencetak nilai). Lokasi konfigurasi dan inbox
+  uji ditanyakan; reset external belum passed. Insiden DB/APP_KEY tetap open;
+  production dan data warga nyata tidak dibuka.
+
+Checkpoint lanjutan12 Oktober:
+- Album PR20 merged `9dd047f` setelah checks konten sukses. Deploy Git Vercel
+  gagal mengambil informasi Git; snapshot statis committed `e472f7a` diterbitkan
+  ke project existing. Alias publik terverifikasi **21/21HTML,32aset, mobile
+  PASS,404rute asing,nol error** pada07:42UTC. [ALBUM_LIVE.json](evidence/m06/ALBUM_LIVE.json).
+- Backend handoff pertama:162tes/1275assertions PostgreSQL17.10 lokal terisolasi,
+  HTTP terpisah dan concurrency proses nyata; Pint passed. Flutter handoff
+  pertama:analyze clean,98tes passed. Build lokal terhenti mengunduh NDK;
+  APK/emulator dan CI tahap ini belum terbukti. [CLAUDE_RESULT.md](evidence/m06/CLAUDE_RESULT.md),
+  [GROK_RESULT.md](evidence/m06/GROK_RESULT.md).
+- Root meminta tindak lanjut sebelum review silang: guard mailer log di semua
+  env, batas72byte UTF8 dan NUL sebelum bcrypt, status tambahan ditolak tetap
+  terbatas, barrier rotasi deterministik, brand form reset, dan respons logout
+  lama tidak menghapus sesi mobile baru. Task Claude `task_fb43b380b205`, Grok
+  `task_f2c4204621e6`; hasil akhir/CI dicatat sesudah worker_done.
+- Gateway `/auth-assets/*`, cookie API terpisah, mail scheme/from dan deploy
+  immutable branch M06 disiapkan; Redocly valid, check-repo pass, kontrak infra
+  pass, isolasi database self-test2positif+19negatif pass. Konsol Hostinger
+  dapat dibuka; inspeksi read-only masih menunjukkan stack sehat SHA `6a8d4f8`.
+  Belum ada rollout M06 atau klaim integration live baru.
+- Folder Drive berisi15artefak yang di-readback: laporan/matriks/review/UI,
+  enamPNGdiagram/sumberZIP,empatcontactsheet. Laporan final akan diperbarui
+  pada fileID sama. Stitch listing masih40layar existing sesudah timeout;
+  tidak ada layar baru terbukti.
+
+Handoff final kode sebelum CI: Claude follow-up **171tes/1461assertions**
+passed, Pint passed; race deterministik5run berurutan dan uji mutasi menemukan
+regresi yang disengaja. Form reset Playwright lokal320–1280px tanpa overflow,
+kedua font termuat, Axe0violation. Grok follow-up **107tes** passed/analyze
+clean; epoch logout/401/storage/password response dan Unicode/NUL diuji.
+[CLAUDE_FIXES.md](evidence/m06/CLAUDE_FIXES.md),
+[GROK_FIXES.md](evidence/m06/GROK_FIXES.md). Ini belum membuktikan CI/Linux,
+APK, staging baru atau inbox. SMTP staging dicek langsung dengan output hanya
+nama key/status: mailer bukan smtp; HOST/PORT/USERNAME/PASSWORD tidak ada.
+Konfigurasi pengirim belum tersedia; acceptance reset tetap blocked.
+
+Checkpoint review12Oktober:
+- Source `8d0b3df` CI seluruhnya SUCCESS: API171/1461, Flutter107/analyze/format
+  dan kedua APK dev/staging, infra serta hygiene. [CI_RESULTS.md](evidence/m06/CI_RESULTS.md).
+- Review silang Claude mobile/Grok backend selesai pada source tersebut.
+  Grok memperbaiki bearer/epoch logout yang dipatok saat request dibuat,
+  menahan kembali selama registrasi, dan judul/alasan permohonan ditolak;
+  analyze clean dan114tes lokal passed. [GROK_REVIEW_FIXES.md](evidence/m06/GROK_REVIEW_FIXES.md).
+- Claude menutup bootstrap fail-fast, kecocokan password lama persis, exception
+  antrean sesudah commit dan limiter reset terpisah;179tes/1577assertions lokal
+  passed. [CLAUDE_REVIEW_FIXES.md](evidence/m06/CLAUDE_REVIEW_FIXES.md).
+  Review root menemukan race inisialisasi RateLimiter di implementasi reservasi
+  token yang baru; follow-up terbatas `task_f684bcfbae8b`/`ctx_660bb74c1bce`
+  menangani fresh/zero counter sebelum freeze kode final. Belum dianggap passed.
+  Hasil suite sesudah koreksi184tes/1679assertions dan Pint pass; uji mutasi
+  mendeteksi5reservasi lolos pada batas3 dalam versi vendor. CI baru menyusul.
+- Pemilik menegaskan pengirim email belum pernah disiapkan. Asumsi SMTP existing
+  pada rencana dicabut. Penerima uji sudah disimpan privat, bukan di Git.
+  [SMTP_OPERATOR.md](evidence/m06/SMTP_OPERATOR.md) menyediakan langkah konkret.
+  M06 belum passed dan implementasi baru M07 tetap terkunci.
+- Folder Drive sekarang16artefak termasuk Google Doc native pada folder yang
+  sama; isi/parents dan58paragraf readback verified. Final CI/live/screenshots
+  akan diperbarui pada fileID yang sama.
+
+Checkpoint source koreksi `15885cbf2d08b3e0f2b66b32899e9e6857ff63d1`:
+- API CI38228867337 SUCCESS184tes/1679assertions, OpenAPI/Pint, Redis recovery
+  dan role runtime/direct smoke; infra38228867353 dan hygiene38228867368 SUCCESS.
+  Mobile38228867355 SUCCESS114tes/analyze/format dan kedua APK.
+- Review delta Claude mobile/Grok backend selesai pada byte source yang sama;
+  temuan sebelumnya tertutup. [CLAUDE_MOBILE_DELTA_REVIEW.md](evidence/m06/CLAUDE_MOBILE_DELTA_REVIEW.md),
+  [GROK_BACKEND_DELTA_REVIEW.md](evidence/m06/GROK_BACKEND_DELTA_REVIEW.md).
+- APK staging checksum cocok dan terpasang di emulator guest sintetis;
+  fingerprint ada di CI_RESULTS. Layar masuk/validasi, daftar utama/tambahan,
+  forgot generik untuk example.invalid dan form reset diperiksa. Form kosong
+  tidak submit. Skala1,3/2,0 dapat scroll, tetapi error aturan password pada2,0
+  terpotong; koreksi UI dibuka ke Grok `task_b2f9f3619c32`/`ctx_f84669a0ef50`.
+  Tidak menganggap uji tampilan final passed sebelum APK koreksi diperiksa.
+- Sesi konsol Hostinger sebelumnya kedaluwarsa; Chrome kini login Hostinger.
+  Pemilik diminta membuka ulang Konsol VPS. Deploy script belum dieksekusi;
+  health existing200/ready09:21UTC bukan bukti M06 terpasang. Bootstrap dan
+  skrip browser/API sintetis siap privat, belum dijalankan ke staging.
+
+Koreksi visual lanjutan: helper aturan password bersama dipakai daftar/reset/
+ganti sandi; label pendek dan error16baris mengatasi ellipsis. Grok115tes awal
+lalu116tes sesudah ganti sandi, analyze clean; tes320px/skala2,0 memeriksa
+RenderParagraph utuh untuk aturan minimum dan pesan72byte. [GROK_EMULATOR_UI_FIX.md](evidence/m06/GROK_EMULATOR_UI_FIX.md).
+CI/APK baru dan pemeriksaan emulator koreksi tetap menunggu. Guest offline/retry
+source15885cb passed dengan PID sama; jaringan/font dikembalikan.
+Koreksi terakhir: pengulangan reset terbukti terpotong pada 320px dan skala 2,0,
+lalu `errorMaxLines: 16` dipasang pada error layar masuk, daftar, lupa sandi,
+dan ganti sandi. Analyze bersih dan 117 tes lulus. Laporan
+[GROK_EMULATOR_UI_FIX.md](evidence/m06/GROK_EMULATOR_UI_FIX.md) dan
+[CLAUDE_PASSWORD_UI_REVIEW.md](evidence/m06/CLAUDE_PASSWORD_UI_REVIEW.md).
+CI `7d42d56` lulus untuk repositori, API, infra, dan kedua APK. Di emulator,
+skala 2,0, pesan pengulangan reset tampil utuh. [LIVE_RESULTS.md](evidence/m06/LIVE_RESULTS.md).
+M06 belum passed. M07 tetap terkunci.
+[LIVE_RESULTS.md](evidence/m06/LIVE_RESULTS.md) memisahkan bukti yang tersedia
+dari gate registrasi/login/approval/keluarga dan sesi yang masih blocked.
+
+### Checkpoint sebelumnya
 
 **Penutupan patch keamanan fondasi M04**, PR18 merged8e2d8a5,
 staging6a8d4f8 terverifikasi12 Oktober. Dokumen bukti pada branch

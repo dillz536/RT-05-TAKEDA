@@ -53,13 +53,22 @@ services:
       QUEUE_CONNECTION: redis
       SESSION_DRIVER: redis
       SESSION_CONNECTION: cache
+      SESSION_COOKIE: rt05_api_session
+      RT05_XSRF_COOKIE: rt05_api_xsrf
+      SESSION_SECURE_COOKIE: "true"
+      SESSION_HTTP_ONLY: "true"
+      SESSION_SAME_SITE: lax
+      SESSION_LIFETIME: "120"
+      SANCTUM_STATEFUL_DOMAINS: ${RT05_HOST}
       TRUSTED_PROXIES: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
       MAIL_MAILER: ${MAIL_MAILER:-log}
       MAIL_HOST: ${MAIL_HOST:-}
       MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_SCHEME: ${MAIL_SCHEME:-smtp}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@takeda.morriz.tech}
+      MAIL_FROM_NAME: "RT05 TAKEDA"
     volumes:
       - api-storage:/app/storage/app
     depends_on:

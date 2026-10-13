@@ -10,7 +10,7 @@ Website publik sudah diterima pada 10 Oktober 2026 (M00) dan live sebagai previe
 | --- | --- | --- |
 | [website/](website/README.md) | Laravel 13 + Blade + Tailwind 4 + Vite; website publik dan UI Pengurus Artikel/Dokumentasi yang diterima | Baseline accepted, dipindah utuh pada M01 |
 | [mobile/](mobile/README.md) | Flutter Android warga/pengurus | Implementasi awal dan APK debug tersedia; penerimaan tiap domain tetap mengikuti PROGRESS |
-| [rest-api/](rest-api/README.md) | Laravel REST API, pemilik database Neon dan aturan bisnis | Fondasi serta layanan awal tersedia; recovery asinkron M03 sedang diverifikasi |
+| [rest-api/](rest-api/README.md) | Laravel REST API, pemilik database Neon dan aturan bisnis | Fondasi M02–M04 dan akses akun M06 di staging; reset inbox/browser/Android diterima13Oktober |
 | [infra/](infra/README.md) | Script, Docker, Caddy, Compose | Staging awal tersedia; gate worker/recovery dan deployment dicatat di PROGRESS |
 | [docs/](docs/PRD.md) | Konteks lintas modul; dokumentasi frontend di [docs/website/](docs/website/FRONTEND_HANDOFF.md) | Aktif |
 | `.github/workflows/` | CI API, website, mobile, image infra dan pemeriksaan repo | Aktif |
@@ -82,11 +82,11 @@ node infra/scripts/check-repo.mjs
 
 ## Status
 
-Lihat [docs/PROGRESS.md](docs/PROGRESS.md). M00 accepted baseline; M01/M02 passed.
-Tahap aktif M03 memverifikasi Redis worker dan recovery outbox. Staging awal,
-layanan API dan APK debug telah tersedia dari sesi sebelumnya; penerimaan lengkap
-domain, provider SMTP/FCM, rilis signed, backup dan production masih memerlukan
-bukti. [Rencana koordinasi](docs/COORDINATION.md) mengatur pekerjaan satu tahap
-sebelum maju ke milestone berikutnya.
+Lihat [docs/PROGRESS.md](docs/PROGRESS.md). M00 accepted baseline; M01–M06 passed.
+Source26a0b7e di staging sudah diuji: runtime, API, Android dan email reset nyata
+sampai inbox/browser/Android; pencabutan sesi dan kode ulang ditolak. Tahap
+berikutnya M07 pendataan lengkap. Production/data warga nyata menunggu M15–M16 dan
+penutupan insiden credential. [Rencana koordinasi](docs/COORDINATION.md) mencatat
+ownership Claude/Grok/Kimi serta checkpoint pemulihan.
 
 Jumlah developer tidak menentukan rancangan. Pekerjaan dapat dibagi per issue/domain, dengan kontrak API serta dependency milestone sebagai acuan bersama.

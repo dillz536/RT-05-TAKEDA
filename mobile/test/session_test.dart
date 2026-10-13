@@ -131,6 +131,62 @@ void main() {
     expect(c.read(sessionProvider).signedIn, isTrue);
   });
 
+  test('logout server yang selesai setelah signIn baru tidak menghapus token, akun, atau cache', () async {
+    final c = container((t) async => Akun(akunJson()));
+    final n = c.read(sessionProvider.notifier);
+    await n.signIn('token-lama', Akun(akunJson(id: 'a-1')));
+    final epoch = n.epoch;
+    await n.signIn('token-baru', Akun(akunJson(id: 'a-2')));
+    await n.signOutIfCurrent(token: 'token-lama', epoch: epoch);
+    final s = c.read(sessionProvider);
+    expect(s.signedIn, isTrue);
+    expect(s.token, 'token-baru');
+    expect(s.akun!.id, 'a-2');
+    expect(s.akun!.nama, 'Warga Uji Coba Dengan Nama Cukup Panjang');
+    expect(storage.token, 'token-baru');
+    expect(storage.log.where((entry) => entry == 'delete'), isEmpty);
+  });
+
+  test('logout server tertunda dengan token string yang sama tidak menghapus epoch baru', () async {
+    final c = container((t) async => Akun(akunJson()));
+    final n = c.read(sessionProvider.notifier);
+    await n.signIn('token-sama', Akun(akunJson(id: 'a-1')));
+    final epoch = n.epoch;
+    final pending = n.signOutIfCurrent(token: 'token-sama', epoch: epoch);
+    await n.signIn('token-sama', Akun(akunJson(id: 'a-2')));
+    await pending;
+    final s = c.read(sessionProvider);
+    expect(s.signedIn, isTrue);
+    expect(s.token, 'token-sama');
+    expect(s.akun!.id, 'a-2');
+    expect(storage.token, 'token-sama');
+    expect(storage.log.where((entry) => entry == 'delete'), isEmpty);
+  });
+
+  test('logout server menghapus token bila epoch dan token masih sama', () async {
+    final c = container((t) async => Akun(akunJson()));
+    final n = c.read(sessionProvider.notifier);
+    await n.signIn('token-lama', Akun(akunJson(id: 'a-1')));
+    await n.signOutIfCurrent(token: 'token-lama', epoch: n.epoch);
+    expect(c.read(sessionProvider).signedIn, isFalse);
+    expect(c.read(sessionProvider).akun, isNull);
+    expect(storage.token, isNull);
+  });
+
+  test('updateAkun dari epoch lama tidak menimpa akun sesi pengganti', () async {
+    final c = container((t) async => Akun(akunJson()));
+    final n = c.read(sessionProvider.notifier);
+    await n.signIn('token-lama', Akun(akunJson(id: 'a-1')));
+    final epoch = n.epoch;
+    await n.signIn('token-baru', Akun(akunJson(id: 'a-2')));
+    n.updateAkun(Akun(akunJson(id: 'a-lama')), epoch: epoch);
+    expect(c.read(sessionProvider).akun!.id, 'a-2');
+    expect(c.read(sessionProvider).token, 'token-baru');
+    n.updateAkun(Akun(akunJson(id: 'a-segar')), epoch: n.epoch);
+    expect(c.read(sessionProvider).akun!.id, 'a-segar');
+    expect(storage.token, 'token-baru');
+  });
+
   group('interceptor 401 Api', () {
     test('401 untuk token sesi aktif → sesi berakhir dan token dihapus', () async {
       final adapter = FakeAdapter((o) => errorBody(401, 'UNAUTHENTICATED', 'Sesi berakhir.'));
@@ -141,6 +197,26 @@ void main() {
       expect(adapter.requests.single.headers['Authorization'], 'Bearer token-lama');
       expect(c.read(sessionProvider).expired, isTrue);
       expect(storage.token, isNull);
+    });
+
+    test('401 terlambat dengan token sama tetapi epoch baru tidak mengakhiri sesi', () async {
+      final gate = Completer<void>();
+      final adapter = FakeAdapter((o) async {
+        await gate.future;
+        return errorBody(401, 'UNAUTHENTICATED', 'Sesi berakhir.');
+      });
+      final c = container((t) async => Akun(akunJson()), adapter: adapter);
+      await c.read(sessionProvider.notifier).restore();
+      final old = c.read(apiProvider).get('/dues/my');
+      await pumpEventQueue();
+      await c.read(sessionProvider.notifier).signIn('token-lama', Akun(akunJson(id: 'a-2')));
+      gate.complete();
+      await expectLater(old, throwsA(isA<ApiException>()));
+      await pumpEventQueue();
+      expect(c.read(sessionProvider).signedIn, isTrue);
+      expect(c.read(sessionProvider).akun!.id, 'a-2');
+      expect(c.read(sessionProvider).expired, isFalse);
+      expect(storage.token, 'token-lama');
     });
 
     test('401 terlambat milik token lama tidak mengakhiri sesi baru', () async {

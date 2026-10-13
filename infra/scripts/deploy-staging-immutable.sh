@@ -136,18 +136,24 @@ prepare_worktree() {
     *) fail "Origin bare repo bukan repositori tepercaya. Remote tidak diubah." ;;
   esac
   # A GitHub object SHA may also belong to an unreviewed fork/PR. Require
-  # ancestry of main or the exact coordinator-owned M04 branch before source/build.
+  # ancestry of main or an exact coordinator-owned staging branch before source/build.
   git -c safe.directory="$BARE" -C "$BARE" fetch --no-tags origin refs/heads/main
   local approved_head trusted=0
   approved_head=$(git -c safe.directory="$BARE" -C "$BARE" rev-parse FETCH_HEAD)
   if git -c safe.directory="$BARE" -C "$BARE" merge-base --is-ancestor "$sha" "$approved_head"; then
     trusted=1
   else
-    git -c safe.directory="$BARE" -C "$BARE" fetch --no-tags origin refs/heads/codex/m04-staging-recovery
-    approved_head=$(git -c safe.directory="$BARE" -C "$BARE" rev-parse FETCH_HEAD)
-    if git -c safe.directory="$BARE" -C "$BARE" merge-base --is-ancestor "$sha" "$approved_head"; then
-      trusted=1
-    fi
+    # M06 is explicitly authorized for synthetic staging; no wildcard/fork refs.
+    local approved_ref
+    for approved_ref in refs/heads/codex/m04-staging-recovery refs/heads/codex/m06-account-access; do
+      if git -c safe.directory="$BARE" -C "$BARE" fetch --no-tags origin "$approved_ref"; then
+        approved_head=$(git -c safe.directory="$BARE" -C "$BARE" rev-parse FETCH_HEAD)
+        if git -c safe.directory="$BARE" -C "$BARE" merge-base --is-ancestor "$sha" "$approved_head"; then
+          trusted=1
+          break
+        fi
+      fi
+    done
   fi
   [ "$trusted" = 1 ] || fail "SHA is not an ancestor of an approved RT05 ref."
   git -c safe.directory="$BARE" -C "$BARE" cat-file -e "${sha}^{commit}"

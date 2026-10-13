@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="880" viewBox="0 0 1400 880">
+<rect width="1400" height="880" fill="white"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10" fill="#0b1f3a"/></marker></defs>
+<text x="40" y="65" font-family="sans-serif" font-size="38" font-weight="bold" fill="#0b1f3a">Ruang lingkup RT05 TAKEDA M06 dan M07</text>
+<text x="40" y="113" font-family="sans-serif" font-size="23" fill="#35465b">M06 aktif | M07 rancangan setelah penerimaan M06</text>
+<path d="M 545.0 350.0 L 420.0 300.0" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M 843.3333333333333 350.0 L 966.9444444444445 300.0" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M 589.1176470588235 470.0 L 377.3529411764706 590.0" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M 799.7058823529412 470.0 L 1009.1176470588235 590.0" stroke="#0b1f3a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="520" y="350" width="350" height="120" rx="16" fill="#f9c846" stroke="#0b1f3a" stroke-width="2"/>
+<text x="695.0" y="400.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">RT05 TAKEDA</text>
+<text x="695.0" y="432.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">M06 lalu M07</text>
+<rect x="60" y="160" width="370" height="140" rx="16" fill="#eaf6ff" stroke="#0b1f3a" stroke-width="2"/>
+<text x="245.0" y="204.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Akses M06</text>
+<text x="245.0" y="236.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Daftar utama dan tambahan</text>
+<text x="245.0" y="268.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Login logout dan pemulihan</text>
+<rect x="950" y="160" width="380" height="140" rx="16" fill="#eaf6ff" stroke="#0b1f3a" stroke-width="2"/>
+<text x="1140.0" y="204.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Perlindungan M06</text>
+<text x="1140.0" y="236.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Token RT dan CSRF</text>
+<text x="1140.0" y="268.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Role status serta audit</text>
+<rect x="60" y="590" width="370" height="150" rx="16" fill="#eaf6ff" stroke="#0b1f3a" stroke-width="2"/>
+<text x="245.0" y="639.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Pendataan M07</text>
+<text x="245.0" y="671.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Rumah keluarga dan warga</text>
+<text x="245.0" y="703.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Verifikasi dan arsip</text>
+<rect x="950" y="590" width="380" height="150" rx="16" fill="#eaf6ff" stroke="#0b1f3a" stroke-width="2"/>
+<text x="1140.0" y="639.0" text-anchor="middle" font-family="sans-serif" font-size="25" fill="#0b1f3a">Histori M07</text>
+<text x="1140.0" y="671.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Hunian membership link akun</text>
+<text x="1140.0" y="703.0" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#0b1f3a">Perpindahan atomik</text>
+<text x="40" y="850" font-family="sans-serif" font-size="19" fill="#35465b">Sumber PRD BUSINESS_RULES API ERD dan keputusan pemilik 12 Oktober 2026 | bukti penerimaan terpisah</text></svg>

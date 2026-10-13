@@ -61,6 +61,10 @@ class SessionController extends Notifier<SessionState> {
   /// setelah keluar/masuk baru diabaikan sehingga tidak menimpa sesi terbaru.
   int _epoch = 0;
 
+  /// Epoch yang sedang berlaku. Logout yang menunggu respons menyimpan nilai ini
+  /// sebelum request dan memeriksanya lagi di dalam antrean storage.
+  int get epoch => _epoch;
+
   /// Operasi storage dijalankan berurutan: hapus milik logout tidak dapat
   /// menyusul dan menghapus token login baru.
   Future<void> _io = Future.value();
@@ -120,22 +124,36 @@ class SessionController extends Notifier<SessionState> {
     state = SessionState(loading: false, token: token, akun: akun);
   }
 
-  void updateAkun(Akun akun) {
-    if (state.token == null) return;
+  /// Menimpa akun hanya bila [epoch] masih sesi yang meminta data itu.
+  void updateAkun(Akun akun, {required int epoch}) {
+    if (epoch != _epoch || state.token == null) return;
     state = SessionState(loading: false, token: state.token, akun: akun);
   }
 
-  /// Logout: hapus token dan cache pribadi.
+  /// Logout lokal tanpa syarat (splash). Hapus token dan cache pribadi.
   Future<void> signOut() async {
     _epoch++;
     state = const SessionState(loading: false);
     await _serial(_storage.delete);
   }
 
-  /// 401 dari API. [token] = token yang dipakai request tersebut; respons milik sesi
-  /// lama (sudah keluar/berganti akun) tidak mengakhiri sesi sekarang.
-  Future<void> expire({String? token}) async {
+  /// Logout server yang selesai terlambat. Token, akun, dan cache sesi dihapus
+  /// hanya bila sesi masih [token] pada [epoch] yang dicatat sebelum request.
+  /// Pemeriksaan ada di dalam antrean storage, termasuk bila token string-nya sama.
+  Future<void> signOutIfCurrent({required String token, required int epoch}) async {
+    await _serial(() async {
+      if (_epoch != epoch || state.token != token) return;
+      _epoch++;
+      state = const SessionState(loading: false);
+      await _storage.delete();
+    });
+  }
+
+  /// 401 dari API. [token] dan [epoch] milik request tersebut; respons sesi lama
+  /// (sudah keluar atau masuk lagi, termasuk token yang sama) tidak mengakhiri sesi sekarang.
+  Future<void> expire({String? token, int? epoch}) async {
     if (state.token == null || (token != null && token != state.token)) return;
+    if (epoch != null && epoch != _epoch) return;
     _epoch++;
     state = const SessionState(loading: false, expired: true);
     await _serial(_storage.delete);

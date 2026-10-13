@@ -143,12 +143,12 @@ class _BusyButtonState extends State<BusyButton> {
   @override
   Widget build(BuildContext context) {
     final child = _busy
-        ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+        ? SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: widget.outlined ? Brand.navy : Colors.white))
         : Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (widget.icon != null) ...[Icon(widget.icon, size: 20), const SizedBox(width: 8)],
-              Text(widget.label),
+              Flexible(child: Text(widget.label, textAlign: TextAlign.center)),
             ],
           );
     final onPressed = _busy || widget.onPressed == null ? null : _run;
@@ -174,9 +174,10 @@ class SectionCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: Text(title!, style: Theme.of(context).textTheme.titleMedium)),
-                  ?trailing,
+                  if (trailing != null) Flexible(child: trailing!),
                 ],
               ),
             ),
