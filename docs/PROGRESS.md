@@ -2,7 +2,30 @@
 
 Updated: 13 Oktober 2026.
 
-## M07 aktif — 13 Oktober 2026
+## Penutupan M07 — 13 Oktober 2026
+
+Coordinator menerima **M07 passed**, sesudah M06 passed/PR21 merged.
+Source dan image staging `979634fb7ae847f6c743f0ae7e11ec575b1fe722`:
+220 tes backend/2125 assertion, 152 tes Flutter, seluruh sembilan CI SUCCESS.
+Migrasi additive/backfill idempotent diterima; API live **77/77 kasus,
+327/327 assertion**. APK checksum cocok; Android nyata membuktikan tambah
+anggota, 409 mempertahankan isian/resubmit sekali, tambahan read-only,
+pending terbatas, serta pengurus membuat keluarga/hunian. Tampilan error
+diterima pada320dp/skala2. [Laporan lengkap](evidence/m07/REPORT.md).
+
+Native Drive existing dibaca kembali: **31 gambar/4 tabel**, PDF37halaman;
+laporan native5halaman. Lima diagram M07 dan lima layar Android ditambahkan;
+halaman bukti konflik/pending dan laporan akhir dirender tanpa terpotong.
+Kartu rumah perlu muat ulang sesudah membuat keluarga dan badge notifikasi
+terpotong pada skala2 dicatat sebagai keterbatasan kecil. Penerimaan ini
+untuk staging sintetis/emulator, bukan production atau UAT mitra.
+
+Semua dispatch worker root selesai/dilepas; terminal Grok user_takeover dan
+Claude external_terminal dipertahankan. Mailbox Orca kosong. Bukti akhir
+dicommit terpisah; source rest-api/mobile/website sama dengan runtime yang
+diterima. PR22 diselesaikan setelah CI head bukti lulus. Tidak membuka M08.
+
+## Checkpoint historis M07 — 13 Oktober 2026
 
 Checkpoint source final: backend **220/220, 2125 assertion** sesudah koreksi
 akses bersamaan/backfill; Flutter **152 tes**, analyzer/formatter lulus dengan
@@ -11,6 +34,30 @@ skala2. Worker source selesai; CI/staging/Android tetap gate berikutnya.
 Pemilik menyoroti penggunaan limit; root membatasi sisa kerja ke CI/deploy/
 demonstrasi, tanpa review baru. Pilihan inbox Gmail utama dikonfirmasi pemilik
 05:45UTC dan tidak mengulang uji M06 yang sudah lulus.
+
+Source dipush `979634fb7ae847f6c743f0ae7e11ec575b1fe722`, PR #22 draft.
+API CI38353725706, infra38353725776, mobile verify dan hygiene SUCCESS;
+dua debugAPK masih dibangun saat checkpoint. Claude source/helper terminal
+direuse ke `task_3201aad6b734`/`ctx_3781b7e77d8d` untuk rollout SHA dan
+77kasus live melalui API sintetis. Rollout API dapat berjalan sesudah cek
+API/infra/mobile-verify hijau sambil APK dibangun; uji perangkat menunggu
+artefak staging SUCCESS dan checksum cocok. Tidak memakai production.
+Release Grok final `ctx_979b8b302587` mengembalikan retained/user_takeover;
+root mempertahankan terminal pengguna dan tidak menutupnya. Diagram Drive
+native26gambar/4tabel, PDF32halaman; userflow/ERD dirender tanpa terpotong.
+
+Checkpoint live: seluruh9CI termasuk dev/stagingAPK SUCCESS. Artefak staging
+run38353725721 cocok SHA256 `6210638aadaa6bcb791ad414d9fa4849e02135f684c250bb1c731eee8d322297`.
+Rollout979634f selesai06:12UTC, migration additive DONE, runtime DML rollback0/
+DDL ditolak, direct job terisolasi, heartbeat4/4, env/volume/unrelated tetap.
+Backfill ulang0/0 idempotent. Live API06:14:12–06:15:10 **77/77,327/327 PASS**
+melalui HTTP nyata; tidak ada429 atau resume. Pengisian tagihan periode berjalan
+menyentuh rumah staging aktif yang semuanya sintetis; M06 fixture tidak diubah.
+Terminal Claude direuse ke Android `task_767258d6330a`/`ctx_999485d251a5`.
+APK173MB terpasang setelah hanya aplikasi RT05 uji lama dicopot, cache Android
+trim, lalu emulator owned Pixel8a menggunakan1536MiB. Tidak wipe userdata/
+instal ulang aplikasi lain; size960x2133/density480=320dp, aplikasi STAGING.
+Android merupakan gate terakhir sebelum penerimaan M07 coordinator.
 
 - M06 ditutup pada commit `8eae8fc`, seluruh CI SUCCESS; PR #21 merged ke
   main `bc57b4fa5f5d52f500fa3a81ece8b37c083c5e63`. Branch aktif
@@ -51,8 +98,8 @@ demonstrasi, tanpa review baru. Pilihan inbox Gmail utama dikonfirmasi pemilik
   Flutter existing. Rancangan tidak menggantikan penerimaan aplikasi.
 
 Kontrak [M07](evidence/m07/CONTRACT.md), hasil [Claude](evidence/m07/CLAUDE_RESULT.md)
-dan [Grok](evidence/m07/GROK_RESULT.md). Status tetap **in_progress** sampai
-CI, migrasi additive staging, akses/konkurensi live, dan Android dapat diperagakan.
+dan [Grok](evidence/m07/GROK_RESULT.md). Gate pada checkpoint ini masih
+menunggu live; hasil akhirnya **passed** sesuai penutupan di atas.
 
 ## Penutupan M06 — 13 Oktober 2026
 
@@ -191,7 +238,7 @@ ditentukan hanya oleh tersedianya kode.
 | M04 | passed | Gate fungsional sebelumnya12b4642; patch isolasi credential6a8d4f8 diterapkan12 Oktober: runtime tanpa migrator, DML/DDLdenied, direct job rollback0, heartbeat dan volume/unrelated preserved. Insiden rotasi tetap open; production belum siap. Checkpoint keamanan di bawah. |
 | M05 | passed | PR17, source13de24e: 77 tes/analyzer/dua APK CI SUCCESS, checksum cocok; emulator health HTTPS, offline/retry proses sama, ikon dan skala teks1,3/2,0; review final Kimi PASS. docs/evidence/m05/LIVE_RESULTS.md |
 | M06 | passed | Staging26a0b7e; API52alur/17mekanika reset; Android akun/sesi; SMTP nyata, INBOX A/browser dan B/Android, verifier4/4 masing-masing. Penutupan13Oktober; INBOX_ACCEPTANCE |
-| M07 | in_progress | M06/PR21 merged; implementasi dan tes lokal pendataan, review integrasi berlangsung; CI/staging/Android belum diterima |
+| M07 | passed | Source979634f; 220tes/2125assertion, Flutter152, 9CI SUCCESS, deploy additive/backfill, API live77/327, Android nyata dan native Drive; evidence/m07/REPORT.md |
 | M08 | in_progress | Pengaduan + foto privat + anonim + status; tes CI lulus |
 | M09 | in_progress | Aspirasi terpisah; tes CI lulus |
 | M10 | in_progress | Agenda/ICS/Google Calendar, pengumuman, inbox; push FCM blocked (tanpa project Firebase) |

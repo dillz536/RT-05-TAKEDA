@@ -1,6 +1,23 @@
 # Koordinasi RT05 TAKEDA
 
-## Tahap aktif M07 — 13 Oktober 2026
+## Penutupan M06–M07 — 13 Oktober 2026
+
+M06 dan M07 **passed**; source M07 `979634f` diterima di staging sintetis.
+Claude: 220tes/2125assertion, deploy additive, API live77/327, demonstrasi
+Android `task_767258d6330a`/`ctx_999485d251a5` selesai. Grok: 152tes,
+capability terbaru dan teks dirender320px/skala2. Semua9CI source SUCCESS.
+Kimi menyelesaikan M06; M07 provider-limit403 sebelum output, sehingga
+Claude cadangan membuat diagram dan root menerbitkan di native Drive existing.
+Panduan31gambar/4tabel/PDF37halaman dan laporan5halaman dibaca/render ulang.
+
+Worker final Android dilepas retained/external_terminal; Grok retained/
+user_takeover. Terminal pengguna dipertahankan, worker owned lain selesai/
+dilepas, mailbox kosong. Bukti [REPORT](evidence/m07/REPORT.md), API live,
+deploy, Android dan Drive tersimpan. Root menutup PR22 setelah CI head bukti;
+tidak memperluas review atau membuka M08. Source runtime tidak diubah.
+Catatan UI kecil dan batas production/UAT tercantum di laporan penerimaan.
+
+## Checkpoint historis M07 — 13 Oktober 2026
 
 M06 passed dan PR21 merged ke `main` (`bc57b4f`). Branch aktif
 `codex/m07-resident-data`; run `run_d783036e0906` dipertahankan.

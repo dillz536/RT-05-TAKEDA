@@ -82,10 +82,11 @@ node infra/scripts/check-repo.mjs
 
 ## Status
 
-Lihat [docs/PROGRESS.md](docs/PROGRESS.md). M00 accepted baseline; M01–M06 passed.
-Source26a0b7e di staging sudah diuji: runtime, API, Android dan email reset nyata
-sampai inbox/browser/Android; pencabutan sesi dan kode ulang ditolak. Tahap
-berikutnya M07 pendataan lengkap. Production/data warga nyata menunggu M15–M16 dan
+Lihat [docs/PROGRESS.md](docs/PROGRESS.md). M00 accepted baseline; M01–M07 passed.
+M06 membuktikan email reset nyata sampai inbox/browser/Android. M07 source
+979634f di staging lulus 77 kasus API/327 assertion dan demonstrasi Android;
+220 tes backend/2125 assertion serta 152 tes Flutter lulus. Bukti dan
+keterbatasan ada di [penerimaan M07](docs/evidence/m07/REPORT.md). Production/data warga nyata menunggu M15–M16 dan
 penutupan insiden credential. [Rencana koordinasi](docs/COORDINATION.md) mencatat
 ownership Claude/Grok/Kimi serta checkpoint pemulihan.
 
