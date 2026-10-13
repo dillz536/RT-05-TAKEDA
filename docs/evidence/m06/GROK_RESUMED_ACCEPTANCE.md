@@ -133,10 +133,30 @@ Gambar:
 - [Tamu sesudah keluar semua](screenshots/logout-all-guest-26a0b7e.png)
 - [Beranda sesudah masuk lagi](screenshots/login-after-logout-all-26a0b7e.png)
 
-Font `1.0`. Mode pesawat mati. Emulator tetap terpasang. Sesi akun perangkat berada di Beranda.
+Font `1.0`. Mode pesawat mati. Emulator tetap terpasang. Sesi akun perangkat berada di Beranda pada akhir bagian 12 Oktober itu.
+
+## Reset inbox di Android, putaran B
+
+13 Oktober 2026. Runtime tetap `26a0b7e`. HEAD `2dfe4ba` hanya dokumen; byte `mobile/`, `rest-api/`, dan `infra/` sama. Tidak ada pasang ulang, build, atau deploy.
+
+Emulator `emulator-5554`, paket `tech.morriz.takeda`, PID `12743`. Font `1.0`. Mode pesawat mati. Wifi hidup. Sesi akun perangkat pada emulator dikeluarkan satu kali supaya halaman tamu terbuka. Sandi akun itu tidak diubah. Tidak ada keluar dari semua perangkat.
+
+Satu ketukan `Kirim kode reset` pada `2026-10-13T03:09:56.910Z`. Tidak ada permintaan forgot dari helper. Kode yang sudah tersimpan sebelumnya tidak diketik. Form langkah kedua tetap terbuka. Kode pengganti dan sandi yang direncanakan diisi di kolom aplikasi. Panjang kode 64. Panjang kedua kolom sandi 22. `Simpan kata sandi baru` dikirim sekali pada `2026-10-13T03:20:24.104Z`. Aplikasi menampilkan `Kata sandi berhasil direset. Silakan masuk kembali.` lalu kembali ke Masuk dengan kolom kosong.
+
+Masuk dengan sandi baru pada `2026-10-13T03:22:55.348Z` sampai Beranda. Hierarki tidak memuat `@`. Gambar [Beranda sesudah reset](screenshots/reset-b-beranda-26a0b7e.png) menampilkan `Kepala Sintetis Inbox M06` dan rumah `UJIM06-887623`, tanpa kode atau sandi.
+
+Pada saat masuk dan saat bagian ini ditulis, state putaran B masih `verifiedAt` kosong. Pemeriksaan verifier belum dicatat di laporan ini. M06 belum lulus. M07 tidak dibuka.
 
 ## Batas
 
-Pengirim SMTP valid belum tersedia; alamat inbox uji sudah disimpan privat, tetapi pengiriman sampai inbox belum terbukti. Masuk `accounts.mobile` gagal satu kali, jadi akun fixture bersama itu tidak dipakai untuk ganti sandi. M06 belum lulus. M07 tidak dibuka. Stitch tetap pada koordinator. Production dan data warga tidak disentuh. Grok tidak membuat commit atau meluncurkan Claude; penyimpanan checkpoint ditangani coordinator.
+Reset Android putaran B memakai kode yang masuk ke inbox dan sandi yang sudah direncanakan. Verifikasi server putaran B belum tercatat. Masuk `accounts.mobile` tetap gagal satu kali pada pemeriksaan 12 Oktober, dan sandi fixture itu tidak diubah. M06 belum lulus. M07 tidak dibuka. Stitch tetap pada koordinator. Production dan data warga tidak disentuh. Grok tidak membuat commit.
 
-`node infra/scripts/check-repo.mjs` → `OK: 682 berkas dilacak; tanpa file terlarang, pola secret, .git bersarang, atau tautan relatif rusak; vercel.json setara.`
+`node infra/scripts/check-repo.mjs` → `OK: 685 berkas dilacak; tanpa file terlarang, pola secret, .git bersarang, atau tautan relatif rusak; vercel.json setara.`
+
+## Gate coordinator13 Oktober
+
+Sesudah laporan perangkat ini, Claude verifier B4/4 PASS pada03:29:00.769UTC.
+Coordinator meninjau screenshot aman dan menerima gate M06 passed; bukti final
+ada pada [INBOX_ACCEPTANCE.md](INBOX_ACCEPTANCE.md). Status pending di atas
+merupakan keadaan saat Grok menyelesaikan tugas perangkat, sebelum verifier.
+M07 menjadi tahap berikutnya; tidak diklaim selesai oleh laporan ini.

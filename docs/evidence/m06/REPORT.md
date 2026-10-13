@@ -1,5 +1,9 @@
 # Laporan perkembangan RT05 TAKEDA M06 dan M07
 
+**Update13 Oktober: M06 passed; M07 tahap berikutnya.** Inbox/browser/Android
+dan pencabutan sesi/kode ulang terbukti pada
+[INBOX_ACCEPTANCE.md](INBOX_ACCEPTANCE.md). Bagian12 Oktober berikut historis.
+
 12 Oktober2026. Disusun Codex untuk pemilik dan tim capstone dari pemeriksaan
 repo, connector Drive, implementasi serta hasil tes yang benar-benar dijalankan.
 M06 sedang dikerjakan dan M07 baru belum dibuka. Akun utama valid langsung aktif;

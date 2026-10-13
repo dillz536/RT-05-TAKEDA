@@ -21,9 +21,9 @@ Tanggal: 12 Oktober 2026. Task `task_a48b08a965dc`, dispatch `ctx_b78db9af3f87`.
 | Probe sesi/rotasi/cookie (Claude) | **29/30**; satu gagal karena pacing probe sendiri, rerun terisolasi PASS | §5 |
 | Mekanika reset (token dibuat di server) | **17/17 PASS** | §6 |
 | Kebocoran token reset di log | Tidak ditemukan | §6 |
-| **Email reset sampai inbox** | **BLOCKED**: belum ada pengirim; satu opsi existing milik pemilik ditemukan | §7 |
+| **Email reset sampai inbox** | 12 Oktober: BLOCKED (§7). **13 Oktober: ronde A (tautan, Chrome) dan B (kode, Android) diterima di inbox Gmail nyata; `verify A` 4/4 dan `verify B` 4/4 PASS** | §9 |
 
-**M06 belum passed** karena gate inbox. M07 tidak dibuka.
+Gate inbox sisi Claude selesai (§9). Keputusan akhir gate M06 dan Git tetap milik root. M07 tidak dibuka.
 
 ## 1. Validasi lokal
 
@@ -248,6 +248,70 @@ Status: **disiapkan, belum dijalankan.** Belum ada akun inbox, permintaan forgot
 >
 > **Penerimaan:** jalankan `inbox-flow.mjs` dengan langkah `precheck`, `prepare`, `forgot A`, konfirmasi inbox oleh root, `verify A`, lalu ronde B untuk Android. Simpan timestamp terima dan tangkapan layar tanpa alamat/kode. Respons forgot 202 dan baris `DONE` worker tidak membuktikan inbox.
 
+## 9. Penerimaan inbox nyata, 13 Oktober 2026 (task `task_e6babca81a7e`, dispatch `ctx_0ec47366d23f`)
+
+Sumber HEAD `2dfe4ba`; runtime staging tetap `26a0b7e22cfe96941266cb9c194072512eca707e`. Semua waktu UTC. Tidak ada alamat penerima, kode, password, bearer, atau key di laporan ini; nilainya hanya ada di berkas privat `~/.rt05/m06-stage-check/` dan `/root/.rt05/` (mode 600).
+
+### Pengirim
+
+Root login ke Resend, mendapati domain `mail.morriztech.cloud` berstatus Verified, lalu membuat key khusus `rt05-takeda-staging-m06-20261013` (akses Sending, dibatasi ke domain itu). Key MorrizStore tidak dipakai. Root mendelegasikan perubahan env dan recreate kepada Claude untuk task ini.
+
+| Langkah (skrip `/root/.rt05/m06-smtp-apply.sh`) | Hasil |
+| --- | --- |
+| phase1: key dari stdin ke `/root/.rt05/rt05-smtp.key` | mode 600; format key divalidasi tanpa dicetak |
+| phase1: asersi rilis | `staging-current-sha` = `26a0b7e…`; image api/worker-default `rt05-api:26a0b7e…` ada lokal; compose dari `/opt/rt05-releases/26a0b7e…/infra` (`compose.production.yml` + `compose.vps.yml`), project `rt05-staging`, `RT05_IMAGE_TAG` eksplisit |
+| phase1: env kandidat | Hanya baris `MAIL_*` diganti: `MAIL_MAILER=smtp`, `MAIL_HOST=smtp.resend.com`, `MAIL_PORT=587`, `MAIL_SCHEME=smtp`, `MAIL_USERNAME=resend`, `MAIL_PASSWORD` dari berkas key, `MAIL_FROM_ADDRESS=takeda@mail.morriztech.cloud`. `MAIL_FROM_NAME` tetap "RT05 TAKEDA" dari compose. Baris non-MAIL identik (15 → 20 baris). |
+| phase1: isolasi | Env hasil compose untuk api dan worker-default dibandingkan dengan container berjalan: `APP_KEY`, `DATABASE_URL`, `DB_CONNECTION`, `REDIS_*`, `APP_ENV`, `APP_URL`, `QUEUE_CONNECTION`, `CACHE_STORE`, `SESSION_DRIVER` = same; selisih non-MAIL: none |
+| phase2, 02:43:29 | Backup `/root/.rt05/.env.staging.bak-m06-smtp` (600), swap atomik, `compose up -d --no-build --no-deps --force-recreate --pull never api worker-default`. Tanpa build, migrasi, atau restart lain. |
+| Sesudah phase2 | api `healthy`; api dan worker-default `running` di `rt05-api:26a0b7e…`, start 02:43:31; `MAIL_MAILER=smtp`. Tujuh container lain (ID dan StartedAt) dan volume tidak berubah. |
+
+Rollback: `bash /root/.rt05/m06-smtp-apply.sh restore` (backup kembali, lalu recreate dua service yang sama).
+
+### Kronologi
+
+| Waktu | Kejadian | Status |
+| --- | --- | --- |
+| 02:44:11 | `precheck` PASS (penerima awal `fixtures.inbox_test`) | — |
+| 02:44:26 | `prepare`: registrasi 201, login 200 | — |
+| 02:44:31 → 02:44:41 | `forgot A` ke penerima awal: 202; worker-default `ResetPasswordNotification` RUNNING 02:44:36 → DONE 02:44:41 | **Transport saja.** Root tidak punya akses ke inbox ini, sehingga ronde ini tidak dihitung sebagai bukti inbox. Akun lama tetap ada, password tidak direset. |
+| ~02:52 | Root memilih inbox Gmail pemilik yang terhubung sebagai penerima uji sintetis. Claude menyimpan snapshot fixture/state lama secara privat, mengganti `inbox_test`, membuat akun inbox baru (password acak, nomor rumah sintetis unik `inbox_nomor`), dan memulai state baru. Lima akun fixture lain tidak berubah. | — |
+| 02:52:59 / 02:53:14 | `precheck` PASS; `prepare`: registrasi 201, login 200 | — |
+| 02:53:15 → 02:53:25 | `forgot A`: 202; worker DONE 02:53:25 | Transport |
+| 02:53:25 | Root: email A tiba di INBOX Gmail; pengirim dan penerima cocok; tautan dan kode 64-hex diambil dari email asli | **Inbox A** |
+| sebelum 03:01 | Root membuka tautan email di Chrome (fragment hilang dari alamat, menjadi `/reset-password`), mengisi `rounds.A.password`, submit sekali → "Kata sandi berhasil direset. Silakan masuk kembali." | Reset via tautan |
+| 03:01:35 | **`verify A` 4/4 PASS** (rincian di bawah) | — |
+| 03:01:38 → 03:01:46 | `forgot B` dari helper: 202; worker DONE 03:01:46; root mengonfirmasi tiba di inbox 03:01:47 (DKIM/SPF PASS) | **Digantikan.** Form Android baru menampilkan isian kode setelah "Kirim kode reset", sehingga kode ini terotasi. |
+| 03:09:56.910 → 03:10:09 | Grok mengirim forgot sekali dari form aplikasi Android; worker RUNNING 03:10:03 → DONE 03:10:09 | Transport |
+| 03:10:10 | Root: email B tiba di INBOX Gmail; kode berbeda dari A dan dari B awal | **Inbox B** |
+| 03:20:24.104 | Grok submit form Android sekali dengan kode email dan `rounds.B.password` → "Kata sandi berhasil direset" | Reset via kode |
+| 03:22:55.348 | Login aplikasi dengan password baru mencapai Beranda (Grok) | — |
+| 03:29:00 | **`verify B` 4/4 PASS** | — |
+
+### Hasil `verify`
+
+| Cek | A | B |
+| --- | --- | --- |
+| Bearer sesi sebelum reset (`/auth/me`) | 401 | 401 (sesi login sesudah A) |
+| Password sebelumnya | 422 | 422 (password A) |
+| Password baru yang direncanakan | 200 | 200 |
+| Pakai ulang kode email via API | 422 | 422 |
+
+Tangkapan layar root/Grok (tanpa alamat, kode, atau fragment): `docs/evidence/m06/screenshots/reset-inbox-browser-success-26a0b7e.png` (A, Chrome) dan `reset-b-beranda-26a0b7e.png` (B, Beranda).
+
+### Invarian sesudah ronde B (03:29, read-only)
+
+- api dan worker-default: `rt05-api:26a0b7e…`, `running`, `healthy`, restart 0, start 02:43:31 (tidak berubah sejak recreate).
+- `staging-current-sha` = `26a0b7e…`. `.env.staging`, backup, dan key mode 600; tidak ada sisa env kandidat.
+- Volume dan ID tujuh container lain tidak berubah. StartedAt `worker-exports` dan `worker-media` maju dari 02:21 ke 03:21: ini daur ulang per jam akibat `--max-time=3600` dengan restart `unless-stopped`, bukan tindakan task ini.
+- Log sejak 02:43, worker-default: `ResetPasswordNotification … DONE` ×4 (A awal, A, B awal, B Android), FAIL 0, exception/error 0. api: exception/error 0. Kedua container: string 64-hex 0 dan `reset-password#`/`token=` 0 (token reset tidak bocor ke log).
+
+### Perubahan helper privat
+
+- Deteksi transport diperbaiki. Laravel mencatat job sebagai `App\Notifications\ResetPasswordNotification`, bukan `SendQueuedNotifications`, sehingga `forgot A` pertama sempat ditandai FAIL keliru. Langkah read-only `transport <A|B>` ditambahkan dan mengonfirmasi DONE tanpa forgot tambahan.
+- Registrasi memakai `f.inbox_nomor ?? '77'`.
+
+Dengan ini §8 langkah 0–8 selesai dengan email nyata. Expiry dan race tetap dibuktikan oleh §6 dan PHPUnit, tidak diulang. Usulan untuk `SMTP_OPERATOR.md` (§8): baris worker yang dicari adalah `ResetPasswordNotification … DONE`, dan pengirim staging sekarang `takeda@mail.morriztech.cloud` via Resend.
+
 ## Usulan kontrak/backend (tidak diterapkan)
 
 1. **Throttle `login` dipakai bersama** oleh login mobile dan web-login (per IP+email). Sesuai desain anti brute-force; OpenAPI cukup menyebut bahwa kedua endpoint berbagi kuota.
@@ -258,5 +322,7 @@ Status: **disiapkan, belum dijalankan.** Belum ada akun inbox, permintaan forgot
 - `docs/evidence/m06/CLAUDE_RESUMED_ACCEPTANCE.md` (laporan ini).
 - **Privat, di luar Git:**
   - `~/.rt05/m06-stage-check/fixtures.json`: diperbarui dengan `registrationToken`, ID sintetis dari `verify.mjs`, dan `results.json`.
+  - `~/.rt05/m06-stage-check/inbox-flow.mjs`, `inbox-flow.json`, snapshot `fixtures.before-recipient-switch-*.json` dan `inbox-flow.legacy-original-recipient-*.json` (§9).
+  - VPS `/root/.rt05/`: `rt05-smtp.key`, `.env.staging.bak-m06-smtp`, `m06-smtp-apply.sh`, `m06-snap-*.txt` (semua mode 600, tanpa nilai di Git).
   - Skrip probe di scratchpad sesi Claude: `probe-extended.mjs`, `probe-weblogin.mjs`, `probe-reset.mjs`, `bootstrap_admin.py`, `exists.py`, beserta JSON hasilnya.
 - `rest-api/` tidak diubah.

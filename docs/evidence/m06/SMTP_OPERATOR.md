@@ -1,5 +1,9 @@
 # M06 — menyiapkan pengirim email
 
+**Status13 Oktober: Resend SMTP staging aktif; gate inbox/browser/Android PASS.**
+Lihat [INBOX_ACCEPTANCE.md](INBOX_ACCEPTANCE.md) untuk bukti aktual. Pilihan
+Gmail di bawah adalah alternatif runbook, bukan konfigurasi yang sedang dipakai.
+
 Pemilik mengonfirmasi12Oktober2026 bahwa pengirim belum pernah disiapkan.
 Alamat penerima percobaan sudah disimpan privat. Reset sampai inbox tetap
 blocked sampai pengirim terhubung dan email nyata diterima.
@@ -45,7 +49,7 @@ APK sukses, dan health worker tidak membuktikan delivery. Jika App Password
 tidak tersedia, operator memilih pengirim SMTP lain yang benar-benar dimiliki;
 endpoint dan credential tidak ditebak. Production tetap mengikuti gate M16.
 
-## Checkpoint pemulihan malam12 Oktober
+## Checkpoint pemulihan malam12 Oktober (historis)
 
 Staging26a0b7e/runtime/API/Android sudah diverifikasi. Env staging tetap
 MAIL_MAILER=log tanpa pengirim SMTP; tidak ada email nyata dikirim. Pembacaan
@@ -66,3 +70,22 @@ Urutan penerimaan: precheck, prepare akun sintetis, forgot rondeA, konfirmasi
 email inbox dan reset lewat tautan browser, verifyA, lalu rondeB lewat Android
 dan verifyB. Forgot202 atau worker DONE sendiri tidak membuktikan inbox.
 Expiry/reuse/race sudah diuji mekaniknya; tidak perlu mengulang drill runtime.
+
+## Konfigurasi aktif13 Oktober
+
+Domain Resend milik pemilik sudah Verified. Key khusus RT05 dibatasi Sending
+dan domain, tersimpan hanya pada env/key privat mode600. Pengirim aplikasi
+menggunakan alias pada domain itu; tidak menjadi kontak resmi RT.
+MAIL_MAILER=smtp, host smtp.resend.com, port587, scheme smtp/STARTTLS,
+username resend; nama pengirim RT05 TAKEDA. Nilai password tidak dicetak.
+
+Claude mengganti hanya MAIL_* secara atomik dan recreate API/worker-default
+pada26a0b7e, tanpa build/migration. DB/APP_KEY/Redis tidak berubah; backup
+privat `/root/.rt05/.env.staging.bak-m06-smtp` dan helper restore tersedia.
+Jangan menjalankan setup atau recreate ulang hanya karena sesi baru.
+
+Helper precheck/prepare/forgot/verify sudah dijalankan dengan email nyata.
+Job yang dicari adalah `App\Notifications\ResetPasswordNotification ... DONE`.
+Browser memakai tautan email asli; Android meminta kode dari aplikasinya dulu
+lalu memakai email baru. Masing-masing verifier4/4 PASS. Alamat penerima,
+kode, password dan key tetap privat; bukti publik berisi waktu/hasil/screenshot aman.

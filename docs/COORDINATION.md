@@ -1,5 +1,18 @@
 # Koordinasi RT05 TAKEDA
 
+Checkpoint13 Oktober: root menerima **M06 passed** sesudah dua reset dari email
+INBOX nyata/browser/Android dan verifier4/4 masing-masing. Claude/Grok completed;
+release mempertahankan terminal existing. Task penutupan dokumentasi Kimi
+task_84cb2119d017/ctx_b7ab54d137ff menyelesaikan proposal Native Doc dan diagram
+SMTP aktual; receipt awal agent_prompt_stalled bukan bukti tidak bekerja.
+Root menjaga publikasi cloud dan Git. M07 menjadi tahap berikut sesudah checkpoint
+M06 disimpan. Run tetap run_d783036e0906; jangan mengulang rollout/SMTP/forgot.
+
+Wait background Claude sempat dihentikan oleh Claude Code karena RAM PC kritis;
+root membaca status, lalu membangunkan task yang sama untuk verify B langsung.
+Status sender/key/config dan inbox tidak perlu ditebak dari terminal idle.
+Ini kejadian baru yang terverifikasi, bukan kepastian sebab CLI lama tertutup.
+
 Instruksi awal pemilik 11 Oktober 2026: Codex mengelola Claude Code, Grok, dan Kimi;
 pekerjaan dilanjutkan dari checkpoint Claude, satu tahap dengan bukti penerimaan
 sebelum tahap berikutnya. Target saat itu adalah sampai M05 secara

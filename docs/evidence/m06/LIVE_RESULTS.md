@@ -1,5 +1,9 @@
 # M06 — pemeriksaan perangkat dan staging
 
+**Update13 Oktober: gate M06 passed.** Bukti historis di bawah dilengkapi
+rollout/API/Android dan dua reset dari inbox nyata pada
+[INBOX_ACCEPTANCE.md](INBOX_ACCEPTANCE.md); source runtime tetap26a0b7e.
+
 12 Oktober2026. Paket backend/Flutter koreksi review:
 `15885cbf2d08b3e0f2b66b32899e9e6857ff63d1`.
 CI API184tes/1679assertions, Flutter114tes/analyze/format dan kedua APK SUCCESS.

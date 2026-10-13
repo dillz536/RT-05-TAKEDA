@@ -154,6 +154,20 @@ Keputusan: migration default Laravel (users/sessions/cache/jobs bigint) dihapus.
 
 ## Input operasional yang belum tersedia
 
+### ADR20 — SMTP Resend untuk staging M06
+
+13 Oktober2026. Pemilik melanjutkan pekerjaan sesudah login Resend. Domain
+pengirim existing terverifikasi; coordinator membuat key khusus RT05 dengan
+izin Sending/domain, Claude memasang hanya MAIL_* pada API/worker-default
+staging. Tidak memakai key proyek lain atau mengubah DB/APP_KEY/DNS/production.
+Ini integrasi SMTP pengirim; autentikasi warga tetap email/sandi aplikasi.
+
+Coordinator memilih Gmail pemilik yang sudah terhubung sebagai default uji
+sintetis setelah pertanyaan preferensi dan asumsi diumumkan; pilihan itu bukan
+persetujuan RT atas kontak resmi baru. Akun/fixture penerima lama dipertahankan
+privat. Bukti INBOX/browser/Android dan verifier A/B4/4 menerima gate M06.
+Credential/recipient/kode tetap privat, bukan Git atau dokumentasi publik.
+
 ### Otorisasi lanjutan pemilik 11 Oktober 2026
 
 Pemilik menyediakan Chrome pada Hostinger dan mengizinkan penggunaan terminal,

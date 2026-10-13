@@ -1,6 +1,32 @@
 # Progress — RT05 TAKEDA
 
-Updated: 12 Oktober 2026.
+Updated: 13 Oktober 2026.
+
+## Penutupan M06 — 13 Oktober 2026
+
+- Coordinator menerima **M06 passed** pada runtime26a0b7e, byte aplikasi sama
+  dengan HEAD2dfe4ba yang seluruh CI-nya SUCCESS: API184/1679, Flutter117/
+  duaAPK, infra. Bukti52alur akun/17mekanika reset dan Android sebelumnya tetap.
+- Key Resend khusus RT05 dibatasi Sending/domain terverifikasi. Claude mengubah
+  hanya MAIL_* staging dan recreate API/worker-default pada tag yang sama,
+  tanpa build/migration. DB/APP_KEY/Redis, ID service lain dan volume tetap.
+  Recycle alami worker media/exports per jam bukan restart tambahan oleh task.
+- Inbox lama tidak dapat diakses dari sesi tersedia; coordinator memakai Gmail
+  pemilik yang terhubung sebagai default uji yang diumumkan setelah kesempatan
+  memilih. Fixture/akun lama dipertahankan privat. Kontak resmi RT tidak berubah.
+- **INBOX A02:53:25UTC**, tautan email asli/Chrome reset sukses; verifier A4/4:
+  bearer lama401, sandi lama422, sandi baru200, kode ulang422. Fragment hilang.
+- Android meminta kode03:09:56.910UTC; **INBOX B03:10:10UTC**, reset03:20:24.104,
+  login Beranda03:22:55.348. Verifier B **4/4 PASS03:29:00.769UTC**. B awal dari
+  helper digantikan; tidak dihitung sebagai reset akhir. Empat job DONE, nol
+  FAIL/exception/pola kode atau fragment pada log yang diperiksa.
+- Claude task_e6babca81a7e/ctx_0ec47366d23f dan Grok task_86000e8c6e85/
+  ctx_13987cde954b completed; release mempertahankan terminal existing. Wait
+  background Claude sempat dihentikan karena RAM PC kritis; root melanjutkan
+  verify B langsung. Ini bukan kepastian penyebab penutupan CLI sesi sebelumnya.
+- [INBOX_ACCEPTANCE.md](evidence/m06/INBOX_ACCEPTANCE.md) dan laporan/screenshots
+  aman menjadi bukti penutupan. M07 boleh dimulai sesudah checkpoint tersimpan;
+  belum terimplementasi. Insiden credential historis tetap open untuk M16.
 
 ## Pemulihan sesi12 Oktober malam — M06 lalu M07
 
@@ -112,8 +138,8 @@ ditentukan hanya oleh tersedianya kode.
 | M03 | passed | PR #15, kode 0d678bb: API CI 88 tes/727 assertion, recovery worker/Redis nyata dan build infra SUCCESS; review final Kimi PASS; docs/evidence/m03/CI_RESULTS.md |
 | M04 | passed | Gate fungsional sebelumnya12b4642; patch isolasi credential6a8d4f8 diterapkan12 Oktober: runtime tanpa migrator, DML/DDLdenied, direct job rollback0, heartbeat dan volume/unrelated preserved. Insiden rotasi tetap open; production belum siap. Checkpoint keamanan di bawah. |
 | M05 | passed | PR17, source13de24e: 77 tes/analyzer/dua APK CI SUCCESS, checksum cocok; emulator health HTTPS, offline/retry proses sama, ikon dan skala teks1,3/2,0; review final Kimi PASS. docs/evidence/m05/LIVE_RESULTS.md |
-| M06 | blocked | Staging26a0b7e, API52alur/17mekanika reset dan Android akun/sesi terbukti; pengirim valid belum tersedia (provider401), inbox reset belum terbukti; helper privat siap |
-| M07 | planned | Kode rumah/keluarga/akun existing dipertahankan; implementasi baru dan penerimaan M07 terkunci sampai M06 passed |
+| M06 | passed | Staging26a0b7e; API52alur/17mekanika reset; Android akun/sesi; SMTP nyata, INBOX A/browser dan B/Android, verifier4/4 masing-masing. Penutupan13Oktober; INBOX_ACCEPTANCE |
+| M07 | planned | M06 passed; tahap berikutnya pendataan lengkap/histori membership/link, izin, concurrency dan penerimaan Android/staging |
 | M08 | in_progress | Pengaduan + foto privat + anonim + status; tes CI lulus |
 | M09 | in_progress | Aspirasi terpisah; tes CI lulus |
 | M10 | in_progress | Agenda/ICS/Google Calendar, pengumuman, inbox; push FCM blocked (tanpa project Firebase) |
@@ -126,7 +152,7 @@ ditentukan hanya oleh tersedianya kode.
 
 M00 memakai label accepted_baseline khusus, bukan status passed hasil tes baru. M01–M16 menggunakan planned/in_progress/passed/blocked.
 
-## Milestone aktif
+## Riwayat pembukaan M06 (checkpoint 12 Oktober)
 
 **M06 — registrasi dan akses akun**, dibuka oleh instruksi pemilik12 Oktober
 melalui rencana M06–M07. Baseline `fb6e59f`; branch `codex/m06-account-access`.
