@@ -81,13 +81,9 @@ Panic Button bukan fitur untuk menyampaikan aspirasi, mengusulkan kegiatan, atau
 
 RT-05 TAKEDA terdiri dari beberapa bagian yang memiliki kegunaan berbeda.
 
-**Website RT** menjadi bagian yang dapat digunakan untuk menyampaikan informasi mengenai lingkungan dan konten yang dipublikasikan.
+**Website** menjadi bagian yang dapat digunakan untuk menyampaikan informasi mengenai lingkungan dan konten yang dipublikasikan.
 
-**Aplikasi mobile warga** menyediakan akses terhadap layanan warga yang tersedia dalam aplikasi, termasuk fitur-fitur seperti aspirasi, agenda, usulan kegiatan, iuran, pengaduan, dan Panic Button sesuai implementasinya.
-
-**Web Pengurus** digunakan untuk kebutuhan pengelolaan dari sisi pengurus. Bagian proyek yang telah dibahas mencakup pengelolaan artikel dan dokumentasi serta tindak lanjut pengaduan warga.
-
-Ketiga bagian tersebut merupakan bagian dari satu proyek, tetapi tidak berarti setiap fitur memiliki tampilan atau cara kerja yang sama pada setiap platform.
+**Aplikasi mobile** menyediakan akses terhadap layanan warga yang tersedia dalam aplikasi, termasuk fitur-fitur seperti aspirasi, agenda, usulan kegiatan, iuran, pengaduan, dan Panic Button sesuai implementasinya.
 
 ## Siapa yang Menggunakan RT-05 TAKEDA?
 
