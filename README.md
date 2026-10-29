@@ -77,7 +77,7 @@ Panic Button bukan fitur untuk menyampaikan aspirasi, mengusulkan kegiatan, atau
 
 **Perlu diperhatikan:** Ketersediaan tombol darurat tidak dengan sendirinya menjamin bahwa bantuan akan langsung datang. Mekanisme pengiriman peringatan, pihak yang menerima laporan, dan tindak lanjutnya harus mengikuti sistem yang benar-benar diterapkan. Dalam keadaan darurat, warga tetap perlu menghubungi layanan darurat resmi yang sesuai.
 
-## Website, Aplikasi Mobile, dan Web Pengurus
+## Website dan Aplikasi Mobile
 
 RT-05 TAKEDA terdiri dari beberapa bagian yang memiliki kegunaan berbeda.
 
