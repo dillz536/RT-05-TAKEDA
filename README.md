@@ -1,93 +1,112 @@
-# RT05 TAKEDA — monorepo
+# RT-05 TAKEDA
 
-Sistem informasi dan layanan warga RT 05 RW 07 Taman Kedaung, Ciputat. Pemilik: Morriz. Domain: morriz.tech.
+**Sistem Informasi dan Layanan Warga RT 05 RW 07 Taman Kedaung, Ciputat**
 
-Website publik sudah diterima pada 10 Oktober 2026 (M00) dan live sebagai preview statis di https://rt05takeda.vercel.app. Sejak M01 repository ini menjadi monorepo: website, aplikasi mobile, REST API, dokumentasi, dan dukungan infrastruktur berada di satu Git history.
+RT-05 TAKEDA adalah proyek website dan aplikasi mobile yang dikembangkan untuk mendukung kegiatan warga dan pengurus RT. Proyek ini menyediakan beberapa layanan yang berkaitan dengan informasi lingkungan, penyampaian aspirasi, kegiatan warga, iuran, pengaduan, dan keadaan darurat.
 
-## Struktur
+Melalui sistem ini, warga memiliki sarana untuk mengakses informasi dan menyampaikan kebutuhan mereka, sedangkan pengurus RT dapat menggunakan layanan yang tersedia untuk membantu mengelola kegiatan dan menindaklanjuti laporan warga.
 
-| Folder | Isi | Status |
-| --- | --- | --- |
-| [website/](website/README.md) | Laravel 13 + Blade + Tailwind 4 + Vite; website publik dan UI Pengurus Artikel/Dokumentasi yang diterima | Baseline accepted, dipindah utuh pada M01 |
-| [mobile/](mobile/README.md) | Flutter Android warga/pengurus | Implementasi awal dan APK debug tersedia; penerimaan tiap domain tetap mengikuti PROGRESS |
-| [rest-api/](rest-api/README.md) | Laravel REST API, pemilik database Neon dan aturan bisnis | Fondasi M02–M04 dan akses akun M06 di staging; reset inbox/browser/Android diterima13Oktober |
-| [infra/](infra/README.md) | Script, Docker, Caddy, Compose | Staging awal tersedia; gate worker/recovery dan deployment dicatat di PROGRESS |
-| [docs/](docs/PRD.md) | Konteks lintas modul; dokumentasi frontend di [docs/website/](docs/website/FRONTEND_HANDOFF.md) | Aktif |
-| `.github/workflows/` | CI API, website, mobile, image infra dan pemeriksaan repo | Aktif |
+## Mengenal RT-05 TAKEDA
 
-## Target
+Dalam lingkungan RT, ada berbagai hal yang perlu dikelola bersama. Warga membutuhkan informasi mengenai pengumuman dan kegiatan lingkungan, sementara pengurus perlu menerima masukan, mengatur agenda, dan menangani laporan yang disampaikan warga.
 
-| Bagian | Target |
-| --- | --- |
-| Website | Laravel 13, Blade, Tailwind 4; pertahankan frontend yang diterima |
-| REST API | Laravel 13, Eloquent, Sanctum; pemilik seluruh aturan bisnis |
-| Mobile | Flutter/Dart; satu aplikasi dengan tampilan warga dan pengurus |
-| Database | PostgreSQL melalui Neon; lingkungan terisolasi |
-| Redis | Instance antrean dan cache terpisah |
-| Asinkron | Worker Laravel, scheduler, transactional outbox |
-| Hosting | VPS Hostinger, Docker, reverse proxy HTTPS |
-| Domain | Production `takeda.morriz.tech`, staging `takeda-staging.morriz.tech`; `/api/v1` untuk API |
-| Preview | Vercel tetap preview statis frontend selama pengembangan |
-| Distribusi mobile | APK Android bertanda tangan; bukan proses Flutter pada VPS |
+RT-05 TAKEDA dikembangkan untuk membantu kebutuhan tersebut melalui layanan digital. Website, aplikasi mobile warga, dan Web Pengurus memiliki peran yang berbeda dalam mendukung kegiatan lingkungan RT.
 
-Iuran Rp75.000 per rumah per bulan, dibayar offline dan dicatat pengurus. Tidak ada payment gateway. Perubahan teknis dicatat sebagai ADR di [docs/DECISIONS.md](docs/DECISIONS.md).
+## Fitur yang Tersedia dalam Proyek
 
-## Mulai cepat — website
+### 1. Pengumuman
 
-Prasyarat: PHP 8.3+ (CI 8.4), Composer, Node.js 22.12+. Jalankan dari folder `website/`:
+Fitur pengumuman digunakan untuk menyampaikan informasi kepada warga mengenai hal-hal yang berkaitan dengan lingkungan RT.
 
-```powershell
-Set-Location website
-composer install
-Copy-Item .env.example .env
-php artisan key:generate
-npm.cmd ci
-npm.cmd run build:preview
-npm.cmd run preview
-```
+Melalui fitur ini, informasi yang dipublikasikan oleh pengurus dapat diakses warga tanpa harus selalu menunggu informasi disampaikan secara langsung. Pengumuman dapat menjadi sarana penyampaian informasi resmi dari pengurus kepada warga.
 
-Buka http://127.0.0.1:8123. Rute tetap `/profil`, `/artikel`, dan seterusnya; `website/` bukan prefix URL. Jangan menjalankan `composer setup` untuk frontend karena menjalankan migrasi. Detail pemeriksaan ada di [website/README.md](website/README.md).
+### 2. Aspirasi Warga
 
-Pemeriksaan repo (secret, file terlarang, `.git` bersarang, tautan relatif, paritas Vercel):
+Fitur aspirasi menjadi sarana bagi warga untuk menyampaikan pendapat, masukan, atau saran mengenai lingkungan tempat tinggal mereka.
 
-```powershell
-node infra/scripts/check-repo.mjs
-```
+Warga dapat menggunakan fitur ini untuk menyampaikan hal-hal yang menurut mereka perlu diperhatikan oleh pengurus. Aspirasi tersebut dapat membantu pengurus mengetahui pandangan dan kebutuhan warga.
 
-## Peta baca
+Aspirasi berbeda dengan pengaduan. Aspirasi lebih berfokus pada pendapat atau masukan, sedangkan pengaduan berkaitan dengan masalah atau kejadian yang ingin dilaporkan.
 
-| Dokumen | Tujuan |
-| --- | --- |
-| [AGENTS.md](AGENTS.md) | Instruksi agent dan batas keselamatan |
-| [docs/PRD.md](docs/PRD.md) | Produk, cakupan, alur, dan penerimaan |
-| [docs/BUSINESS_RULES.md](docs/BUSINESS_RULES.md) | Aturan bisnis dan invariant |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Runtime, modul, dan aliran data |
-| [docs/MONOREPO.md](docs/MONOREPO.md) | Struktur, migrasi repo, dan workflow |
-| [docs/FRONTEND.md](docs/FRONTEND.md) | Baseline web dan integrasi CMS |
-| [docs/DATABASE.md](docs/DATABASE.md) | Koneksi Neon, skema, transaksi, migrasi |
-| [docs/ERD.md](docs/ERD.md) | Relasi dan daftar tabel rancangan |
-| [docs/API.md](docs/API.md) | Kontrak HTTP dan autentikasi |
-| [docs/MOBILE.md](docs/MOBILE.md) | Layar, struktur Flutter, build |
-| [docs/ASYNC_JOBS.md](docs/ASYNC_JOBS.md) | Redis, worker, outbox, scheduler |
-| [docs/SECURITY.md](docs/SECURITY.md) | Privasi, otorisasi, secrets, abuse |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Hostinger, DNS, Docker, backup, rollback |
-| [docs/TESTING.md](docs/TESTING.md) | Pengujian perilaku, UAT, rilis |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | M00–M16; hasil dan syarat selesai |
-| [docs/CODEX_PROMPTS.md](docs/CODEX_PROMPTS.md) | Prompt tiap milestone dan lanjut sesi |
-| [docs/DECISIONS.md](docs/DECISIONS.md) | Sumber keputusan dan ADR |
-| [docs/PROGRESS.md](docs/PROGRESS.md) | Status aktual dan bukti per milestone |
-| [docs/COORDINATION.md](docs/COORDINATION.md) | Pembagian Codex/Claude/Grok/Kimi, tahap aktif, gate dan checkpoint pemulihan |
-| [docs/SOURCES.md](docs/SOURCES.md) | Sumber proyek dan dokumentasi resmi |
-| [docs/website/](docs/website/FRONTEND_HANDOFF.md) | Handoff, preview konten, Stitch, QA, bukti frontend, [instruksi Vercel](docs/website/VERCEL_ROOT.md) |
+### 3. Agenda Kegiatan
 
-## Status
+Fitur agenda digunakan untuk menyajikan informasi mengenai kegiatan yang dijadwalkan di lingkungan RT.
 
-Lihat [docs/PROGRESS.md](docs/PROGRESS.md). M00 accepted baseline; M01–M07 passed.
-M06 membuktikan email reset nyata sampai inbox/browser/Android. M07 source
-979634f di staging lulus 77 kasus API/327 assertion dan demonstrasi Android;
-220 tes backend/2125 assertion serta 152 tes Flutter lulus. Bukti dan
-keterbatasan ada di [penerimaan M07](docs/evidence/m07/REPORT.md). Production/data warga nyata menunggu M15–M16 dan
-penutupan insiden credential. [Rencana koordinasi](docs/COORDINATION.md) mencatat
-ownership Claude/Grok/Kimi serta checkpoint pemulihan.
+Dengan adanya agenda, warga dapat mengetahui kegiatan yang tercantum dalam sistem beserta informasi yang disediakan untuk kegiatan tersebut. Fitur ini membantu penyampaian informasi kegiatan agar warga dapat mengetahui rencana aktivitas di lingkungan mereka.
 
-Jumlah developer tidak menentukan rancangan. Pekerjaan dapat dibagi per issue/domain, dengan kontrak API serta dependency milestone sebagai acuan bersama.
+### 4. Usulan Agenda Kegiatan
+
+Selain melihat agenda yang tersedia, warga juga dapat mengusulkan kegiatan melalui fitur usulan agenda kegiatan.
+
+Fitur ini memberikan kesempatan kepada warga untuk menyampaikan ide kegiatan yang dianggap bermanfaat bagi lingkungan. Usulan tersebut dapat menjadi bahan pertimbangan dalam perencanaan kegiatan RT.
+
+Usulan kegiatan tidak berarti kegiatan tersebut otomatis disetujui atau langsung masuk ke agenda. Pelaksanaan dan pengaturan kegiatan tetap mengikuti proses yang berlaku di lingkungan RT.
+
+### 5. Iuran Warga
+
+Fitur iuran ditujukan untuk membantu pengelolaan informasi yang berkaitan dengan iuran warga.
+
+Iuran merupakan salah satu bagian administrasi lingkungan yang perlu dicatat dan dikelola dengan baik. Dengan adanya layanan ini, informasi mengenai iuran dapat dikelola melalui sistem sesuai fungsi yang tersedia.
+
+Fitur ini berkaitan dengan administrasi iuran, bukan layanan pembayaran untuk semua jenis kebutuhan warga. Rincian seperti cara pembayaran, riwayat transaksi, atau status pembayaran perlu mengikuti fungsi yang benar-benar tersedia dalam aplikasi.
+
+### 6. Pengaduan Warga
+
+Fitur pengaduan digunakan untuk menyampaikan laporan mengenai masalah atau kejadian yang membutuhkan perhatian pengurus RT.
+
+Warga dapat membuat laporan melalui aplikasi mobile. Dalam alur yang telah diuji, warga dapat menyertakan foto yang diambil menggunakan kamera, memilih opsi untuk menyembunyikan identitas, serta memperbaiki laporan dengan menambahkan foto dari galeri atau menghapus foto yang sudah dilampirkan.
+
+Di sisi pengurus, tersedia alur untuk mengubah status laporan, misalnya menjadi *Diproses* atau *Selesai*, serta mengisi catatan tindak lanjut.
+
+Fitur ini membantu proses pelaporan dan penanganan masalah agar informasi laporan serta perkembangannya dapat dikelola melalui sistem.
+
+### 7. Panic Button (Tombol Darurat)
+
+Panic Button merupakan fitur yang dikhususkan untuk keadaan darurat yang dapat membahayakan keselamatan warga.
+
+Contoh keadaan yang termasuk dalam penggunaan fitur ini antara lain:
+
+- **Kebakaran**, ketika terjadi kebakaran yang mengancam warga atau bangunan.
+- **Pencurian atau kemalingan**, ketika terdapat kejadian pencurian atau ancaman keamanan.
+- **Penyerangan atau kekerasan**, ketika seseorang menghadapi ancaman fisik.
+- **Keadaan berbahaya lainnya**, ketika terdapat situasi darurat yang membutuhkan perhatian atau bantuan segera.
+
+Fitur ini ditujukan untuk membedakan kejadian darurat dari kebutuhan atau laporan biasa. Karena itu, penggunaannya harus diperuntukkan bagi situasi yang benar-benar mendesak dan berpotensi membahayakan keselamatan.
+
+Panic Button bukan fitur untuk menyampaikan aspirasi, mengusulkan kegiatan, atau melaporkan masalah administratif biasa. Hal-hal tersebut menggunakan layanan yang sesuai.
+
+**Perlu diperhatikan:** Ketersediaan tombol darurat tidak dengan sendirinya menjamin bahwa bantuan akan langsung datang. Mekanisme pengiriman peringatan, pihak yang menerima laporan, dan tindak lanjutnya harus mengikuti sistem yang benar-benar diterapkan. Dalam keadaan darurat, warga tetap perlu menghubungi layanan darurat resmi yang sesuai.
+
+## Website, Aplikasi Mobile, dan Web Pengurus
+
+RT-05 TAKEDA terdiri dari beberapa bagian yang memiliki kegunaan berbeda.
+
+**Website RT** menjadi bagian yang dapat digunakan untuk menyampaikan informasi mengenai lingkungan dan konten yang dipublikasikan.
+
+**Aplikasi mobile warga** menyediakan akses terhadap layanan warga yang tersedia dalam aplikasi, termasuk fitur-fitur seperti aspirasi, agenda, usulan kegiatan, iuran, pengaduan, dan Panic Button sesuai implementasinya.
+
+**Web Pengurus** digunakan untuk kebutuhan pengelolaan dari sisi pengurus. Bagian proyek yang telah dibahas mencakup pengelolaan artikel dan dokumentasi serta tindak lanjut pengaduan warga.
+
+Ketiga bagian tersebut merupakan bagian dari satu proyek, tetapi tidak berarti setiap fitur memiliki tampilan atau cara kerja yang sama pada setiap platform.
+
+## Siapa yang Menggunakan RT-05 TAKEDA?
+
+**Warga RT 05 RW 07 Taman Kedaung**
+
+Warga dapat memanfaatkan layanan yang tersedia untuk memperoleh informasi lingkungan, menyampaikan aspirasi, melihat agenda, mengusulkan kegiatan, mengakses informasi iuran, menyampaikan pengaduan, dan menggunakan Panic Button ketika menghadapi keadaan darurat.
+
+**Pengurus RT**
+
+Pengurus dapat memanfaatkan sistem untuk mendukung pengelolaan informasi dan layanan warga, termasuk bagian administrasi serta penanganan laporan sesuai akses dan fungsi yang tersedia.
+
+## Tujuan Pengembangan
+
+RT-05 TAKEDA dikembangkan untuk membantu kegiatan lingkungan melalui sarana digital. Harapannya, warga memiliki akses yang lebih mudah terhadap informasi dan layanan, sementara pengurus mempunyai sarana pendukung untuk mengelola kebutuhan lingkungan.
+
+Proyek ini juga menyediakan jalur yang berbeda untuk kebutuhan yang berbeda. Informasi disampaikan melalui pengumuman, masukan disampaikan melalui aspirasi, kegiatan dapat dilihat atau diusulkan melalui agenda, masalah dapat dilaporkan melalui pengaduan, dan keadaan yang mengancam keselamatan ditujukan ke fitur Panic Button.
+
+## Status Proyek
+
+Proyek ini dikembangkan dan diuji secara bertahap. Adanya fitur dalam dokumentasi proyek tidak selalu berarti seluruh fitur sudah siap digunakan dalam operasional sehari-hari.
+
+Informasi mengenai kesiapan masing-masing fitur perlu mengacu pada kondisi implementasi dan hasil pengujian terbaru.
